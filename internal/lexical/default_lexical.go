@@ -12,3 +12,10 @@ func LexicalAnalysis() {
 	// 3、解析代码
 	fmt.Println("3、解析代码")
 }
+
+/**
+ * 预处理 去掉空格和注释等
+ */
+func LexicalPreDeal() {
+
+}
