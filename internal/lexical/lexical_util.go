@@ -10,3 +10,15 @@ func endChar(ch uint8) bool {
 
 	return ch == ' ' || ch == '\n'
 }
+
+//空格
+func blankChar(ch uint8) bool {
+
+	return ch == ' '
+}
+
+//换行
+func eofChar(ch uint8) bool {
+
+	return ch == '\n'
+}

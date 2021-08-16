@@ -10,7 +10,7 @@ type WordLexical struct{}
 
 // LexicalAnalysis 实现了把输入的字符串，解析成了单词 自动过滤空格 和 换行
 //换行也是停止符号 如果是注释的话，会区分单行注释 还是双行注释
-// 这个方法只解析单个方法，因此没办法判断多行注释。
+// 这个方法只解析单个方法，因此没办法判断多行注释。 只实现了过滤单行注释
 func (a *WordLexical) LexicalAnalysis(str string) *list.List {
 
 	res := list.List{}
