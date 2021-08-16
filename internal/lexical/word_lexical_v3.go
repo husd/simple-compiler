@@ -84,7 +84,7 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 				} else {
 					goto NEXT_LOOP
 				}
-			case eof_flag:
+			case eofFlag:
 				i++
 				goto TOKEN
 			case comment01:
@@ -139,20 +139,20 @@ const (
 	comment01      = 3
 	comment02Start = 4
 	comment02End   = 5
-	eof_flag       = 6
+	eofFlag        = 6
 )
 
 func judgeCondition(line string, index int, max int) int {
 
 	if index >= max {
-		return eof_flag
+		return eofFlag
 	}
 	ch := line[index]
 	if blankChar(ch) {
 		return blank
 	}
 	if eofChar(ch) {
-		return eof_flag
+		return eofFlag
 	}
 	if index+1 < max {
 		nextChar := line[index+1]
@@ -167,10 +167,4 @@ func judgeCondition(line string, index int, max int) int {
 		}
 	}
 	return id
-}
-
-func (a *WordLexicalV3) TokenTag(str string) int {
-
-	// 由于只是简单的切割单词，所以不需要实现这个方法
-	return 0
 }

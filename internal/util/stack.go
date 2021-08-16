@@ -47,7 +47,7 @@ func (s *DefaultStack) Peek() interface{} {
 	return e.Value
 }
 
-func (q *DefaultStack) Init() {
-	q.data = list.New()
-	q.size = 0
+func (s *DefaultStack) Init() {
+	s.data = list.New()
+	s.size = 0
 }

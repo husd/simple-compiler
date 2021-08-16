@@ -43,9 +43,3 @@ func (a *WordLexical) LexicalAnalysis(str string) *list.List {
 end:
 	return &res
 }
-
-func (a *WordLexical) TokenTag(str string) int {
-
-	// 由于只是简单的切割单词，所以不需要实现这个方法
-	return 0
-}

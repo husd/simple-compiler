@@ -9,12 +9,6 @@ type Lexer interface {
 	 * 词素，Lexeme 结构
 	 */
 	LexicalAnalysis(str string) *list.List
-	//TokenTag
-	/**
-	 * 根据词素，判断它的类型
-	 * 词素的类型一般有以下几种：
-	 */
-	TokenTag(lexeme string) int
 }
 
 // Token
