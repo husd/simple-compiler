@@ -8,23 +8,11 @@ import (
 	"os"
 )
 
-// WordLexicalV3 非常简单的程序，把字符串分割成单词。
+// WordLexicalV3
+/**
+ * 要实现词法分析器功能
+ */
 type WordLexicalV3 struct{}
-
-// TokenTag 词法分析器的输出结果 Token
-type TokenTag struct {
-	LineNum   int         //源代码多少行
-	Token     interface{} //标识符
-	TokenType int         // token的类型
-}
-
-const (
-	TAG_ID     = 1 // identify 标识符 数字+字母+下划线+中划线 不能以数字开头
-	TAG_NUM    = 2 // 数字
-	TAG_OP     = 3 // 运算符
-	TAG_STRING = 4 // 字符串 类似 "abcd" 这样的
-
-)
 
 // LexicalAnalysis 解析单个文件 按行读取单个文件，把解析到的数据，存入到链表里。
 // 这个方法对于v1版本的方法来说，增加了1个功能，会过滤多行注释 /* */ 这样的注释
@@ -33,6 +21,7 @@ const (
 // 2 过滤多行注释
 // 3 分割次素
 // 4 自动处理换行和空格 过滤多余的空格
+// 5 识别出当前token，并转换为 TokenTag
 // 基本实现了词法分析器的功能
 func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 
@@ -67,7 +56,7 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 			flag := judgeCondition(line, i, length)
 			//忽略多行注释的一切内容，直到找到了多行注释的结束
 			if comment02Flag && flag != comment02End {
-				goto NEXT_LOOP
+				goto NEXTLOOP
 			}
 			switch flag {
 			case blank: //由于之前已经去过空格了，再有空格，就是拿到token了
@@ -82,7 +71,7 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 					i++ //加1的原因是，切片是左开右闭的 str[1:2]
 					goto TOKEN
 				} else {
-					goto NEXT_LOOP
+					goto NEXTLOOP
 				}
 			case eofFlag:
 				i++
@@ -104,11 +93,11 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 				}
 				comment02Flag = true
 				i++ // 一定要注意，因为我们读取了2个字符，所以要跳过下一个字符
-				goto NEXT_LOOP
+				goto NEXTLOOP
 			case comment02End:
 				comment02Flag = false
 				i++ // 一定要注意，因为我们读取了2个字符，所以要跳过下一个字符
-				goto NEXT_LOOP
+				goto NEXTLOOP
 			}
 		TOKEN:
 			//这里就是要声明token了
@@ -117,7 +106,7 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 				fmt.Println("token is :", w)
 				idStart = false
 			}
-		NEXT_LOOP:
+		NEXTLOOP:
 		}
 		// ----------- 解析单行内容 -----------
 	}

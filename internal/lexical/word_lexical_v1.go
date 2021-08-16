@@ -5,7 +5,8 @@ import (
 	"fmt"
 )
 
-// WordLexical 非常简单的程序，把字符串分割成单词
+// WordLexical 非常简单的程序，把字符串分割成单词 这个文件的方法，独立，简单，是一个开胃菜。
+// 万事开头难，先从这里开始，可以增加一点信心。
 type WordLexical struct{}
 
 // LexicalAnalysis 实现了把输入的字符串，解析成了单词 自动过滤空格 和 换行
