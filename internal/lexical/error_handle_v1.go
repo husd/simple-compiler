@@ -10,3 +10,21 @@ func HandleError(token *TokenTag, msg string) {
 	//这里处理错误的方式，就是先简单的打印一下错误信息
 	fmt.Errorf("error happened line: %d token: %s , error msg: %s", token.LineNum, token.Token, msg)
 }
+
+//CheckLexicalError 词法分析阶段的错误检查，这里主要检查是不是有效的字符
+// 例如 有一个变量是 0abc ，变量是不能用0开头的
+// 例如
+func CheckLexicalError(token string) (b bool, msg string) {
+
+	if startWithNum(token) {
+		return false, "无效的token，以数字开头:" + token
+	}
+	return true, ""
+}
+
+func startWithNum(token string) bool {
+
+	var zero uint8 = 0
+	var nine uint8 = 9
+	return token[0] >= zero && token[0] <= nine
+}
