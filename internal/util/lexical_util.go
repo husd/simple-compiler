@@ -1,4 +1,4 @@
-package lexical
+package util
 
 /**
  * 这个类，提供了一些公共的方法 和具体的词法分析器无关的代码
@@ -6,19 +6,19 @@ package lexical
  */
 
 //空或者换行，都是停止符号
-func endChar(ch uint8) bool {
+func EndChar(ch uint8) bool {
 
 	return ch == ' ' || ch == '\n'
 }
 
 //空格
-func blankChar(ch uint8) bool {
+func BlankChar(ch uint8) bool {
 
 	return ch == ' '
 }
 
 //换行
-func eofChar(ch uint8) bool {
+func EofChar(ch uint8) bool {
 
 	return ch == '\n'
 }

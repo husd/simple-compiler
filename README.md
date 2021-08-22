@@ -1,6 +1,7 @@
 # simple-compiler
 
-编译器教练机，为了学习编译原理用go语言写的一个简单的编译器。 目录里如果有1个Keep.go，就是为了让目录里有个文件，这样就能把目录提交到github了， 之后会删除这个无用的文件。
+编译器教练机，为了学习编译原理用go语言写的一个简单的编译器。 目录里如果有1个Keep.go，
+就是为了让目录里有个文件，这样就能把目录提交到github了， 之后会删除这个无用的文件。
 
 这个项目，最终目的是实现一个javac的功能，将Java源代码编译为.class文件。
 
@@ -25,6 +26,23 @@
 - 语法分析阶段 分析下语法规则的错误
 - 语义分析阶段 例如将2个标识符相加， 一个数组 一个过程
 
+## 储备内容
+
+javac编译器的官方说法： 
+
+java语法 被 The Java Language Specification (JLS) 所定义
+字节码文件 被The Java Virtual Machine Specification (JVMS) 所定义
+注解 被Pluggable Annotation Processing API (JSR 269) 所定义的
+编译器还支持 the Java Compiler API (JSR 199)
+
+所以需要以下内容的储备知识：
+JLS https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html
+JVMS 
+(option) JSR 269
+(option) JSR 199
+
+当然作为编译器，肯定是还需要编译器知识储备。
+
 ## 1.0 一些笔记
 
 这里列举下，编译原理这本书中提到的一些关于编译器的经典语句：
@@ -34,6 +52,8 @@
 ## 1.1 词法分析器
 
 第一步的目的是实现一个词法分析器。
+
+设计上来说，解析文本字符串，需要一个Tokenizer，专门来解析字符，但是不提供分割功能。
 
 ### 1.1.1 简单的分割字符串
 

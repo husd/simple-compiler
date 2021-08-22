@@ -3,6 +3,7 @@ package lexical
 import (
 	"container/list"
 	"fmt"
+	"husd.com/v0/util"
 )
 
 // WordLexical 非常简单的程序，把字符串分割成单词 这个文件的方法，独立，简单，是一个开胃菜。
@@ -18,12 +19,12 @@ func (a *WordLexical) LexicalAnalysis(str string) *list.List {
 	length := len(str)
 	start := 0
 	//去掉了开头的空格
-	for ; start < length && endChar(str[start]); start++ {
+	for ; start < length && util.EndChar(str[start]); start++ {
 	}
 	// 判断是不是单行注释 //
 	//遍历这个字符串
 	for i := start; i < length; {
-		for i < length && !endChar(str[i]) {
+		for i < length && !util.EndChar(str[i]) {
 			if str[i] == '/' && i+1 < length && str[i+1] == '/' {
 				//单行注释 // 直接结束，跳出循环
 				w := str[start:i]
@@ -36,7 +37,7 @@ func (a *WordLexical) LexicalAnalysis(str string) *list.List {
 		fmt.Println(w)
 		res.PushBack(w)
 		//找到空格了，要继续跳过空格
-		for i < length && endChar(str[i]) {
+		for i < length && util.EndChar(str[i]) {
 			i++
 		}
 		start = i

@@ -4,25 +4,31 @@ import (
 	"bufio"
 	"container/list"
 	"fmt"
+	"husd.com/v0/util"
 	"io"
 	"os"
+	"strings"
 )
 
 // WordLexicalV3
 /**
- * 要实现词法分析器功能
+ * 要实现词法分析器功能 这个类的方法，是玩具性质的解析代码，并不能用于真正的编译器代码
+ *
  */
 type WordLexicalV3 struct{}
 
-// LexicalAnalysis 解析单个文件 按行读取单个文件，把解析到的数据，存入到链表里。
-// 这个方法对于v1版本的方法来说，增加了1个功能，会过滤多行注释 /* */ 这样的注释
-// 该方法实现了以下功能：
-// 1 过滤单行注释
-// 2 过滤多行注释
-// 3 分割次素
-// 4 自动处理换行和空格 过滤多余的空格
-// 5 识别出当前token，并转换为 TokenTag
-// 基本实现了词法分析器的功能
+// LexicalAnalysis
+/**  解析单个文件 按行读取单个文件，把解析到的数据，存入到链表里。
+ * 这个方法对于v1版本的方法来说，增加了1个功能，会过滤多行注释 /* \*\/ 这样的注解
+ * 该方法实现了以下功能：
+ * 1 过滤单行注释
+ * 2 过滤多行注释
+ * 3 分割次素
+ * 4 自动处理换行和空格 过滤多余的空格
+ * 5 识别出当前token，并转换为 TokenTag
+ * 6 读取双引号的字符串 "hello wrold " TODO
+ * 7 读取单引号 '\n' 单引号只能有1个字节 TODO
+ */
 func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 
 	res := list.New()
@@ -30,9 +36,10 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 	fd, err := os.Open(path)
 	defer fd.Close()
 	if err != nil {
-		panic("读取文件失败 " + path)
+		panic("读取文件失败: " + path)
 	}
-	buf := bufio.NewReader(fd)
+	//buf := bufio.NewReader(fd)
+	buf := bufio.NewReader(strings.NewReader("这里是  默认 的 蒙自"))
 	lineNum := 0
 
 	comment02Flag := false //多行注释的标志，如果为true，就表示扫描到了多行注释的开始 /*
@@ -48,7 +55,7 @@ func (a *WordLexicalV3) LexicalAnalysis(path string) *list.List {
 		length := len(line)
 		start := 0
 		//去掉了开头的空格
-		for ; start < length && blankChar(line[start]); start++ {
+		for ; start < length && util.BlankChar(line[start]); start++ {
 		}
 		//idStart 是为了记录当前token从哪个索引开始的
 		idStart := false
@@ -137,10 +144,10 @@ func judgeCondition(line string, index int, max int) int {
 		return eofFlag
 	}
 	ch := line[index]
-	if blankChar(ch) {
+	if util.BlankChar(ch) {
 		return blank
 	}
-	if eofChar(ch) {
+	if util.EofChar(ch) {
 		return eofFlag
 	}
 	if index+1 < max {
