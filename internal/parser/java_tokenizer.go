@@ -1,7 +1,5 @@
 package parser
 
-import "husd.com/v0/io"
-
 /**
  * 这个类主要是解析字符的，unicode编码 这里本来要有一个各种编码的reader
  * 为了降低难度，先不写这个reader了，直接调用 CharSequence 来解析
@@ -17,5 +15,5 @@ import "husd.com/v0/io"
  */
 
 type JavaTokenizer struct {
-	seq *io.CharSequence
+	reader *UnicodeReader //这个是保留的 暂时先不用这个unicode reader
 }

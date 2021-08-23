@@ -14,6 +14,10 @@ type CharSequence interface {
 	 */
 	CharAt(index int) rune
 	/**
+	 * 读取byte
+	 */
+	ByteAt(index int) uint8
+	/**
 	 * 子序列
 	 */
 	SubCharSequence(start int, end int) string

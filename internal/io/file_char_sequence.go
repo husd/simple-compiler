@@ -37,6 +37,14 @@ func (f FileCharSequence) CharAt(index int) rune {
 	return (rune)(f.content[index])
 }
 
+func (f FileCharSequence) ByteAt(index int) uint8 {
+
+	if index < 0 || index >= f.length {
+		panic(fmt.Sprintf("out of index %d", index))
+	}
+	return f.content[index]
+}
+
 // 左闭右开
 func (f FileCharSequence) SubCharSequence(start int, end int) string {
 
