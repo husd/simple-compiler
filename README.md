@@ -35,13 +35,12 @@ java语法 被 The Java Language Specification (JLS) 所定义
 注解 被Pluggable Annotation Processing API (JSR 269) 所定义的
 编译器还支持 the Java Compiler API (JSR 199)
 
-所以需要以下内容的储备知识：
-JLS https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html
-JVMS 
+所以需要以下内容的储备知识： JLS https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html
+JVMS
 (option) JSR 269
 (option) JSR 199
 
-当然作为编译器，肯定是还需要编译器知识储备。
+当然作为编译器，肯定是还需要编译器知识储备。此外，还需要对字符编码有了解，尤其是Unicode和UTF8。
 
 ## 1.0 一些笔记
 
