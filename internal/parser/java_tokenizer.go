@@ -1,8 +1,10 @@
 package parser
 
+import (
+	"husd.com/v0/code"
+)
+
 /**
- * 这个类主要是解析字符的，unicode编码 这里本来要有一个各种编码的reader
- * 为了降低难度，先不写这个reader了，直接调用 CharSequence 来解析
  *
  * 可以把源代码里的 String name = "xiaoming 你好" 分解成:
  * String
@@ -15,5 +17,48 @@ package parser
  */
 
 type JavaTokenizer struct {
-	reader *UnicodeReader //这个是保留的 暂时先不用这个unicode reader
+	reader    *UnicodeReader // reader
+	source    code.JVersion  // jdk版本
+	tokenKind tokenKind      // 当前token的类型
+
+}
+
+func NewJavaTokenizer(path string) *JavaTokenizer {
+
+	javaTokenizer := JavaTokenizer{}
+	javaTokenizer.reader = NewUnicodeReaderFromFile(path)
+	javaTokenizer.source = code.JDK8
+	javaTokenizer.tokenKind = TOKEN_KIND_ERROR
+
+	return &javaTokenizer
+}
+
+func (jt *JavaTokenizer) ReadToken() *Token {
+
+	//TODO husd start 核心方法 解析出来下一个token是什么
+	//endPos := int(0)
+	reader := jt.reader
+	for {
+		//pos := reader.CurrentPos()
+		switch reader.ch {
+		case '\t':
+		case ' ':
+		case Layout_char_ff:
+			for {
+				reader.ReadRune()
+				if reader.ch == '\t' || reader.ch == ' ' || reader.ch == Layout_char_ff {
+					break
+				}
+			}
+			//
+			break
+		case Layout_char_lf:
+			reader.ReadRune()
+			break
+		}
+
+	}
+
+	t := Token{}
+	return &t
 }

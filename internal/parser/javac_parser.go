@@ -2,22 +2,20 @@ package parser
 
 import (
 	"fmt"
-	jcIo "husd.com/v0/io"
+	"husd.com/v0/code"
 	"husd.com/v0/tree"
 )
 
 type JavacParser struct {
-	sequence *jcIo.CharSequence //注意这里定义的是一个接口，而不是一个string
-	lex      lexer              // 词法分析器
-
-	token *Token //当前的token
+	lex    lexer         // 词法分析器
+	source code.JVersion // 当前JDK的版本
+	token  *Token
 }
 
-func NewJavacParser(sequence *jcIo.CharSequence) JavacParser {
+func NewJavacParser(path string) JavacParser {
 
 	parser := JavacParser{}
-	parser.sequence = sequence
-	parser.lex = GetScannerLexerFromFactory(sequence)
+	parser.lex = GetScannerLexerFromFactory(path)
 	return parser
 }
 

@@ -4,7 +4,6 @@ import (
 	"container/list"
 	"fmt"
 	jcComp "husd.com/v0/compiler"
-	jcIo "husd.com/v0/io"
 	"husd.com/v0/parser"
 	"husd.com/v0/tree"
 )
@@ -44,8 +43,7 @@ func parseFiles(files []string) *list.List {
 
 func parseFile(path string) tree.JCCompilationUnit {
 
-	charSequence := jcIo.GetCharSequenceFromFactory(path)
-	p := parser.GetParserFromFactory(charSequence)
+	p := parser.GetParserFromFactory(path)
 	res := p.ParseJCCompilationUnit()
 	return res
 }

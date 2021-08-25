@@ -21,6 +21,10 @@ type CharSequence interface {
 	 * 子序列
 	 */
 	SubCharSequence(start int, end int) string
+
+	ReadRune() rune
+
+	CurrentPos() int
 }
 
 func checkScope(start int, end int, max int) {

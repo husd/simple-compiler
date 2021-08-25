@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"io/ioutil"
 	"unicode/utf8"
 )
 
@@ -9,6 +10,7 @@ type UnicodeReader struct {
 	buf  []byte //所有的数组
 	size int    // 数组的大小
 	pos  int    // 当前读到那个位置了
+	ch   rune   // 当前的位置的rune
 }
 
 func NewUnicodeReader(buf []byte) *UnicodeReader {
@@ -21,8 +23,30 @@ func NewUnicodeReader(buf []byte) *UnicodeReader {
 	return &reader
 }
 
+func NewUnicodeReaderFromFile(path string) *UnicodeReader {
+
+	buf, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic("读取文件错误：" + path)
+	}
+	reader := UnicodeReader{}
+	reader.pos = 0
+	reader.size = len(buf)
+	reader.buf = buf
+	return &reader
+}
+
 //调用这个方法之后，会移动指针到下一个位置
-func (reader *UnicodeReader) ReadRune() rune {
+func (reader *UnicodeReader) ReadRune() (rune, int) {
+
+	pos := reader.pos
+	res, count := reader.CurrentRune()
+	reader.pos = pos + count
+	reader.ch = res
+	return res, count
+}
+
+func (reader *UnicodeReader) CurrentRune() (rune, int) {
 
 	currentByte := reader.CurrentByte()
 	succ, count := utf8Start(currentByte)
@@ -36,29 +60,16 @@ func (reader *UnicodeReader) ReadRune() rune {
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+1])
 		break
 	case 2:
-		b2 := reader.byteAt(pos + 1)
-		checkUtf8Start10(b2)
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+2])
 		break
 	case 3:
-		b2 := reader.byteAt(pos + 1)
-		b3 := reader.byteAt(pos + 2)
-		checkUtf8Start10(b2)
-		checkUtf8Start10(b3)
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+3])
 		break
 	case 4:
-		b2 := reader.byteAt(pos + 1)
-		b3 := reader.byteAt(pos + 2)
-		b4 := reader.byteAt(pos + 3)
-		checkUtf8Start10(b2)
-		checkUtf8Start10(b3)
-		checkUtf8Start10(b4)
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+4])
 		break
 	}
-	reader.pos = pos + count
-	return res
+	return res, count
 }
 
 func (reader *UnicodeReader) CurrentByte() uint8 {
@@ -67,7 +78,12 @@ func (reader *UnicodeReader) CurrentByte() uint8 {
 	return reader.buf[reader.pos]
 }
 
-func (reader *UnicodeReader) byteAt(pos int) uint8 {
+func (reader *UnicodeReader) CurrentPos() int {
+
+	return reader.pos
+}
+
+func (reader *UnicodeReader) ByteAt(pos int) uint8 {
 
 	reader.checkPos(pos)
 	return reader.buf[pos]
@@ -78,6 +94,18 @@ func (reader *UnicodeReader) checkPos(pos int) {
 	if pos >= reader.size {
 		panic("out of index")
 	}
+}
+
+func (reader *UnicodeReader) SubByteArray(start int, end int) []byte {
+
+	return reader.buf[start:end]
+}
+
+//读取下一个字符
+func (reader *UnicodeReader) ScanNextChar() {
+
+	//javac里处理了原生的unicode \uFFFE 这里我们不处理这样的字符了
+	reader.ReadRune()
 }
 
 // 是否是 0 10 110 1110 这样的开头的格式 如果是

@@ -3,42 +3,38 @@ package parser
 import (
 	"container/list"
 	"fmt"
-	"husd.com/v0/io"
 )
 
-//Scanner 这里先不管处理unicode的问题
+//Scanner 在CharSequence里处理好unicode的事情
 type Scanner struct {
 	token    *Token
 	preToken *Token
-	seq      *io.CharSequence
-	length   int // 总长度
 	// ahead token list
-	tokenList *list.List
+	tokenList     *list.List
+	javaTokenizer *JavaTokenizer
 }
 
-func NewScannerLexer(seq *io.CharSequence) Scanner {
+func NewScannerLexer(path string) Scanner {
 
 	scanner := Scanner{}
 	scanner.tokenList = list.New()
-	scanner.seq = seq
 	//设置了一个假的节点
 	dummy := dummyToken()
 	scanner.token = dummy
 	scanner.preToken = dummy
+	scanner.javaTokenizer = NewJavaTokenizer(path)
 
-	scanner.length = (*seq).Len()
 	return scanner
 }
 
 func (scan Scanner) NextToken() {
-	fmt.Println(scan.token.StartPos)
-	panic("implement me")
+
+	// TODO husd
 }
 
 func (scan Scanner) CurrentToken() *Token {
 
-	fmt.Println("implement me")
-	return dummyToken()
+	return scan.token
 }
 
 func (scan Scanner) Ahead(len int) *Token {
@@ -47,8 +43,8 @@ func (scan Scanner) Ahead(len int) *Token {
 }
 
 func (scan Scanner) PreToken() *Token {
-	fmt.Println("implement me")
-	return dummyToken()
+
+	return scan.preToken
 }
 
 func (scan Scanner) ErrPos() int {
