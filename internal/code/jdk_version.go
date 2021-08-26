@@ -21,3 +21,8 @@ func AllowForeach(version JVersion) bool {
 
 	return version >= JDK5
 }
+
+//十六进制浮点文本
+func AllowHexFloats(v JVersion) bool {
+	return false
+}

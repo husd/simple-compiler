@@ -2,16 +2,9 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/util"
 	"io/ioutil"
 	"unicode/utf8"
-)
-
-type BASE_SYS_NUM int
-
-const (
-	BASE_HEX     BASE_SYS_NUM = 16
-	BASE_OCTAL   BASE_SYS_NUM = 8
-	BASE_DECIMAL BASE_SYS_NUM = 10
 )
 
 // 实际为utf8解析 utf8 without bom
@@ -20,15 +13,26 @@ type UnicodeReader struct {
 	size             int    // 数组的大小
 	bp               int    // 当前读到那个位置了 byte position
 	ch               rune   // 当前的位置的rune
+	chLen            int    // 当前的位置的rune占用的字节数
 	lastConversionBp int    // 最后一次转换的unicode的位置
+
+	schStart int // 缓存的字符的开始
+	schEnd   int // 结束
 }
 
 func NewUnicodeReader(buf []byte) *UnicodeReader {
 
 	reader := UnicodeReader{}
-	reader.bp = 0
-	reader.size = len(buf)
+
 	reader.buf = buf
+	reader.size = len(buf)
+	reader.bp = 0
+	reader.ch = rune(-1)
+	reader.chLen = 0
+	reader.lastConversionBp = -1
+
+	reader.schStart = 0
+	reader.schEnd = 0
 
 	return &reader
 }
@@ -138,6 +142,25 @@ func (reader *UnicodeReader) digit(bp int, base int) rune {
 
 	//TODO husd
 	panic("请实现这个方法 UnicodeReader.digit")
+}
+
+//Append a character 记录以下读到的字符
+func (reader *UnicodeReader) putRune(scan bool) {
+
+	//TODO husd 确定下schStart的值
+	reader.schEnd = reader.schEnd + reader.chLen
+	// 是否需要一个sbuf sp呢？
+	if scan {
+		reader.ReadRune()
+	}
+}
+
+func (reader *UnicodeReader) name() *util.Name {
+
+	n := util.Name{}
+	n.NameStr = string(reader.buf[0:reader.schEnd])
+
+	return &n
 }
 
 // 是否是 0 10 110 1110 这样的开头的格式 如果是
