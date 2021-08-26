@@ -1,22 +1,32 @@
 package parser
 
 import (
+	"fmt"
 	"io/ioutil"
 	"unicode/utf8"
 )
 
+type BASE_SYS_NUM int
+
+const (
+	BASE_HEX     BASE_SYS_NUM = 16
+	BASE_OCTAL   BASE_SYS_NUM = 8
+	BASE_DECIMAL BASE_SYS_NUM = 10
+)
+
 // 实际为utf8解析 utf8 without bom
 type UnicodeReader struct {
-	buf  []byte //所有的数组
-	size int    // 数组的大小
-	pos  int    // 当前读到那个位置了
-	ch   rune   // 当前的位置的rune
+	buf              []byte //所有的数组
+	size             int    // 数组的大小
+	bp               int    // 当前读到那个位置了 byte position
+	ch               rune   // 当前的位置的rune
+	lastConversionBp int    // 最后一次转换的unicode的位置
 }
 
 func NewUnicodeReader(buf []byte) *UnicodeReader {
 
 	reader := UnicodeReader{}
-	reader.pos = 0
+	reader.bp = 0
 	reader.size = len(buf)
 	reader.buf = buf
 
@@ -30,30 +40,40 @@ func NewUnicodeReaderFromFile(path string) *UnicodeReader {
 		panic("读取文件错误：" + path)
 	}
 	reader := UnicodeReader{}
-	reader.pos = 0
+	reader.bp = 0
 	reader.size = len(buf)
 	reader.buf = buf
 	return &reader
 }
 
 //调用这个方法之后，会移动指针到下一个位置
-func (reader *UnicodeReader) ReadRune() (rune, int) {
+func (reader *UnicodeReader) ReadRune() (bool, rune, int) {
 
-	pos := reader.pos
-	res, count := reader.CurrentRune()
-	reader.pos = pos + count
+	pos := reader.bp
+	succ, res, count := reader.CurrentRune()
+	if !succ {
+		return succ, res, count
+	}
+	reader.bp = pos + count
 	reader.ch = res
-	return res, count
+	//这里表示读到了类似 \uFF41 这样的字符，就需要尝试看看是不是转换unicode
+	//if res == '\\' {
+	//	reader.convertUnicodeText()
+	//}
+	return true, res, count
 }
 
-func (reader *UnicodeReader) CurrentRune() (rune, int) {
+func (reader *UnicodeReader) CurrentRune() (bool, rune, int) {
 
+	if reader.bp >= reader.size {
+		return false, -1, -1
+	}
 	currentByte := reader.CurrentByte()
 	succ, count := utf8Start(currentByte)
 	if !succ {
 		panic("解析utf8编码失败")
 	}
-	pos := reader.pos
+	pos := reader.bp
 	var res int32
 	switch count {
 	case 1:
@@ -68,19 +88,21 @@ func (reader *UnicodeReader) CurrentRune() (rune, int) {
 	case 4:
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+4])
 		break
+	default:
+		return false, -1, -1
 	}
-	return res, count
+	return true, res, count
 }
 
 func (reader *UnicodeReader) CurrentByte() uint8 {
 
-	reader.checkPos(reader.pos)
-	return reader.buf[reader.pos]
+	reader.checkPos(reader.bp)
+	return reader.buf[reader.bp]
 }
 
 func (reader *UnicodeReader) CurrentPos() int {
 
-	return reader.pos
+	return reader.bp
 }
 
 func (reader *UnicodeReader) ByteAt(pos int) uint8 {
@@ -92,7 +114,7 @@ func (reader *UnicodeReader) ByteAt(pos int) uint8 {
 func (reader *UnicodeReader) checkPos(pos int) {
 
 	if pos >= reader.size {
-		panic("out of index")
+		panic(fmt.Sprintf("out of index pos is : %d", pos))
 	}
 }
 
@@ -104,8 +126,18 @@ func (reader *UnicodeReader) SubByteArray(start int, end int) []byte {
 //读取下一个字符
 func (reader *UnicodeReader) ScanNextChar() {
 
-	//javac里处理了原生的unicode \uFFFE 这里我们不处理这样的字符了
+	//javac里处理了原生的unicode \uFF41 这里我们不处理这样的字符了
 	reader.ReadRune()
+}
+
+/** Convert an ASCII digit from its base (8, 10, or 16)
+ *  to its value.
+ */
+// 把当前的 ch ，转换为对应的值，base值的是进值 例如 8 10 16 例如 \uFF41 转换为：0x10
+func (reader *UnicodeReader) digit(bp int, base int) rune {
+
+	//TODO husd
+	panic("请实现这个方法 UnicodeReader.digit")
 }
 
 // 是否是 0 10 110 1110 这样的开头的格式 如果是

@@ -15,3 +15,5 @@ const (
 	LOWER    CompileState = 8
 	GENERATE CompileState = 9
 )
+
+const DEBUG bool = true

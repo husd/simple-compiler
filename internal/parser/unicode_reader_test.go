@@ -7,14 +7,16 @@ import (
 
 func TestRune(t *testing.T) {
 
-	var str = "北京"
+	var str = "\uFF41"
+	//str = "a"
+	//str = "a"
 	buf := []byte(str)
 	reader := NewUnicodeReader(buf)
-	fmt.Printf("str[%d]=%c\n", 0, reader.ReadRune())
-	fmt.Printf("str[%d]=%c\n", 1, reader.ReadRune())
-
-	for inx, ch := range str {
-
-		fmt.Printf("str[%d]=%c\n", inx, ch)
+	for {
+		succ, ch, _ := reader.ReadRune()
+		if !succ {
+			break
+		}
+		fmt.Printf("ch is: %c\n", ch)
 	}
 }
