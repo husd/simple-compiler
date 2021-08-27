@@ -118,7 +118,7 @@ var TOKEN_KIND_GTGTGT = &tokenKind{">>>", DEFAULT}
 var TOKEN_KIND_PLUSEQ = &tokenKind{"+=", DEFAULT}
 var TOKEN_KIND_SUBEQ = &tokenKind{"-=", DEFAULT}
 var TOKEN_KIND_STAREQ = &tokenKind{"*=", DEFAULT}
-var TOKEN_KIND_SLASHEQ = &tokenKind{"/=", DEFAULT}
+var TOKEN_KIND_SLASHEQ = &tokenKind{"/=", DEFAULT} //斜线等号
 var TOKEN_KIND_AMPEQ = &tokenKind{"&=", DEFAULT}
 var TOKEN_KIND_BAREQ = &tokenKind{"|=", DEFAULT}
 var TOKEN_KIND_CARETEQ = &tokenKind{"^=", DEFAULT}

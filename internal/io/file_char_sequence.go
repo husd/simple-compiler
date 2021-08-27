@@ -41,23 +41,23 @@ func (f FileCharSequence) ByteAt(index int) uint8 {
 	if index < 0 || index >= f.length {
 		panic(fmt.Sprintf("out of index %d", index))
 	}
-	return f.reader.ByteAt(index)
+	return f.reader.byteAt(index)
 }
 
 // 左闭右开
 func (f FileCharSequence) SubCharSequence(start int, end int) string {
 
 	checkScope(start, end, f.length)
-	return string(f.reader.SubByteArray(start, end))
+	return string(f.reader.subByteArray(start, end))
 }
 
 func (f FileCharSequence) ReadRune() rune {
 
-	r, _ := f.reader.ReadRune()
+	r, _ := f.reader.readRune()
 	return r
 }
 
 func (f FileCharSequence) CurrentPos() int {
 
-	return f.reader.CurrentPos()
+	return f.reader.currentPos()
 }

@@ -40,13 +40,13 @@ func NewJavaTokenizer(path string) *JavaTokenizer {
 	return &javaTokenizer
 }
 
-func (jt *JavaTokenizer) ReadToken() *Token {
+func (jt *JavaTokenizer) readToken() *Token {
 
 	//TODO husd start 核心方法 解析出来下一个token是什么
-	pos := int(0)
+	pos := 0
 	reader := jt.reader
 
-	reader.schStart = reader.bp // reset
+	reader.spos = 0 // reset spos
 loop:
 	for {
 		pos = reader.bp
@@ -55,7 +55,7 @@ loop:
 		case ' ':
 		case Layout_char_ff: // 空格 tab 换页等
 			for {
-				reader.ReadRune()
+				reader.scanRune()
 				if reader.ch == '\t' || reader.ch == ' ' || reader.ch == Layout_char_ff {
 					break
 				}
@@ -63,12 +63,12 @@ loop:
 			//
 			break
 		case Layout_char_lf: // 换行
-			reader.ReadRune()
+			reader.scanRune()
 			break
 		case Layout_char_cr: // 回车
-			reader.ReadRune()
+			reader.scanRune()
 			if reader.ch == Layout_char_lf { //有的操作系统是： CRLF
-				reader.ReadRune()
+				reader.scanRune()
 			}
 			break
 		case 'A':
@@ -129,16 +129,46 @@ loop:
 			goto loop
 		case '0': //0比较特殊，例如 0xF 0b10 等数字，需要单独处理
 			//TODO husd
-			reader.ReadRune()
+			reader.scanRune()
 			if reader.ch == 'X' || reader.ch == 'x' {
 				//16进制
-				reader.ReadRune()
+				reader.scanRune()
 				jt.skipUnderLine()
 				if reader.ch == '.' {
 					jt.scanHexFractionAndSuffix(pos, false)
+				} else if reader.digit(pos, 16) < 0 {
+					jt.lexError(pos, "无效的16进制数字")
+				} else {
+					jt.scanNumber(pos, 16)
 				}
+			} else if reader.ch == 'b' || reader.ch == 'B' {
+				if !allowBinaryLiterals {
+					jt.lexError(pos, "不允许使用二进制字面量", jt.source)
+				}
+				reader.scanRune()
+				jt.skipUnderLine()
+				if reader.digit(pos, 2) < 0 {
+					jt.lexError(pos, "无效的二进制数字")
+				} else {
+					jt.scanNumber(pos, 2)
+				}
+			} else {
+				reader.putChar('0')
+				if reader.ch == '_' {
+					savedPos := reader.bp
+					for {
+						reader.scanRune()
+						if reader.ch != '_' {
+							break
+						}
+					}
+					if reader.digit(pos, 10) < 0 {
+						jt.lexError(savedPos, "无效的下划线")
+					}
+				}
+				jt.scanNumber(pos, 8)
 			}
-			break
+			goto loop
 		case '1':
 		case '2':
 		case '3':
@@ -148,27 +178,187 @@ loop:
 		case '7':
 		case '8':
 		case '9':
-			jt.scanNumber()
+			jt.scanNumber(pos, 10)
 			goto loop
 		case '.':
+			//Java里对于点的这种开头的数字
+			reader.scanRune()
+			if reader.ch >= '0' && reader.ch <= '9' {
+				reader.putChar('.')
+				jt.scanFractionAndSuffix(pos)
+			} else if reader.ch == '.' {
+				savedPos := reader.bp
+				reader.putChar('.')
+				reader.putRuneChar('.', true)
+				if reader.ch == '.' {
+					reader.scanRune()
+					reader.putChar('.')
+					jt.tk = TOKEN_KIND_ELLIPSIS
+				} else {
+					jt.lexError(savedPos, "无效的点 . ")
+				}
+			} else {
+				jt.tk = TOKEN_KIND_DOT
+			}
+			goto loop
 		case ',':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_COMMA
+			goto loop
 		case ';':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_SEMI
+			goto loop
 		case '(':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_LPAREN
+			goto loop
 		case ')':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_RPAREN
+			goto loop
 		case '{':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_LBRACE
+			goto loop
 		case '}':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_RBRACE
+			goto loop
 		case '[':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_LBRACKET
+			goto loop
 		case ']':
-		case '/':
-		case '\'':
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_RBRACKET
+			goto loop
+		case '/': // 这里涉及到了注释的解析
+			reader.scanRune()
+			if reader.ch == '/' { //读到了单行注释
+				for {
+					reader.scanRune()
+					if reader.ch == Layout_char_cr ||
+						reader.ch == Layout_char_lf ||
+						reader.bp >= reader.size { // 一直读到换行或者结束
+						break
+					}
+					// 我们不保留注释
+					break
+				}
+			} else if reader.ch == '*' { //读到了多行注释
+				for reader.bp < reader.size {
+					reader.scanRune()
+					if reader.ch == '*' {
+						// 看下一个是不是 /
+						reader.scanRune()
+						if reader.ch == '/' { //找到了结束符号
+							reader.scanRune()
+							break
+						}
+					} else {
+						//不是 * 就继续找
+						reader.scanRune()
+					}
+				}
+				if reader.bp >= reader.size {
+					//找到结束，都没有找到多行注释的结束符号，直接报错
+					jt.lexError(pos, "多行注释没有找到结束符号")
+				}
+			} else if reader.ch == '=' {
+				// 对于Java语法来说，就是遇到了 /= 这种符号
+				jt.tk = TOKEN_KIND_SLASHEQ
+				reader.scanRune()
+			} else {
+				jt.tk = TOKEN_KIND_SLASH //单纯就是 /
+			}
+			goto loop
+		case '\'': //遇到了单引号
+			reader.scanRune()
+			if reader.ch == '\'' { // ''
+				jt.lexError(pos, "空 '' ")
+			} else {
+				if reader.ch == Layout_char_cr ||
+					reader.ch == Layout_char_lf {
+					jt.lexError(pos, "无效的换行")
+				}
+				jt.scanLitChar(pos)
+				if reader.ch == '\'' { // 找到了 ''
+					reader.scanRune()
+					jt.tk = TOKEN_KIND_CHAR_LITERAL
+				} else {
+					jt.lexError(pos, "单引号没有关闭")
+				}
+			}
+			goto loop
 		case '"':
-			fmt.Println("遇到了特殊符号，单独处理")
+			reader.scanRune()
+			for reader.ch != '"' &&
+				reader.ch != Layout_char_cr &&
+				reader.ch != Layout_char_lf &&
+				reader.bp < reader.size {
+				jt.scanLitChar(pos)
+			}
+			if reader.ch == '"' {
+				jt.tk = TOKEN_KIND_STRING_LITERAL
+				reader.scanRune()
+			} else {
+				jt.lexError(pos, "字符串没有关闭 只有一个双引号")
+			}
 		default:
-			fmt.Println("默认逻辑----------------------")
+			if isSpecialOperator(reader.ch) {
+				jt.scanOperator()
+			} else {
+				//走到这里，默认就假设是标识符了 ，按标识符解析
+				isJavaIdentiryStart := false
+				if reader.ch < '\u0080' { // 小于 \u0080 的都是ascii码，已经处理过了，所以肯定不是标识符
+					isJavaIdentiryStart = false
+				} else {
+					//TODO husd 判断是不是标识符
+					isJavaIdentiryStart = true
+				}
+				if isJavaIdentiryStart {
+					jt.scanIdentify()
+				} else if reader.bp == reader.size ||
+					reader.ch == Layout_char_eoi ||
+					reader.bp+1 == reader.size { //JTS 3.5 主要说的EOI的问题
+					jt.tk = TOKEN_KIND_EOF
+					pos = reader.size
+				} else {
+					jt.lexError(pos, "无效的字符:", reader.ch)
+					reader.scanRune()
+				}
+			}
+			goto loop
 		}
 	}
 	t := Token{}
 	return &t
+}
+
+func isSpecialOperator(ch rune) bool {
+
+	switch ch {
+	case '!':
+	case '%':
+	case '&':
+	case '*':
+	case '?':
+	case '+':
+	case '-':
+	case ':':
+	case '<':
+	case '=':
+	case '>':
+	case '^':
+	case '|':
+	case '~':
+	case '@':
+		return true
+	default:
+		return false
+	}
+	return false
 }
 
 func (jt *JavaTokenizer) scanIdentify() {
@@ -268,7 +458,7 @@ func (jt *JavaTokenizer) scanIdentify() {
 		case '\u0019':
 		case '\u001B':
 		case '\u007F':
-			reader.ReadRune() //这里直接就忽略了，但是我们的实现，没有忽略这些字符，暂时先这么做，后续优化 TODO husd
+			reader.scanRune() //这里直接就忽略了，但是我们的实现，没有忽略这些字符，暂时先这么做，后续优化 TODO husd
 			continue
 		case '\u001A': // EOI 也是一个有效的标识符 That's the Ctrl+Z control code.
 			if reader.bp >= reader.size {
@@ -281,7 +471,7 @@ func (jt *JavaTokenizer) scanIdentify() {
 				}
 				return
 			}
-			reader.ReadRune()
+			reader.scanRune()
 			continue
 		default:
 			if reader.ch < '\u0080' {
@@ -300,7 +490,7 @@ func (jt *JavaTokenizer) scanIdentify() {
 				//Params:
 				//codePoint – the character (Unicode code point) to be tested.
 				//Returns:
-				//true if the character is an ignorable control character that may be part of a Java or Unicode identifier; false otherwise.
+				//true if the character is an ignorable control character that may be part of a Java or Unicode identifier false otherwise.
 				isIdentify = false
 			}
 			if !isIdentify {
@@ -310,11 +500,11 @@ func (jt *JavaTokenizer) scanIdentify() {
 			}
 		}
 		// break 之后，执行到这里了，扫描下一个字符
-		reader.ReadRune()
+		reader.scanRune()
 	}
 }
 
-func (jt *JavaTokenizer) scanNumber() {
+func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 
 	//TODO husd
 }
@@ -324,12 +514,12 @@ func (jt *JavaTokenizer) skipUnderLine() {
 	if jt.reader.ch == '_' {
 		jt.lexError(jt.reader.bp, "数字里有无效的下划线")
 		for jt.reader.ch == '_' {
-			jt.reader.ReadRune()
+			jt.reader.scanRune()
 		}
 	}
 }
 
-func (jt *JavaTokenizer) lexError(bp int, msg string) {
+func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 
 	fmt.Println("词法解析错误，位置：", bp, " msg:", msg)
 	jt.tk = TOKEN_KIND_ERROR
@@ -408,7 +598,7 @@ func (jt *JavaTokenizer) scanDigits(pos int, radix int) {
 			res = reader.ch
 			savedPos = reader.bp
 		}
-		reader.ReadRune()
+		reader.scanRune()
 		if reader.digit(pos, radix) < 0 && reader.ch == '_' {
 			break
 		}
@@ -416,4 +606,94 @@ func (jt *JavaTokenizer) scanDigits(pos int, radix int) {
 	if res == '_' {
 		jt.lexError(savedPos, "无效的下划线")
 	}
+}
+
+// read next char or string literal and copy into sbuf
+func (jt *JavaTokenizer) scanLitChar(pos int) {
+
+	reader := jt.reader
+	if reader.ch == '\\' {
+		if reader.peekChar() == '\\' && !reader.isUnicode() {
+			reader.skipChar()
+			reader.putRuneChar('\\', true)
+		} else {
+			reader.scanRune()
+			switch reader.ch {
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+				leadCh := reader.ch
+				oct := reader.digit(pos, 8)
+				reader.scanRune()
+				if reader.ch >= '0' && reader.ch <= '7' { //解析八进制的数字
+					oct = oct*8 + reader.digit(pos, 8)
+					reader.scanRune()
+					if leadCh <= '3' && reader.ch >= '0' && reader.ch <= '7' {
+						oct = oct*8 + reader.digit(pos, 8)
+						reader.scanRune()
+					}
+				}
+				reader.putChar(oct)
+				break
+			case 'b':
+				reader.putRuneChar('\b', true)
+				break
+			case 't':
+				reader.putRuneChar('\t', true)
+				break
+			case 'n':
+				reader.putRuneChar('\n', true)
+				break
+			case 'f':
+				reader.putRuneChar('\f', true)
+				break
+			case 'r':
+				reader.putRuneChar('\r', true)
+				break
+			case '\'':
+				reader.putRuneChar('\'', true)
+				break
+			case '"':
+				reader.putRuneChar('"', true)
+				break
+			case '\\':
+				reader.putRuneChar('\\', true)
+				break
+			default:
+				jt.lexError(reader.bp, "illegal.esc.char")
+			}
+		}
+	} else if reader.bp != reader.size {
+		reader.putRune(true)
+	}
+}
+
+// 扫描操作符号 需要尽可能的长
+func (jt *JavaTokenizer) scanOperator() {
+
+	reader := jt.reader
+	for {
+		reader.putRune(false)
+		newName := reader.name()
+		tk1 := lookupTokenKind(newName)
+		if tk1 == TOKEN_KIND_IDENTIFIER { //?
+			reader.spos--
+			break
+		}
+		jt.tk = tk1
+		reader.scanRune()
+		if !isSpecialOperator(reader.ch) {
+			break
+		}
+	}
+}
+
+func (jt *JavaTokenizer) scanFractionAndSuffix(pos int) {
+
+	//TODO husd
 }

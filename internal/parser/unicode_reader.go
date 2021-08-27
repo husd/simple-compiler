@@ -11,13 +11,13 @@ import (
 type UnicodeReader struct {
 	buf              []byte //所有的数组
 	size             int    // 数组的大小
-	bp               int    // 当前读到那个位置了 byte position
-	ch               rune   // 当前的位置的rune
-	chLen            int    // 当前的位置的rune占用的字节数
+	bp               int    // 当前读到那个位置了 byte position 这个位置还没被读取
+	ch               rune   // 最后一次读到的 rune
+	chLen            int    // 最后一次读到的 rune 占用的字节数
 	lastConversionBp int    // 最后一次转换的unicode的位置
 
-	schStart int // 缓存的字符的开始
-	schEnd   int // 结束
+	sbuf *[]byte // 切片，所有的已扫描到的数据
+	spos int     // 已扫描的数据的长度
 }
 
 func NewUnicodeReader(buf []byte) *UnicodeReader {
@@ -31,8 +31,11 @@ func NewUnicodeReader(buf []byte) *UnicodeReader {
 	reader.chLen = 0
 	reader.lastConversionBp = -1
 
-	reader.schStart = 0
-	reader.schEnd = 0
+	const SBUF_LEN = 128
+	const SBUF_MAX = 128
+	sbuf := make([]byte, SBUF_LEN, SBUF_MAX)
+	reader.sbuf = &sbuf
+	reader.spos = 0
 
 	return &reader
 }
@@ -51,33 +54,42 @@ func NewUnicodeReaderFromFile(path string) *UnicodeReader {
 }
 
 //调用这个方法之后，会移动指针到下一个位置
-func (reader *UnicodeReader) ReadRune() (bool, rune, int) {
+func (reader *UnicodeReader) scanRune() bool {
 
 	pos := reader.bp
-	succ, res, count := reader.CurrentRune()
-	if !succ {
-		return succ, res, count
+	if pos >= reader.size {
+		return false
 	}
+	succ, res, count := reader.runeAt(pos)
+	if !succ {
+		return false
+	}
+	reader.chLen = count
 	reader.bp = pos + count
 	reader.ch = res
 	//这里表示读到了类似 \uFF41 这样的字符，就需要尝试看看是不是转换unicode
 	//if res == '\\' {
-	//	reader.convertUnicodeText()
+	//	reader.convertUnicode()
 	//}
-	return true, res, count
+	return true
 }
 
-func (reader *UnicodeReader) CurrentRune() (bool, rune, int) {
+func (reader *UnicodeReader) peekChar() rune {
 
-	if reader.bp >= reader.size {
-		return false, -1, -1
+	_, res, _ := reader.runeAt(reader.bp)
+	return res
+}
+
+func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
+
+	if pos >= reader.size {
+		return false, 0, 0
 	}
-	currentByte := reader.CurrentByte()
+	currentByte := reader.byteAt(pos)
 	succ, count := utf8Start(currentByte)
 	if !succ {
 		panic("解析utf8编码失败")
 	}
-	pos := reader.bp
 	var res int32
 	switch count {
 	case 1:
@@ -93,23 +105,22 @@ func (reader *UnicodeReader) CurrentRune() (bool, rune, int) {
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+4])
 		break
 	default:
-		return false, -1, -1
+		return false, 0, 0
 	}
 	return true, res, count
 }
 
-func (reader *UnicodeReader) CurrentByte() uint8 {
+func (reader *UnicodeReader) currentByte() uint8 {
 
-	reader.checkPos(reader.bp)
-	return reader.buf[reader.bp]
+	return reader.byteAt(reader.bp)
 }
 
-func (reader *UnicodeReader) CurrentPos() int {
+func (reader *UnicodeReader) currentPos() int {
 
 	return reader.bp
 }
 
-func (reader *UnicodeReader) ByteAt(pos int) uint8 {
+func (reader *UnicodeReader) byteAt(pos int) uint8 {
 
 	reader.checkPos(pos)
 	return reader.buf[pos]
@@ -122,16 +133,9 @@ func (reader *UnicodeReader) checkPos(pos int) {
 	}
 }
 
-func (reader *UnicodeReader) SubByteArray(start int, end int) []byte {
+func (reader *UnicodeReader) subByteArray(start int, end int) []byte {
 
 	return reader.buf[start:end]
-}
-
-//读取下一个字符
-func (reader *UnicodeReader) ScanNextChar() {
-
-	//javac里处理了原生的unicode \uFF41 这里我们不处理这样的字符了
-	reader.ReadRune()
 }
 
 /** Convert an ASCII digit from its base (8, 10, or 16)
@@ -147,23 +151,59 @@ func (reader *UnicodeReader) digit(bp int, base int) rune {
 //Append a character 记录以下读到的字符
 func (reader *UnicodeReader) putRune(scan bool) {
 
-	//TODO husd 确定下schStart的值
-	reader.schEnd = reader.schEnd + reader.chLen
-	// 是否需要一个sbuf sp呢？
+	reader.putRuneChar(reader.ch, scan)
+}
+
+func (reader *UnicodeReader) putChar(r rune) {
+
+	reader.putRuneChar(r, false)
+}
+
+func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
+
+	spos := reader.spos
+	if r >= 0 && r <= 255 {
+		ensureCapacity(reader.sbuf, spos+1)
+		(*reader.sbuf)[spos] = reader.buf[uint8(r)]
+		reader.spos = spos + 1
+	} else {
+		ensureCapacity(reader.sbuf, spos+4)
+		(*reader.sbuf)[spos] = reader.buf[uint8(r>>24)]
+		(*reader.sbuf)[spos+1] = reader.buf[uint8(r>>16)]
+		(*reader.sbuf)[spos+2] = reader.buf[uint8(r>>8)]
+		(*reader.sbuf)[spos+3] = reader.buf[uint8(r)]
+		reader.spos = spos + 4
+	}
 	if scan {
-		reader.ReadRune()
+		reader.scanRune()
 	}
 }
 
 func (reader *UnicodeReader) name() *util.Name {
 
 	n := util.Name{}
-	n.NameStr = string(reader.buf[0:reader.schEnd])
+	n.NameStr = string(*reader.sbuf)
 
 	return &n
 }
 
-// 是否是 0 10 110 1110 这样的开头的格式 如果是
+func (reader *UnicodeReader) isUnicode() bool {
+
+	return reader.lastConversionBp == reader.bp
+}
+
+func (reader *UnicodeReader) skipChar() {
+
+	pos := reader.bp
+	succ, _, count := reader.runeAt(reader.bp + reader.chLen)
+	if succ {
+		reader.bp = pos + count
+		reader.chLen = count
+		//reader.ch 这个不变，还是原来的值
+	}
+}
+
+// 是否是 0 10 110 1110 这样的开头的格式 我们读取的是字节数组
 func utf8Start(b uint8) (bool, int) {
 
 	// 0XXXXXXX
@@ -196,4 +236,22 @@ func checkUtf8Start10(b uint8) {
 	if !utf8Start10(b) {
 		panic("无效的utf8字符")
 	}
+}
+
+func ensureCapacity(sbuf *[]byte, max int) {
+
+	currentCap := cap(*sbuf)
+	if currentCap < max {
+		newCap := calcNewLength(currentCap, max)
+		newSbuf := make([]byte, len(*sbuf), newCap)
+		sbuf = &newSbuf
+	}
+}
+
+func calcNewLength(len int, max int) int {
+
+	for len < max+1 {
+		len = len * 2
+	}
+	return len
 }

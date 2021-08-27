@@ -7,16 +7,16 @@ import (
 
 func TestRune(t *testing.T) {
 
-	var str = "\uFF41"
+	var str = "中华人民123\u4E25"
 	//str = "a"
 	//str = "a"
 	buf := []byte(str)
 	reader := NewUnicodeReader(buf)
 	for {
-		succ, ch, _ := reader.ReadRune()
+		succ := reader.scanRune()
 		if !succ {
 			break
 		}
-		fmt.Printf("ch is: %c\n", ch)
+		fmt.Printf("ch is: %c\n", reader.ch)
 	}
 }
