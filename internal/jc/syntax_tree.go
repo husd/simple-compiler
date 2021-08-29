@@ -1,4 +1,4 @@
-package tree
+package jc
 
 // 这里是整个语法树的定义
 type syntaxTree interface {

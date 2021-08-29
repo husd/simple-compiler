@@ -2,5 +2,6 @@ package parser
 
 func GetParserFromFactory(path string) Parser {
 
-	return NewJavacParser(path)
+	parser := NewJavacParser(path)
+	return parser
 }

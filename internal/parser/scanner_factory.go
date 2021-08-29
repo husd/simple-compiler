@@ -1,6 +1,6 @@
 package parser
 
-func GetScannerLexerFromFactory(path string) Scanner {
+func GetScannerLexerFromFactory(path string) *Scanner {
 
 	return NewScannerLexer(path)
 }

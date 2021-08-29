@@ -12,11 +12,11 @@ type lexer interface {
 	/**
 	 * 返回当前指针指向的 token
 	 */
-	CurrentToken() *Token
+	Token() token
 
-	Ahead(len int) *Token
+	Ahead(len int) token
 
-	PreToken() *Token
+	PreToken() token
 
 	ErrPos() int
 

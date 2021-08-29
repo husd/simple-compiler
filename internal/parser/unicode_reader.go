@@ -20,10 +20,10 @@ type UnicodeReader struct {
 	spos int     // 已扫描的数据的长度
 }
 
-func NewUnicodeReader(buf []byte) *UnicodeReader {
+func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
 
 	reader := UnicodeReader{}
-
+	buf := (*bufPoint)
 	reader.buf = buf
 	reader.size = len(buf)
 	reader.bp = 0
@@ -37,6 +37,7 @@ func NewUnicodeReader(buf []byte) *UnicodeReader {
 	reader.sbuf = &sbuf
 	reader.spos = 0
 
+	reader.scanRune()
 	return &reader
 }
 
@@ -46,11 +47,7 @@ func NewUnicodeReaderFromFile(path string) *UnicodeReader {
 	if err != nil {
 		panic("读取文件错误：" + path)
 	}
-	reader := UnicodeReader{}
-	reader.bp = 0
-	reader.size = len(buf)
-	reader.buf = buf
-	return &reader
+	return NewUnicodeReader(&buf)
 }
 
 //调用这个方法之后，会移动指针到下一个位置
@@ -142,10 +139,20 @@ func (reader *UnicodeReader) subByteArray(start int, end int) []byte {
  *  to its value.
  */
 // 把当前的 ch ，转换为对应的值，base值的是进值 例如 8 10 16 例如 \uFF41 转换为：0x10
+// bp只是记录错误日志使用 如果当前字符不是数字，那么就返回-1
+// 词法分析器
+const digitStr string = "0123456789abcdef"
+
 func (reader *UnicodeReader) digit(bp int, base int) rune {
 
-	//TODO husd
-	panic("请实现这个方法 UnicodeReader.digit")
+	ch := reader.ch
+	res := digitRune(ch, base)
+	if res >= 0 && ch > 0x7f {
+		fmt.Println("读到了无效的ascii数字，请检查ch :", ch, " bp: ", bp+1, " base:", base)
+		// TODO husd DEBUG
+		reader.ch = rune(digitStr[res])
+	}
+	return res
 }
 
 //Append a character 记录以下读到的字符

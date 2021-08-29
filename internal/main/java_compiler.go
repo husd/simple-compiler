@@ -4,8 +4,9 @@ import (
 	"container/list"
 	"fmt"
 	jcComp "husd.com/v0/compiler"
+	"husd.com/v0/jc"
 	"husd.com/v0/parser"
-	"husd.com/v0/tree"
+	"husd.com/v0/util"
 )
 
 type RES int
@@ -22,11 +23,12 @@ var fileMap = make(map[string]int) // 已经解析过的文件的集合
 func compiler(files []string) RES {
 
 	//转换源代码文件
-	parseFiles(files)
+	context := util.NewContext()
+	parseFiles(files, context)
 	return SUCCESS
 }
 
-func parseFiles(files []string) *list.List {
+func parseFiles(files []string, context *util.Context) *list.List {
 
 	res := list.New()
 	len := len(files)
@@ -35,13 +37,13 @@ func parseFiles(files []string) *list.List {
 		if _, ok := fileMap[f]; !ok {
 			fmt.Println("开始编译文件: ", f)
 			fileMap[f] = 1
-			res.PushBack(parseFile(f))
+			res.PushBack(parseFile(f, context))
 		}
 	}
 	return res
 }
 
-func parseFile(path string) tree.JCCompilationUnit {
+func parseFile(path string, context *util.Context) jc.JCCompilationUnit {
 
 	p := parser.GetParserFromFactory(path)
 	res := p.ParseJCCompilationUnit()

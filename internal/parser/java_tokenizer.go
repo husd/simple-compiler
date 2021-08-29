@@ -40,13 +40,12 @@ func NewJavaTokenizer(path string) *JavaTokenizer {
 	return &javaTokenizer
 }
 
-func (jt *JavaTokenizer) readToken() *Token {
+func (jt *JavaTokenizer) readToken() token {
 
-	//TODO husd start 核心方法 解析出来下一个token是什么
 	pos := 0
 	reader := jt.reader
-
 	reader.spos = 0 // reset spos
+	endPos := 0
 loop:
 	for {
 		pos = reader.bp
@@ -332,8 +331,19 @@ loop:
 			goto loop
 		}
 	}
-	t := Token{}
-	return &t
+	endPos = reader.bp
+	switch jt.tk.Tag {
+	case TOKEN_TAG_DEFAULT:
+		return newDefaultToken(jt.tk, pos, endPos)
+	case TOKEN_TAG_STRING:
+		return newStringToken(jt.tk, pos, endPos, reader.name().NameStr)
+	case TOKEN_TAG_NUMERIC:
+		return newNumericToken(jt.tk, pos, endPos, reader.name().NameStr, jt.radix)
+	case TOKEN_TAG_NAMED:
+		return newNamedToken(jt.tk, pos, endPos, reader.name())
+	default:
+		panic("错误的token kind ")
+	}
 }
 
 func isSpecialOperator(ch rune) bool {
@@ -504,9 +514,46 @@ func (jt *JavaTokenizer) scanIdentify() {
 	}
 }
 
+// 词法分析要分析出来源代码里的 数字，并转换为对应的10进制数字，目前支持 2进制 8进制 10进制 16进制的数字
 func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 
-	//TODO husd
+	jt.radix = radix
+	//对于8进制，按10进制规则来，因为有可能是一个单精度数字的字面量 0x1.0p1
+	digitRadix := radix
+	if radix == 8 {
+		digitRadix = 10
+	}
+	seenDigit := false
+	reader := jt.reader
+	if reader.digit(pos, digitRadix) >= 0 {
+		seenDigit = true
+		jt.scanDigits(pos, digitRadix)
+	}
+	if radix == 16 {
+		if reader.ch == '.' {
+			jt.scanHexFractionAndSuffix(pos, seenDigit)
+		} else if reader.ch == 'p' || reader.ch == 'P' {
+			if seenDigit {
+				jt.scanHexExponentAndSuffix(pos)
+			}
+		}
+	} else if radix == 10 {
+		if reader.ch == '.' {
+			reader.putRune(true)
+			jt.scanFractionAndSuffix(pos)
+		} else if reader.ch == 'e' || reader.ch == 'E' ||
+			reader.ch == 'f' || reader.ch == 'F' ||
+			reader.ch == 'd' || reader.ch == 'D' {
+			jt.scanFractionAndSuffix(pos)
+		}
+	} else {
+		if reader.ch == 'l' || reader.ch == 'L' {
+			reader.scanRune()
+			jt.tk = TOKEN_KIND_LONG_LITERAL
+		} else {
+			jt.tk = TOKEN_KIND_INT_LITERAL
+		}
+	}
 }
 
 func (jt *JavaTokenizer) skipUnderLine() {
@@ -526,7 +573,7 @@ func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 	jt.errPos = bp
 }
 
-// Read fractional part and 'd' or 'f' suffix of floating point number.
+// 16进制小数部分和后缀 d或者f    float a = 10.3f  double b = 102.3d
 func (jt *JavaTokenizer) scanHexFractionAndSuffix(pos int, seenDigit bool) {
 
 	jt.radix = 16
@@ -544,7 +591,7 @@ func (jt *JavaTokenizer) scanHexFractionAndSuffix(pos int, seenDigit bool) {
 	}
 }
 
-// Read fractional part of hexadecimal floating point number.
+// 16进制小数部分
 func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 
 	reader := jt.reader
@@ -582,7 +629,7 @@ func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 	}
 }
 
-// 扫描数字
+// 扫描数字 注意区分 scanNumber number的含义更丰富
 func (jt *JavaTokenizer) scanDigits(pos int, radix int) {
 
 	reader := jt.reader
@@ -693,7 +740,45 @@ func (jt *JavaTokenizer) scanOperator() {
 	}
 }
 
+// 读取小数部分和单精度小数的d 或者 f 的后缀
+// float a = 10.4f double b = 10.00d
 func (jt *JavaTokenizer) scanFractionAndSuffix(pos int) {
 
-	//TODO husd
+	jt.radix = 10
+	jt.scanFraction(pos)
+	reader := jt.reader
+	if reader.ch == 'f' || reader.ch == 'F' {
+		reader.putRune(true)
+		jt.tk = TOKEN_KIND_FLOAT_LITERAL
+	} else {
+		if reader.ch == 'd' || reader.ch == 'D' {
+			reader.putRune(true)
+		}
+		jt.tk = TOKEN_KIND_DOUBLE_LITERAL
+	}
+}
+
+//查找小数部分
+func (jt *JavaTokenizer) scanFraction(pos int) {
+
+	jt.skipUnderLine()
+	reader := jt.reader
+	if '0' <= reader.ch && reader.ch <= '9' {
+		jt.scanDigits(pos, 10)
+	}
+	spos := reader.spos
+	if reader.ch == 'e' || reader.ch == 'E' { // double c1 = 120.0e32; 这种
+		reader.putRune(true)
+		jt.skipUnderLine()
+		if reader.ch == '+' || reader.ch == '-' {
+			reader.putRune(true)
+		}
+		jt.skipUnderLine()
+		if '0' <= reader.ch && reader.ch <= '9' {
+			jt.scanDigits(pos, 10)
+			return
+		}
+		jt.lexError(pos, "无效的.fp.lit pos:", pos)
+		reader.spos = spos
+	}
 }
