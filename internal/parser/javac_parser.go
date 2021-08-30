@@ -41,19 +41,14 @@ func (jp *JavacParser) ParseJCCompilationUnit() jc.JCCompilationUnit {
 	//seenImport := false
 	//seenPackage := false
 	//consumedToplevelDoc := false
-	lex := jp.lex
-	tok := lex.Token()
-	fmt.Println("current token is : ", tok.GetTokenKind())
-
-	for jp.token != nil {
+	for {
+		tok := jp.token
+		fmt.Println("current token name: ", tok.GetName().NameStr)
+		if tok.GetTokenKind() == TOKEN_KIND_EOF {
+			break
+		}
 		jp.nextToken()
-		fmt.Println("current token is : ", jp.token)
 	}
-
-	if tok.GetTokenKind() == TOKEN_KIND_PACKAGE {
-
-	}
-
 	return jc.JCCompilationUnit{}
 }
 

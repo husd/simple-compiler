@@ -18,18 +18,23 @@ func newDefaultToken(tk *tokenKind, start int, end int) *defaultToken {
 }
 
 func (dt *defaultToken) GetTokenKind() *tokenKind {
+
 	return dt.tk
 }
 
 func (dt *defaultToken) GetName() *util.Name {
-	panic("implement me")
+
+	n := util.Name{NameStr: dt.tk.Name, Index: 0}
+	return &n
 }
 
 func (dt *defaultToken) GetStringVal() string {
-	panic("implement me")
+
+	return "默认名字"
 }
 
 func (dt *defaultToken) GetRadix() int {
+
 	panic("implement me")
 }
 

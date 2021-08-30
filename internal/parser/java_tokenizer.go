@@ -35,7 +35,7 @@ func NewJavaTokenizer(path string) *JavaTokenizer {
 	javaTokenizer := JavaTokenizer{}
 	javaTokenizer.reader = NewUnicodeReaderFromFile(path)
 	javaTokenizer.source = v
-	javaTokenizer.tk = TOKEN_KIND_ERROR
+	javaTokenizer.tk = TOKEN_KIND_DEF
 
 	return &javaTokenizer
 }
@@ -50,84 +50,32 @@ loop:
 	for {
 		pos = reader.bp
 		switch reader.ch {
-		case '\t':
-		case ' ':
-		case Layout_char_ff: // 空格 tab 换页等
+		case '\t', ' ', Layout_char_ff: // 空格(32) tab(9) 换页(12)等
 			for {
 				reader.scanRune()
-				if reader.ch == '\t' || reader.ch == ' ' || reader.ch == Layout_char_ff {
+				if !(reader.ch == '\t' || reader.ch == ' ' || reader.ch == Layout_char_ff) {
 					break
 				}
 			}
-			//
-			break
 		case Layout_char_lf: // 换行
 			reader.scanRune()
-			break
 		case Layout_char_cr: // 回车
 			reader.scanRune()
 			if reader.ch == Layout_char_lf { //有的操作系统是： CRLF
 				reader.scanRune()
 			}
-			break
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z':
-		case '$':
-		case '_': //java的标识符，只能以这些字符开头
+		case
+			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+			'U', 'V', 'W', 'X', 'Y', 'Z',
+			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+			'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+			'u', 'v', 'w', 'x', 'y', 'z',
+			'$', '_':
+			//java的标识符，只能以这些字符开头
 			jt.scanIdentify()
-			goto loop
+			break loop
 		case '0': //0比较特殊，例如 0xF 0b10 等数字，需要单独处理
-			//TODO husd
 			reader.scanRune()
 			if reader.ch == 'X' || reader.ch == 'x' {
 				//16进制
@@ -167,18 +115,10 @@ loop:
 				}
 				jt.scanNumber(pos, 8)
 			}
-			goto loop
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
+			break loop
+		case '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			jt.scanNumber(pos, 10)
-			goto loop
+			break loop
 		case '.':
 			//Java里对于点的这种开头的数字
 			reader.scanRune()
@@ -199,39 +139,39 @@ loop:
 			} else {
 				jt.tk = TOKEN_KIND_DOT
 			}
-			goto loop
+			break loop
 		case ',':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_COMMA
-			goto loop
+			break loop
 		case ';':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_SEMI
-			goto loop
+			break loop
 		case '(':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_LPAREN
-			goto loop
+			break loop
 		case ')':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_RPAREN
-			goto loop
+			break loop
 		case '{':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_LBRACE
-			goto loop
+			break loop
 		case '}':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_RBRACE
-			goto loop
+			break loop
 		case '[':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_LBRACKET
-			goto loop
+			break loop
 		case ']':
 			reader.scanRune()
 			jt.tk = TOKEN_KIND_RBRACKET
-			goto loop
+			break loop
 		case '/': // 这里涉及到了注释的解析
 			reader.scanRune()
 			if reader.ch == '/' { //读到了单行注释
@@ -240,11 +180,15 @@ loop:
 					if reader.ch == Layout_char_cr ||
 						reader.ch == Layout_char_lf ||
 						reader.bp >= reader.size { // 一直读到换行或者结束
+						reader.scanRune() // 读下个字符
 						break
 					}
-					// 我们不保留注释
-					break
 				}
+				/**    这里要注意，读完了注释内容，这个时候要继续去读下一个内容，如下这种情况：
+				 *      int a // 1234
+				 *       = 4;
+				 */
+				goto loop
 			} else if reader.ch == '*' { //读到了多行注释
 				for reader.bp < reader.size {
 					reader.scanRune()
@@ -253,7 +197,10 @@ loop:
 						reader.scanRune()
 						if reader.ch == '/' { //找到了结束符号
 							reader.scanRune()
-							break
+							/**
+							 * 这里同单行注释是一样的，找到了结束符号，就需要继续循环
+							 */
+							goto loop
 						}
 					} else {
 						//不是 * 就继续找
@@ -263,6 +210,7 @@ loop:
 				if reader.bp >= reader.size {
 					//找到结束，都没有找到多行注释的结束符号，直接报错
 					jt.lexError(pos, "多行注释没有找到结束符号")
+					break loop
 				}
 			} else if reader.ch == '=' {
 				// 对于Java语法来说，就是遇到了 /= 这种符号
@@ -271,7 +219,7 @@ loop:
 			} else {
 				jt.tk = TOKEN_KIND_SLASH //单纯就是 /
 			}
-			goto loop
+			break loop
 		case '\'': //遇到了单引号
 			reader.scanRune()
 			if reader.ch == '\'' { // ''
@@ -289,7 +237,7 @@ loop:
 					jt.lexError(pos, "单引号没有关闭")
 				}
 			}
-			goto loop
+			break loop
 		case '"':
 			reader.scanRune()
 			for reader.ch != '"' &&
@@ -304,19 +252,24 @@ loop:
 			} else {
 				jt.lexError(pos, "字符串没有关闭 只有一个双引号")
 			}
+			break loop
 		default:
 			if isSpecialOperator(reader.ch) {
 				jt.scanOperator()
 			} else {
 				//走到这里，默认就假设是标识符了 ，按标识符解析
-				isJavaIdentiryStart := false
+				isJavaIdentifyPart := false
 				if reader.ch < '\u0080' { // 小于 \u0080 的都是ascii码，已经处理过了，所以肯定不是标识符
-					isJavaIdentiryStart = false
+					isJavaIdentifyPart = false
 				} else {
 					//TODO husd 判断是不是标识符
-					isJavaIdentiryStart = true
+					isJavaIdentifyPart = true
 				}
-				if isJavaIdentiryStart {
+				if reader.bp == reader.size ||
+					reader.bp+1 == reader.size {
+					jt.tk = TOKEN_KIND_EOF
+					pos = reader.size
+				} else if isJavaIdentifyPart {
 					jt.scanIdentify()
 				} else if reader.bp == reader.size ||
 					reader.ch == Layout_char_eoi ||
@@ -328,7 +281,7 @@ loop:
 					reader.scanRune()
 				}
 			}
-			goto loop
+			break loop
 		}
 	}
 	endPos = reader.bp
@@ -349,21 +302,10 @@ loop:
 func isSpecialOperator(ch rune) bool {
 
 	switch ch {
-	case '!':
-	case '%':
-	case '&':
-	case '*':
-	case '?':
-	case '+':
-	case '-':
-	case ':':
-	case '<':
-	case '=':
-	case '>':
-	case '^':
-	case '|':
-	case '~':
-	case '@':
+	case
+		'!', '%', '&', '*', '?',
+		'+', '-', ':', '<', '=',
+		'>', '^', '|', '~', '@':
 		return true
 	default:
 		return false
@@ -380,102 +322,27 @@ func (jt *JavaTokenizer) scanIdentify() {
 	reader.putRune(true)
 	for {
 		switch reader.ch {
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z':
-		case '$':
-		case '_':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			break // continue to find next one
-		case '\u0000':
-		case '\u0001':
-		case '\u0002':
-		case '\u0003':
-		case '\u0004':
-		case '\u0005':
-		case '\u0006':
-		case '\u0007':
-		case '\u0008':
-		case '\u000E':
-		case '\u000F':
-		case '\u0010':
-		case '\u0011':
-		case '\u0012':
-		case '\u0013':
-		case '\u0014':
-		case '\u0015':
-		case '\u0016':
-		case '\u0017':
-		case '\u0018':
-		case '\u0019':
-		case '\u001B':
-		case '\u007F':
+		case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+			'U', 'V', 'W', 'X', 'Y', 'Z',
+			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+			'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+			'u', 'v', 'w', 'x', 'y', 'z',
+			'$', '_',
+			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		case '\u0000', '\u0001', '\u0002', '\u0003',
+			'\u0004', '\u0005', '\u0006', '\u0007',
+			'\u0008', '\u000E', '\u000F', '\u0010',
+			'\u0011', '\u0012', '\u0013', '\u0014',
+			'\u0015', '\u0016', '\u0017',
+			'\u0018', '\u0019', '\u001B':
 			reader.scanRune() //这里直接就忽略了，但是我们的实现，没有忽略这些字符，暂时先这么做，后续优化 TODO husd
-			continue
 		case '\u001A': // EOI 也是一个有效的标识符 That's the Ctrl+Z control code.
 			if reader.bp >= reader.size {
 				// 这个名字，可能需要缓存，因为关键字很多，没必要非得转字符串，把字节计算一下hash
 				// 能提高下性能，这里要存一下符号表了，可以指定一下字节数组的位置和长度，就行了。
-				jt.name = reader.name() // 不仅仅有标识符的名字，还有其它属性 TODO husd
-				//jt.tk = tokens.lookupKind(name) //TODO husd
+				jt.name = reader.name()          // 不仅仅有标识符的名字，还有其它属性 TODO husd
+				jt.tk = lookupTokenKind(jt.name) //TODO husd
 				if compiler.DEBUG {
 					fmt.Println("name is :", jt.name)
 				}
@@ -505,12 +372,12 @@ func (jt *JavaTokenizer) scanIdentify() {
 			}
 			if !isIdentify {
 				jt.name = reader.name()
-				//jt.tk = tokens.lookupKind(name) //TODO husd
+				jt.tk = lookupTokenKind(jt.name)
 				return //end
 			}
 		}
 		// break 之后，执行到这里了，扫描下一个字符
-		reader.scanRune()
+		reader.putRune(true)
 	}
 }
 
@@ -568,7 +435,7 @@ func (jt *JavaTokenizer) skipUnderLine() {
 
 func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 
-	fmt.Println("词法解析错误，位置：", bp, " msg:", msg)
+	fmt.Println("---------------- error -------------词法解析错误，位置：", bp, " msg:", msg)
 	jt.tk = TOKEN_KIND_ERROR
 	jt.errPos = bp
 }
@@ -666,14 +533,7 @@ func (jt *JavaTokenizer) scanLitChar(pos int) {
 		} else {
 			reader.scanRune()
 			switch reader.ch {
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
+			case '0', '1', '2', '3', '4', '5', '6', '7':
 				leadCh := reader.ch
 				oct := reader.digit(pos, 8)
 				reader.scanRune()
@@ -686,31 +546,22 @@ func (jt *JavaTokenizer) scanLitChar(pos int) {
 					}
 				}
 				reader.putChar(oct)
-				break
 			case 'b':
 				reader.putRuneChar('\b', true)
-				break
 			case 't':
 				reader.putRuneChar('\t', true)
-				break
 			case 'n':
 				reader.putRuneChar('\n', true)
-				break
 			case 'f':
 				reader.putRuneChar('\f', true)
-				break
 			case 'r':
 				reader.putRuneChar('\r', true)
-				break
 			case '\'':
 				reader.putRuneChar('\'', true)
-				break
 			case '"':
 				reader.putRuneChar('"', true)
-				break
 			case '\\':
 				reader.putRuneChar('\\', true)
-				break
 			default:
 				jt.lexError(reader.bp, "illegal.esc.char")
 			}
@@ -726,13 +577,14 @@ func (jt *JavaTokenizer) scanOperator() {
 	reader := jt.reader
 	for {
 		reader.putRune(false)
+		//看看操作符号前面是什么
 		newName := reader.name()
-		tk1 := lookupTokenKind(newName)
-		if tk1 == TOKEN_KIND_IDENTIFIER { //?
+		tempTk := lookupTokenKind(newName)
+		if tempTk == TOKEN_KIND_IDENTIFIER { //?
 			reader.spos--
 			break
 		}
-		jt.tk = tk1
+		jt.tk = tempTk
 		reader.scanRune()
 		if !isSpecialOperator(reader.ch) {
 			break

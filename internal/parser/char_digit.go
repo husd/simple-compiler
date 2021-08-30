@@ -12,16 +12,12 @@ func digitRune(r rune, base int) rune {
 	switch base {
 	case 2:
 		res = digitRuneRadix2(r)
-		break
 	case 8:
 		res = digitRuneRadix8(r)
-		break
 	case 10:
 		res = digitRuneRadix10(r)
-		break
 	case 16:
 		res = digitRuneRadix16(r)
-		break
 	default:
 		res = -1
 	}

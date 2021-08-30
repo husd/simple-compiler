@@ -25,11 +25,14 @@ func (nt *numericToken) GetTokenKind() *tokenKind {
 }
 
 func (nt *numericToken) GetName() *util.Name {
-	panic("implement me")
+
+	n := util.Name{NameStr: nt.val, Index: 0}
+	return &n
 }
 
 func (nt *numericToken) GetStringVal() string {
-	panic("implement me")
+
+	return nt.val
 }
 
 func (nt *numericToken) GetRadix() int {

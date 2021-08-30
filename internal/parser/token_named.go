@@ -30,7 +30,7 @@ func (nt *namedToken) GetName() *util.Name {
 
 func (nt *namedToken) GetStringVal() string {
 
-	panic("implement me")
+	return nt.n.NameStr
 }
 
 func (nt *namedToken) GetRadix() int {

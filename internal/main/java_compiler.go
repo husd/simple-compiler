@@ -37,7 +37,7 @@ func parseFiles(files []string, context *util.Context) *list.List {
 		if _, ok := fileMap[f]; !ok {
 			fmt.Println("开始编译文件: ", f)
 			fileMap[f] = 1
-			res.PushBack(parseFile(f, context))
+			parseFile(f, context)
 		}
 	}
 	return res

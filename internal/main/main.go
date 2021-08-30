@@ -19,7 +19,8 @@ func main() {
 	}
 	//compiler(args[1:])
 
-	f := []string{"D:\\test.java"}
+	//f := []string{"D:\\test.java"}
+	f := []string{"/tmp/test.java"}
 	compiler(f)
 
 	//v3 := lexical.WordLexicalV3{}

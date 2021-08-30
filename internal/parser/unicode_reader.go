@@ -91,16 +91,12 @@ func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
 	switch count {
 	case 1:
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+1])
-		break
 	case 2:
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+2])
-		break
 	case 3:
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+3])
-		break
 	case 4:
 		res, _ = utf8.DecodeRune(reader.buf[pos : pos+4])
-		break
 	default:
 		return false, 0, 0
 	}
@@ -171,14 +167,14 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 	spos := reader.spos
 	if r >= 0 && r <= 255 {
 		ensureCapacity(reader.sbuf, spos+1)
-		(*reader.sbuf)[spos] = reader.buf[uint8(r)]
+		(*reader.sbuf)[spos] = uint8(r)
 		reader.spos = spos + 1
 	} else {
 		ensureCapacity(reader.sbuf, spos+4)
-		(*reader.sbuf)[spos] = reader.buf[uint8(r>>24)]
-		(*reader.sbuf)[spos+1] = reader.buf[uint8(r>>16)]
-		(*reader.sbuf)[spos+2] = reader.buf[uint8(r>>8)]
-		(*reader.sbuf)[spos+3] = reader.buf[uint8(r)]
+		(*reader.sbuf)[spos] = uint8(r >> 24)
+		(*reader.sbuf)[spos+1] = uint8(r >> 16)
+		(*reader.sbuf)[spos+2] = uint8(r >> 8)
+		(*reader.sbuf)[spos+3] = uint8(r)
 		reader.spos = spos + 4
 	}
 	if scan {
@@ -189,7 +185,7 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 func (reader *UnicodeReader) name() *util.Name {
 
 	n := util.Name{}
-	n.NameStr = string(*reader.sbuf)
+	n.NameStr = string((*reader.sbuf)[0:reader.spos])
 
 	return &n
 }
@@ -210,7 +206,7 @@ func (reader *UnicodeReader) skipChar() {
 	}
 }
 
-// 是否是 0 10 110 1110 这样的开头的格式 我们读取的是字节数组
+// 是否是 0 110 1110 11110 这样的开头的格式 我们读取的是字节数组
 func utf8Start(b uint8) (bool, int) {
 
 	// 0XXXXXXX
@@ -225,8 +221,8 @@ func utf8Start(b uint8) (bool, int) {
 	if (b >> 4) == 14 {
 		return true, 3
 	}
-	// 11110XXXX
-	if (b >> 4) == 30 {
+	// 11110XXX
+	if (b >> 3) == 30 {
 		return true, 4
 	}
 	return false, 0
