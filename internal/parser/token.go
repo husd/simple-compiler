@@ -24,4 +24,8 @@ type token interface {
 	GetRadix() int
 
 	CheckTokenKind()
+	/**
+	 * DEBUG使用的
+	 */
+	DebugToString() string
 }

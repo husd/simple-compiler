@@ -5,6 +5,8 @@ type SharedNameTable struct {
 	NameArray []*Name //The hash table for names.
 	Bytes     []*byte //The shared byte array holding all encountered names.
 
+	HashMap map[string]*Name // 符号表
+
 	nc int //The number of filled bytes in `names'.
 
 }
@@ -35,8 +37,19 @@ func (snt *SharedNameTable) fromUtf8Shared(bytes *[]byte, start int, length int)
 //还有一个简单的策略，就是存储一个hashmap，直接来表示这个表
 func (snt *SharedNameTable) fromString(s string) *Name {
 
-	b := []byte(s)
-	return snt.fromUtf8Shared(&b, 0, len(b))
+	//b := []byte(s)
+	//return snt.fromUtf8Shared(&b, 0, len(b))
+	if n, ok := snt.HashMap[s]; ok {
+		return n
+	}
+	n := &Name{}
+
+	n.NameStr = s
+	n.Index = 0 //TODO husd
+
+	//put it to map
+	snt.HashMap[s] = n
+	return n
 }
 
 func hash(byteArray *[]byte, start int, length int) int {

@@ -24,19 +24,33 @@ func digitRune(r rune, base int) rune {
 	return res
 }
 
+/**   2进制    ascii编码  10进制数
+    00110000	48			0
+	00110001	49			1
+	00110010	50			2
+	00110011	51			3
+	00110100	52			4
+	00110101	53			5
+	00110110	54			6
+	00110111	55			7
+	00111000	56			8
+	00111001	57			9
+*/
+
+// 注意： r 是unicode编码 ascii编码的 0-9 分别对应于 48 - 57
 // 2进制只有 0-1 是合法的
 func digitRuneRadix2(r rune) rune {
 
-	if r == 0 || r == 1 {
+	if r == 48 || r == 49 {
 		return r
 	}
 	return -1
 }
 
-// 8进制是 0-7 合法
+// 8进制是 0-7 合法 0的ascii编码是48 7的ascii编码是55
 func digitRuneRadix8(r rune) rune {
 
-	if r >= 0 && r <= 7 {
+	if r >= 48 && r <= 55 {
 		return r
 	}
 	return -1
@@ -45,7 +59,7 @@ func digitRuneRadix8(r rune) rune {
 // 10进制只有 0-9 是合法的
 func digitRuneRadix10(r rune) rune {
 
-	if r >= 0 && r <= 9 {
+	if r >= 48 && r <= 57 {
 		return r
 	}
 	return -1
@@ -56,7 +70,7 @@ func digitRuneRadix10(r rune) rune {
 // a-z 的ASCII值对应于 97 - 122
 func digitRuneRadix16(r rune) rune {
 
-	if r >= 0 && r <= 9 {
+	if r >= 48 && r <= 57 {
 		return r
 	}
 	if r >= 65 && r <= 90 {

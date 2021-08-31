@@ -5,18 +5,21 @@ import (
 	"husd.com/v0/util"
 )
 
+/**
+ * 数字类的token
+ */
 type numericToken struct {
-	tk    *tokenKind
-	start int
-	end   int
+	tk      *tokenKind
+	lineNum int // 多少行
+	linePos int // 位置
 
 	val   string
 	radix int
 }
 
-func newNumericToken(tk *tokenKind, start int, end int, val string, radix int) *numericToken {
+func newNumericToken(tk *tokenKind, lineNum int, linePos int, val string, radix int) *numericToken {
 
-	res := numericToken{tk, start, end, val, radix}
+	res := numericToken{tk, lineNum, linePos, val, radix}
 	return &res
 }
 
@@ -37,6 +40,11 @@ func (nt *numericToken) GetStringVal() string {
 
 func (nt *numericToken) GetRadix() int {
 	return nt.radix
+}
+
+func (dt *numericToken) DebugToString() string {
+
+	return fmt.Sprintf("numericToken: %v lineNum: %d pos: %d", dt.GetStringVal(), dt.lineNum, dt.linePos)
 }
 
 func (nt *numericToken) CheckTokenKind() {

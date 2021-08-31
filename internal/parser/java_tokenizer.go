@@ -20,22 +20,43 @@ import (
  */
 
 type JavaTokenizer struct {
-	reader *UnicodeReader // reader
-	source code.JVersion  // jdk版本
-	tk     *tokenKind     // 当前token的类型
-	name   *util.Name     // identify name
+	context *util.Context
+	reader  *UnicodeReader // reader
+	source  code.JVersion  // jdk版本
+	tk      *tokenKind     // 当前token的类型
+	name    *util.Name     // identify name
+
+	tokenFactory *Tokens // token工厂类
 
 	errPos int // 错误地址
 	radix  int // 进制 set by nextToken().
 }
 
-func NewJavaTokenizer(path string) *JavaTokenizer {
+func NewJavaTokenizer(path string, c *util.Context) *JavaTokenizer {
 
 	v := code.JDK8
+
 	javaTokenizer := JavaTokenizer{}
 	javaTokenizer.reader = NewUnicodeReaderFromFile(path)
 	javaTokenizer.source = v
 	javaTokenizer.tk = TOKEN_KIND_DEF
+	javaTokenizer.context = c
+	javaTokenizer.tokenFactory = NewTokens(c)
+
+	return &javaTokenizer
+}
+
+func NewJavaTokenizerWithString(str string, c *util.Context) *JavaTokenizer {
+
+	v := code.JDK8
+
+	javaTokenizer := JavaTokenizer{}
+	b := []byte(str)
+	javaTokenizer.reader = NewUnicodeReader(&b)
+	javaTokenizer.source = v
+	javaTokenizer.tk = TOKEN_KIND_ERROR
+	javaTokenizer.context = c
+	javaTokenizer.tokenFactory = NewTokens(c)
 
 	return &javaTokenizer
 }
@@ -194,8 +215,8 @@ loop:
 					reader.scanRune()
 					if reader.ch == '*' {
 						// 看下一个是不是 /
-						reader.scanRune()
-						if reader.ch == '/' { //找到了结束符号
+						nextRune, succ := reader.seenNextRune()
+						if succ && nextRune == '/' { //找到了结束符号
 							reader.scanRune()
 							/**
 							 * 这里同单行注释是一样的，找到了结束符号，就需要继续循环
@@ -204,7 +225,6 @@ loop:
 						}
 					} else {
 						//不是 * 就继续找
-						reader.scanRune()
 					}
 				}
 				if reader.bp >= reader.size {
@@ -263,15 +283,19 @@ loop:
 					isJavaIdentifyPart = false
 				} else {
 					//TODO husd 判断是不是标识符
+
 					isJavaIdentifyPart = true
 				}
-				if reader.bp == reader.size ||
-					reader.bp+1 == reader.size {
+				if reader.bp >= reader.size ||
+					reader.bp+1 >= reader.size {
 					jt.tk = TOKEN_KIND_EOF
 					pos = reader.size
+					if isJavaIdentifyPart {
+						jt.scanIdentify()
+					}
 				} else if isJavaIdentifyPart {
 					jt.scanIdentify()
-				} else if reader.bp == reader.size ||
+				} else if reader.bp >= reader.size ||
 					reader.ch == Layout_char_eoi ||
 					reader.bp+1 == reader.size { //JTS 3.5 主要说的EOI的问题
 					jt.tk = TOKEN_KIND_EOF
@@ -287,15 +311,15 @@ loop:
 	endPos = reader.bp
 	switch jt.tk.Tag {
 	case TOKEN_TAG_DEFAULT:
-		return newDefaultToken(jt.tk, pos, endPos)
+		return newDefaultToken(jt.tk, reader.lineNum, reader.linePos)
 	case TOKEN_TAG_STRING:
-		return newStringToken(jt.tk, pos, endPos, reader.name().NameStr)
+		return newStringToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr)
 	case TOKEN_TAG_NUMERIC:
-		return newNumericToken(jt.tk, pos, endPos, reader.name().NameStr, jt.radix)
+		return newNumericToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, jt.radix)
 	case TOKEN_TAG_NAMED:
-		return newNamedToken(jt.tk, pos, endPos, reader.name())
+		return newNamedToken(jt.tk, reader.lineNum, reader.linePos, jt.name)
 	default:
-		panic("错误的token kind ")
+		panic(fmt.Sprintf("错误的tokenKind pos:%v endPos:%v", pos, endPos))
 	}
 }
 
@@ -341,10 +365,10 @@ func (jt *JavaTokenizer) scanIdentify() {
 			if reader.bp >= reader.size {
 				// 这个名字，可能需要缓存，因为关键字很多，没必要非得转字符串，把字节计算一下hash
 				// 能提高下性能，这里要存一下符号表了，可以指定一下字节数组的位置和长度，就行了。
-				jt.name = reader.name()          // 不仅仅有标识符的名字，还有其它属性 TODO husd
-				jt.tk = lookupTokenKind(jt.name) //TODO husd
+				jt.name = reader.name()                          // 不仅仅有标识符的名字，还有其它属性 TODO husd
+				jt.tk = jt.tokenFactory.lookupTokenKind(jt.name) //TODO husd
 				if compiler.DEBUG {
-					fmt.Println("name is :", jt.name)
+					fmt.Println("EOI name is :", jt.name)
 				}
 				return
 			}
@@ -372,7 +396,7 @@ func (jt *JavaTokenizer) scanIdentify() {
 			}
 			if !isIdentify {
 				jt.name = reader.name()
-				jt.tk = lookupTokenKind(jt.name)
+				jt.tk = jt.tokenFactory.lookupTokenKind(jt.name)
 				return //end
 			}
 		}
@@ -435,7 +459,17 @@ func (jt *JavaTokenizer) skipUnderLine() {
 
 func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 
-	fmt.Println("---------------- error -------------词法解析错误，位置：", bp, " msg:", msg)
+	start := bp - 20
+	end := bp + 20
+
+	if start < 0 {
+		start = 0
+	}
+	if end > jt.reader.size {
+		end = jt.reader.size
+	}
+
+	fmt.Println("---------------- error -------------词法解析错误，位置：", bp, " msg:", msg, " 前后词语:", string(jt.reader.buf[start:end]))
 	jt.tk = TOKEN_KIND_ERROR
 	jt.errPos = bp
 }
@@ -579,7 +613,7 @@ func (jt *JavaTokenizer) scanOperator() {
 		reader.putRune(false)
 		//看看操作符号前面是什么
 		newName := reader.name()
-		tempTk := lookupTokenKind(newName)
+		tempTk := jt.tokenFactory.lookupTokenKind(newName)
 		if tempTk == TOKEN_KIND_IDENTIFIER { //?
 			reader.spos--
 			break

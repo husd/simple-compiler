@@ -45,7 +45,7 @@ func parseFiles(files []string, context *util.Context) *list.List {
 
 func parseFile(path string, context *util.Context) jc.JCCompilationUnit {
 
-	p := parser.GetParserFromFactory(path)
+	p := parser.GetParserFromFactory(path, context)
 	res := p.ParseJCCompilationUnit()
 	return res
 }

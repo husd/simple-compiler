@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/compiler"
 	"husd.com/v0/util"
 	"io/ioutil"
 	"unicode/utf8"
@@ -16,8 +17,11 @@ type UnicodeReader struct {
 	chLen            int    // 最后一次读到的 rune 占用的字节数
 	lastConversionBp int    // 最后一次转换的unicode的位置
 
-	sbuf *[]byte // 切片，所有的已扫描到的数据
+	sbuf *[]byte // 切片，所有的已扫描到的数据 写个固定的数组
 	spos int     // 已扫描的数据的长度
+
+	lineNum int // 多少行
+	linePos int // 位置
 }
 
 func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
@@ -30,9 +34,11 @@ func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
 	reader.ch = rune(-1)
 	reader.chLen = 0
 	reader.lastConversionBp = -1
+	reader.lineNum = 1
+	reader.linePos = 0
 
-	const SBUF_LEN = 128
-	const SBUF_MAX = 128
+	const SBUF_LEN = 8
+	const SBUF_MAX = 8
 	sbuf := make([]byte, SBUF_LEN, SBUF_MAX)
 	reader.sbuf = &sbuf
 	reader.spos = 0
@@ -48,6 +54,17 @@ func NewUnicodeReaderFromFile(path string) *UnicodeReader {
 		panic("读取文件错误：" + path)
 	}
 	return NewUnicodeReader(&buf)
+}
+
+//查看下一个rune，不移动指针
+func (reader *UnicodeReader) seenNextRune() (rune, bool) {
+
+	pos := reader.bp
+	if pos >= reader.size {
+		return -1, false
+	}
+	succ, res, _ := reader.runeAt(pos)
+	return res, succ
 }
 
 //调用这个方法之后，会移动指针到下一个位置
@@ -68,6 +85,15 @@ func (reader *UnicodeReader) scanRune() bool {
 	//if res == '\\' {
 	//	reader.convertUnicode()
 	//}
+	if compiler.DEBUG_SCAN_RUNE {
+		fmt.Println("----debug----第[", reader.lineNum, "]行 pos :", reader.linePos, "  scanRune ch : ", string(reader.ch))
+	}
+	if reader.ch == Layout_char_lf {
+		reader.lineNum++
+		reader.linePos = 0
+	} else {
+		reader.linePos++
+	}
 	return true
 }
 
@@ -154,7 +180,33 @@ func (reader *UnicodeReader) digit(bp int, base int) rune {
 //Append a character 记录以下读到的字符
 func (reader *UnicodeReader) putRune(scan bool) {
 
-	reader.putRuneChar(reader.ch, scan)
+	if reader.bp <= 0 {
+		return
+	}
+	//TODO husd first 处理切片的问题
+	spos := reader.spos
+	//reader.ensureCapacity(spos+reader.chLen)
+	start := reader.bp - reader.chLen
+	switch reader.chLen {
+	case 1:
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
+	case 2:
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
+	case 3:
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+2])
+	case 4:
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+2])
+		*reader.sbuf = append(*reader.sbuf, reader.buf[start+3])
+	}
+	reader.spos = spos + reader.chLen
+	if scan {
+		reader.scanRune()
+	}
 }
 
 func (reader *UnicodeReader) putChar(r rune) {
@@ -166,15 +218,15 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 
 	spos := reader.spos
 	if r >= 0 && r <= 255 {
-		ensureCapacity(reader.sbuf, spos+1)
-		(*reader.sbuf)[spos] = uint8(r)
+		*reader.sbuf = append(*reader.sbuf, uint8(r))
 		reader.spos = spos + 1
 	} else {
-		ensureCapacity(reader.sbuf, spos+4)
-		(*reader.sbuf)[spos] = uint8(r >> 24)
-		(*reader.sbuf)[spos+1] = uint8(r >> 16)
-		(*reader.sbuf)[spos+2] = uint8(r >> 8)
-		(*reader.sbuf)[spos+3] = uint8(r)
+		//TODO husd 这里有BUG是因为，r不一定是几个长度 有可能不是4个
+		// 所以在处理中文的时候，有问题 不过这里并没有处理中文，所以暂时还没有暴露这个BUG
+		*reader.sbuf = append(*reader.sbuf, uint8(r>>24))
+		*reader.sbuf = append(*reader.sbuf, uint8(r>>16))
+		*reader.sbuf = append(*reader.sbuf, uint8(r>>8))
+		*reader.sbuf = append(*reader.sbuf, uint8(r))
 		reader.spos = spos + 4
 	}
 	if scan {
@@ -241,13 +293,14 @@ func checkUtf8Start10(b uint8) {
 	}
 }
 
-func ensureCapacity(sbuf *[]byte, max int) {
+func (reader *UnicodeReader) ensureCapacity(max int) {
 
-	currentCap := cap(*sbuf)
+	currentCap := cap(*reader.sbuf)
 	if currentCap < max {
 		newCap := calcNewLength(currentCap, max)
-		newSbuf := make([]byte, len(*sbuf), newCap)
-		sbuf = &newSbuf
+		newSbuf := make([]byte, len(*reader.sbuf), newCap)
+		copy(newSbuf, *reader.sbuf)
+		reader.sbuf = &newSbuf
 	}
 }
 

@@ -1,7 +1,9 @@
 package parser
 
-func GetParserFromFactory(path string) Parser {
+import "husd.com/v0/util"
 
-	parser := NewJavacParser(path)
+func GetParserFromFactory(path string, context *util.Context) Parser {
+
+	parser := NewJavacParser(path, context)
 	return parser
 }

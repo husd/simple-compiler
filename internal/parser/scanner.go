@@ -3,6 +3,7 @@ package parser
 import (
 	"container/list"
 	"fmt"
+	"husd.com/v0/util"
 )
 
 //Scanner 在CharSequence里处理好unicode的事情
@@ -14,7 +15,7 @@ type Scanner struct {
 	javaTokenizer *JavaTokenizer
 }
 
-func NewScannerLexer(path string) *Scanner {
+func NewScannerLexer(path string, context *util.Context) *Scanner {
 
 	scanner := Scanner{}
 	scanner.tokenList = list.New()
@@ -22,7 +23,7 @@ func NewScannerLexer(path string) *Scanner {
 	dummy := dummyToken()
 	scanner.token = dummy
 	scanner.preToken = dummy
-	scanner.javaTokenizer = NewJavaTokenizer(path)
+	scanner.javaTokenizer = NewJavaTokenizer(path, context)
 
 	return &scanner
 }

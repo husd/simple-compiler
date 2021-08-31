@@ -1,6 +1,8 @@
 package parser
 
-func GetScannerLexerFromFactory(path string) *Scanner {
+import "husd.com/v0/util"
 
-	return NewScannerLexer(path)
+func GetScannerLexerFromFactory(path string, context *util.Context) *Scanner {
+
+	return NewScannerLexer(path, context)
 }

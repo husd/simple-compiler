@@ -16,4 +16,8 @@ const (
 	GENERATE CompileState = 9
 )
 
-const DEBUG bool = true
+const DEBUG bool = false
+
+const DEBUG_TOKEN bool = DEBUG && true
+
+const DEBUG_SCAN_RUNE bool = DEBUG && true

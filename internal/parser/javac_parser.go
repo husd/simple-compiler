@@ -3,7 +3,9 @@ package parser
 import (
 	"fmt"
 	"husd.com/v0/code"
+	"husd.com/v0/compiler"
 	"husd.com/v0/jc"
+	"husd.com/v0/util"
 )
 
 type JavacParser struct {
@@ -12,10 +14,10 @@ type JavacParser struct {
 	token  token
 }
 
-func NewJavacParser(path string) *JavacParser {
+func NewJavacParser(path string, context *util.Context) *JavacParser {
 
 	parser := JavacParser{}
-	parser.lex = GetScannerLexerFromFactory(path)
+	parser.lex = GetScannerLexerFromFactory(path, context)
 	parser.nextToken()
 	return &parser
 }
@@ -43,7 +45,9 @@ func (jp *JavacParser) ParseJCCompilationUnit() jc.JCCompilationUnit {
 	//consumedToplevelDoc := false
 	for {
 		tok := jp.token
-		fmt.Println("current token name: ", tok.GetName().NameStr)
+		if compiler.DEBUG_TOKEN {
+			fmt.Println(tok.DebugToString())
+		}
 		if tok.GetTokenKind() == TOKEN_KIND_EOF {
 			break
 		}

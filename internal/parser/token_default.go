@@ -5,15 +5,20 @@ import (
 	"husd.com/v0/util"
 )
 
+/**
+ * 这个是java的关键字和运算符号之类
+ */
 type defaultToken struct {
-	tk    *tokenKind
-	start int
-	end   int
+	tk *tokenKind
+
+	lineNum int // 多少行
+	linePos int // 位置
+
 }
 
-func newDefaultToken(tk *tokenKind, start int, end int) *defaultToken {
+func newDefaultToken(tk *tokenKind, lineNum int, linePos int) *defaultToken {
 
-	res := defaultToken{tk, start, end}
+	res := defaultToken{tk, lineNum, linePos}
 	return &res
 }
 
@@ -30,12 +35,17 @@ func (dt *defaultToken) GetName() *util.Name {
 
 func (dt *defaultToken) GetStringVal() string {
 
-	return "默认名字"
+	return dt.tk.Name
 }
 
 func (dt *defaultToken) GetRadix() int {
 
 	panic("implement me")
+}
+
+func (dt *defaultToken) DebugToString() string {
+
+	return fmt.Sprintf("关键字token: %v lineNum: %d pos: %d", dt.tk.Name, dt.lineNum, dt.linePos)
 }
 
 func (dt *defaultToken) CheckTokenKind() {
