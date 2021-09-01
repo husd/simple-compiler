@@ -17,8 +17,8 @@ type UnicodeReader struct {
 	chLen            int    // 最后一次读到的 rune 占用的字节数
 	lastConversionBp int    // 最后一次转换的unicode的位置
 
-	sbuf *[]byte // 切片，所有的已扫描到的数据 写个固定的数组
-	spos int     // 已扫描的数据的长度
+	sbuf []byte // 切片，所有的已扫描到的数据 写个固定的数组
+	spos int    // 已扫描的数据的长度
 
 	lineNum int // 多少行
 	linePos int // 位置
@@ -39,8 +39,8 @@ func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
 
 	const SBUF_LEN = 8
 	const SBUF_MAX = 8
-	sbuf := make([]byte, SBUF_LEN, SBUF_MAX)
-	reader.sbuf = &sbuf
+	sbuf := make([]byte, 0, SBUF_MAX)
+	reader.sbuf = sbuf
 	reader.spos = 0
 
 	reader.scanRune()
@@ -183,25 +183,34 @@ func (reader *UnicodeReader) putRune(scan bool) {
 	if reader.bp <= 0 {
 		return
 	}
-	//TODO husd first 处理切片的问题
 	spos := reader.spos
-	//reader.ensureCapacity(spos+reader.chLen)
+	reader.ensureCapacity(spos, reader.chLen)
 	start := reader.bp - reader.chLen
 	switch reader.chLen {
 	case 1:
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
+		reader.sbuf[spos] = reader.buf[start]
+		spos++
 	case 2:
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
+		reader.sbuf[spos] = reader.buf[start]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+1]
+		spos++
 	case 3:
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+2])
+		reader.sbuf[spos] = reader.buf[start]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+1]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+2]
+		spos++
 	case 4:
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+1])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+2])
-		*reader.sbuf = append(*reader.sbuf, reader.buf[start+3])
+		reader.sbuf[spos] = reader.buf[start]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+1]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+2]
+		spos++
+		reader.sbuf[spos] = reader.buf[start+3]
+		spos++
 	}
 	reader.spos = spos + reader.chLen
 	if scan {
@@ -218,15 +227,21 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 
 	spos := reader.spos
 	if r >= 0 && r <= 255 {
-		*reader.sbuf = append(*reader.sbuf, uint8(r))
+		reader.ensureCapacity(spos, 1)
+		reader.sbuf[spos] = uint8(r)
 		reader.spos = spos + 1
 	} else {
 		//TODO husd 这里有BUG是因为，r不一定是几个长度 有可能不是4个
 		// 所以在处理中文的时候，有问题 不过这里并没有处理中文，所以暂时还没有暴露这个BUG
-		*reader.sbuf = append(*reader.sbuf, uint8(r>>24))
-		*reader.sbuf = append(*reader.sbuf, uint8(r>>16))
-		*reader.sbuf = append(*reader.sbuf, uint8(r>>8))
-		*reader.sbuf = append(*reader.sbuf, uint8(r))
+		reader.ensureCapacity(spos, 4)
+		reader.sbuf[spos] = uint8(r >> 24)
+		spos++
+		reader.sbuf[spos] = uint8(r >> 16)
+		spos++
+		reader.sbuf[spos] = uint8(r >> 8)
+		spos++
+		reader.sbuf[spos] = uint8(r)
+		spos++
 		reader.spos = spos + 4
 	}
 	if scan {
@@ -237,7 +252,7 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 func (reader *UnicodeReader) name() *util.Name {
 
 	n := util.Name{}
-	n.NameStr = string((*reader.sbuf)[0:reader.spos])
+	n.NameStr = string(reader.sbuf[0:reader.spos])
 
 	return &n
 }
@@ -256,6 +271,26 @@ func (reader *UnicodeReader) skipChar() {
 		reader.chLen = count
 		//reader.ch 这个不变，还是原来的值
 	}
+}
+
+func (reader *UnicodeReader) hasNext() bool {
+
+	return reader.bp < reader.size
+}
+
+/** Scan surrogate pairs.  If 'ch' is a high surrogate and
+ *  the next character is a low surrogate, then put the low
+ *  surrogate in 'ch', and return the high surrogate.
+ *  otherwise, just return 0.
+ */
+func (reader *UnicodeReader) scanSurrogates() rune {
+
+	const surrogatesSupported bool = false
+
+	if surrogatesSupported {
+		//先不管
+	}
+	return 0
 }
 
 // 是否是 0 110 1110 11110 这样的开头的格式 我们读取的是字节数组
@@ -293,14 +328,14 @@ func checkUtf8Start10(b uint8) {
 	}
 }
 
-func (reader *UnicodeReader) ensureCapacity(max int) {
+func (reader *UnicodeReader) ensureCapacity(current int, need int) {
 
-	currentCap := cap(*reader.sbuf)
-	if currentCap < max {
-		newCap := calcNewLength(currentCap, max)
-		newSbuf := make([]byte, len(*reader.sbuf), newCap)
-		copy(newSbuf, *reader.sbuf)
-		reader.sbuf = &newSbuf
+	currentCap := cap(reader.sbuf)
+	if current+need > currentCap {
+		newCap := calcNewLength(currentCap, current+need)
+		newSbuf := make([]byte, current, newCap) //一定要注意，从current开始写数据
+		copy(newSbuf, reader.sbuf)
+		reader.sbuf = newSbuf
 	}
 }
 

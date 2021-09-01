@@ -337,13 +337,16 @@ func isSpecialOperator(ch rune) bool {
 	return false
 }
 
+/**
+ * 扫描标识符 Java里的变量等 关键字也属于这里识别的
+ */
 func (jt *JavaTokenizer) scanIdentify() {
 
 	reader := jt.reader
 	isIdentify := false
-	//var high rune
-
+	var high rune
 	reader.putRune(true)
+loop:
 	for {
 		switch reader.ch {
 		case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
@@ -354,58 +357,64 @@ func (jt *JavaTokenizer) scanIdentify() {
 			'u', 'v', 'w', 'x', 'y', 'z',
 			'$', '_',
 			'0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			goto next
 		case '\u0000', '\u0001', '\u0002', '\u0003',
 			'\u0004', '\u0005', '\u0006', '\u0007',
 			'\u0008', '\u000E', '\u000F', '\u0010',
 			'\u0011', '\u0012', '\u0013', '\u0014',
 			'\u0015', '\u0016', '\u0017',
 			'\u0018', '\u0019', '\u001B':
-			reader.scanRune() //这里直接就忽略了，但是我们的实现，没有忽略这些字符，暂时先这么做，后续优化 TODO husd
+			reader.scanRune()
+			goto loop
 		case '\u001A': // EOI 也是一个有效的标识符 That's the Ctrl+Z control code.
 			if reader.bp >= reader.size {
 				// 这个名字，可能需要缓存，因为关键字很多，没必要非得转字符串，把字节计算一下hash
 				// 能提高下性能，这里要存一下符号表了，可以指定一下字节数组的位置和长度，就行了。
-				jt.name = reader.name()                          // 不仅仅有标识符的名字，还有其它属性 TODO husd
-				jt.tk = jt.tokenFactory.lookupTokenKind(jt.name) //TODO husd
+				jt.name = reader.name() // 不仅仅有标识符的名字，还有其它属性
+				jt.tk = jt.tokenFactory.lookupTokenKind(jt.name)
 				if compiler.DEBUG {
 					fmt.Println("EOI name is :", jt.name)
 				}
 				return
 			}
 			reader.scanRune()
-			continue
+			goto loop
 		default:
 			if reader.ch < '\u0080' {
 				isIdentify = false //ascii已经考虑过了，直接结束
 			} else {
-				//这里有点复杂，不属于任何一个情况 为了简化功能，这里直接就是结束扫描了
-				// TODO 判断其它是变量的标识符的情况，如果是，设置 isIdentify = true
-				// 就会继续扫描下去
-				// Determines if the specified character (Unicode code point) should be regarded as an ignorable character in a Java identifier or a Unicode identifier.
-				//The following Unicode characters are ignorable in a Java identifier or a Unicode identifier:
-				//ISO control characters that are not whitespace
-				//'\u0000' through '\u0008'
-				//'\u000E' through '\u001B'
-				//'\u007F' through '\u009F'
-				//all characters that have the FORMAT general category value
-				//Params:
-				//codePoint – the character (Unicode code point) to be tested.
-				//Returns:
-				//true if the character is an ignorable control character that may be part of a Java or Unicode identifier false otherwise.
+				if isIdentifierIgnorable(reader.ch) {
+					reader.scanRune()
+					goto loop
+				} else {
+					high = reader.scanSurrogates()
+					if high != 0 {
+						//reader.putChar(high)
+						//temp := toCodePoint(high,reader.ch)
+						//isIdentify  = isJavaIdentifierPart(temp)
+					} else {
+						isIdentify = isJavaIdentifierPart(reader.ch)
+					}
+				}
 				isIdentify = false
 			}
-			if !isIdentify {
+			if !isIdentify { //直接读取结束了。
 				jt.name = reader.name()
 				jt.tk = jt.tokenFactory.lookupTokenKind(jt.name)
 				return //end
 			}
 		}
 		// break 之后，执行到这里了，扫描下一个字符
+	next:
 		reader.putRune(true)
 	}
 }
 
-// 词法分析要分析出来源代码里的 数字，并转换为对应的10进制数字，目前支持 2进制 8进制 10进制 16进制的数字
+/**
+ * 词法分析要分析出来源代码里的 数字，目前支持 2进制 8进制 10进制 16进制的数字
+ * 词法分析阶段，没有把数字解析为对应的10进制数字，而是保留了字面量和进制
+ * 这也符合词法分析阶段的功能，只做解析，而不处理数据。
+ */
 func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 
 	jt.radix = radix
@@ -420,23 +429,18 @@ func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 		seenDigit = true
 		jt.scanDigits(pos, digitRadix)
 	}
-	if radix == 16 {
-		if reader.ch == '.' {
-			jt.scanHexFractionAndSuffix(pos, seenDigit)
-		} else if reader.ch == 'p' || reader.ch == 'P' {
-			if seenDigit {
-				jt.scanHexExponentAndSuffix(pos)
-			}
-		}
-	} else if radix == 10 {
-		if reader.ch == '.' {
-			reader.putRune(true)
-			jt.scanFractionAndSuffix(pos)
-		} else if reader.ch == 'e' || reader.ch == 'E' ||
+	if radix == 16 && reader.ch == '.' {
+		jt.scanHexFractionAndSuffix(pos, seenDigit)
+	} else if seenDigit && radix == 16 && (reader.ch == 'p' || reader.ch == 'P') {
+		jt.scanHexExponentAndSuffix(pos)
+	} else if digitRadix == 10 && reader.ch == '.' {
+		reader.putRune(true)
+		jt.scanFractionAndSuffix(pos)
+	} else if digitRadix == 10 &&
+		(reader.ch == 'e' || reader.ch == 'E' ||
 			reader.ch == 'f' || reader.ch == 'F' ||
-			reader.ch == 'd' || reader.ch == 'D' {
-			jt.scanFractionAndSuffix(pos)
-		}
+			reader.ch == 'd' || reader.ch == 'D') {
+		jt.scanFractionAndSuffix(pos)
 	} else {
 		if reader.ch == 'l' || reader.ch == 'L' {
 			reader.scanRune()
@@ -450,7 +454,7 @@ func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 func (jt *JavaTokenizer) skipUnderLine() {
 
 	if jt.reader.ch == '_' {
-		jt.lexError(jt.reader.bp, "数字里有无效的下划线")
+		jt.lexError(jt.reader.bp, "warn:数字里有无效的下划线")
 		for jt.reader.ch == '_' {
 			jt.reader.scanRune()
 		}
@@ -469,7 +473,7 @@ func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 		end = jt.reader.size
 	}
 
-	fmt.Println("---------------- error -------------词法解析错误，位置：", bp, " msg:", msg, " 前后词语:", string(jt.reader.buf[start:end]))
+	fmt.Println("---------------- error/warn -------------词法解析错误，位置：", bp, " msg:", msg, " 前后词语:", string(jt.reader.buf[start:end]))
 	jt.tk = TOKEN_KIND_ERROR
 	jt.errPos = bp
 }
@@ -536,23 +540,24 @@ func (jt *JavaTokenizer) scanDigits(pos int, radix int) {
 	reader := jt.reader
 	var res rune
 	var savedPos int
+	var haxNext bool = true
 	for {
 		if reader.ch != '_' {
 			reader.putRune(false)
 		} else {
 			if !allowUnderscoresInLiterals {
-				jt.lexError(pos, "unsupported.underscore.li")
+				jt.lexError(pos, "error:数字不支持下划线")
 			}
 			res = reader.ch
 			savedPos = reader.bp
 		}
-		reader.scanRune()
-		if reader.digit(pos, radix) < 0 && reader.ch == '_' {
+		haxNext = reader.scanRune()
+		if !((reader.digit(pos, radix) >= 0 || reader.ch == '_') && haxNext) {
 			break
 		}
 	}
 	if res == '_' {
-		jt.lexError(savedPos, "无效的下划线")
+		jt.lexError(savedPos, "warn:无效的下划线")
 	}
 }
 

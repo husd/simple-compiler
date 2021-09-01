@@ -7,4 +7,4 @@ const allowUnderscoresInLiterals bool = true
 const hexFloatsWork bool = false
 const allowHexFloats bool = false
 
-const allowBinaryLiterals bool = false
+const allowBinaryLiterals bool = true

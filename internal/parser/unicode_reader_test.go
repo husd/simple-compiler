@@ -21,6 +21,33 @@ func TestRune(t *testing.T) {
 	}
 }
 
+//测试把一个char放进去
+func TestPutRune(t *testing.T) {
+
+	var str = "中"
+	//str = "a"
+	//str = "a"
+	buf := []byte(str)
+	reader := NewUnicodeReader(&buf)
+
+	reader.putChar('a')
+	reader.putChar('a')
+	reader.putChar('a')
+	reader.putChar('中')
+	reader.putChar('中')
+}
+
+func TestSlice(t *testing.T) {
+
+	const SBUF_MAX = 8
+	sbuf := [1]int{}
+
+	//sbuf = [2]int{}
+	sbuf[0] = 123
+	//sbuf[1] = 124
+	fmt.Println(sbuf)
+}
+
 func TestSwitch(t *testing.T) {
 
 	a := 2
