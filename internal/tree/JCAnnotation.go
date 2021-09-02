@@ -1,4 +1,4 @@
-package jc
+package tree
 
 type JCAnnotation struct {
 }
