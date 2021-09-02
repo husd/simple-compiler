@@ -42,7 +42,7 @@ func digitRune(r rune, base int) rune {
 func digitRuneRadix2(r rune) rune {
 
 	if r == 48 || r == 49 {
-		return r
+		return r - 48
 	}
 	return -1
 }
@@ -51,7 +51,7 @@ func digitRuneRadix2(r rune) rune {
 func digitRuneRadix8(r rune) rune {
 
 	if r >= 48 && r <= 55 {
-		return r
+		return r - 48
 	}
 	return -1
 }
@@ -60,7 +60,7 @@ func digitRuneRadix8(r rune) rune {
 func digitRuneRadix10(r rune) rune {
 
 	if r >= 48 && r <= 57 {
-		return r
+		return r - 48
 	}
 	return -1
 }
@@ -71,13 +71,13 @@ func digitRuneRadix10(r rune) rune {
 func digitRuneRadix16(r rune) rune {
 
 	if r >= 48 && r <= 57 {
-		return r
+		return r - 48
 	}
 	if r >= 65 && r <= 90 {
-		return r
+		return r - 65 + 10
 	}
 	if r >= 97 && r <= 122 {
-		return r
+		return r - 97 + 10
 	}
 	return -1
 }

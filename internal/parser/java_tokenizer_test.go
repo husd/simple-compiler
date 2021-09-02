@@ -1,30 +1,41 @@
 package parser
 
 import (
+	"fmt"
 	"husd.com/v0/util"
 	"testing"
 )
+
+//测试空格
+func TestJavaTokenizer_readToken_blank(t *testing.T) {
+
+	c := util.NewContext()
+	s := "      "
+	tokenizer := NewJavaTokenizerWithString(s, c)
+	tk := tokenizer.readToken()
+	util.AssertEquals(t, "测试空格", TOKEN_KIND_EOF, tk.GetTokenKind())
+}
 
 //测试注释
 func TestJavaTokenizer_readToken(t *testing.T) {
 
 	c := util.NewContext()
 	str := []string{
-		"/** 多行注释 **/",
-		"/** **/",
+		"/** 多行注释 **/     ",
+		"/** sadf     **/    ",
 		"/**" +
 			"* 1234 " +
 			"// sdf " +
-			" **/",
+			" **/     ",
 		"//",
 		"////",
-		"// public static void main //",
+		"// public static void main //    ",
 		"// sdf */", "// /* ",
 	}
-	for _, s := range str {
+	for inx, s := range str {
 		tokenizer := NewJavaTokenizerWithString(s, c)
 		tk := tokenizer.readToken()
-		util.AssertEquals(t, "测试注释", TOKEN_KIND_ERROR, tk.GetTokenKind())
+		util.AssertEquals(t, fmt.Sprintf("测试注释 index:%d", inx), TOKEN_KIND_EOF, tk.GetTokenKind())
 	}
 }
 
@@ -113,10 +124,10 @@ func TestJavaTokenizer_readToken2(t *testing.T) {
 	util.AssertEquals(t, "测试数字3", "=", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字4 type", TOKEN_KIND_INT, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字4 type", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字4", "10", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字5 type", TOKEN_KIND_INT, tt.GetTokenKind())
-	util.AssertEquals(t, "测试数字5", "10", tt.GetStringVal())
+	util.AssertEquals(t, "测试数字5 type", TOKEN_KIND_SEMI, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字5", ";", tt.GetStringVal())
 }

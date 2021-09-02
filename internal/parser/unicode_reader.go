@@ -17,11 +17,14 @@ type UnicodeReader struct {
 	chLen            int    // 最后一次读到的 rune 占用的字节数
 	lastConversionBp int    // 最后一次转换的unicode的位置
 
-	sbuf []byte // 切片，所有的已扫描到的数据 写个固定的数组
-	spos int    // 已扫描的数据的长度
+	sbuf    []byte // 切片，所有的已扫描到的数据 写个固定的数组
+	spos    int    // 已扫描的数据的长度
+	utf8Buf []byte //
 
 	lineNum int // 多少行
 	linePos int // 位置
+
+	end bool //读到了末尾
 }
 
 func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
@@ -37,11 +40,14 @@ func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
 	reader.lineNum = 1
 	reader.linePos = 0
 
-	const SBUF_LEN = 8
-	const SBUF_MAX = 8
-	sbuf := make([]byte, 0, SBUF_MAX)
+	const SBUF_LEN = 1
+	const SBUF_MAX = 1
+	sbuf := make([]byte, SBUF_LEN, SBUF_MAX)
 	reader.sbuf = sbuf
 	reader.spos = 0
+	reader.utf8Buf = make([]byte, 4, 4)
+
+	reader.end = false
 
 	reader.scanRune()
 	return &reader
@@ -72,6 +78,8 @@ func (reader *UnicodeReader) scanRune() bool {
 
 	pos := reader.bp
 	if pos >= reader.size {
+		reader.end = true
+		reader.ch = -1 //TODO husd 考虑返回-1是否合适
 		return false
 	}
 	succ, res, count := reader.runeAt(pos)
@@ -188,29 +196,19 @@ func (reader *UnicodeReader) putRune(scan bool) {
 	start := reader.bp - reader.chLen
 	switch reader.chLen {
 	case 1:
-		reader.sbuf[spos] = reader.buf[start]
-		spos++
+		reader.sbuf[spos+0] = reader.buf[start]
 	case 2:
-		reader.sbuf[spos] = reader.buf[start]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+1]
-		spos++
+		reader.sbuf[spos+0] = reader.buf[start]
+		reader.sbuf[spos+1] = reader.buf[start+1]
 	case 3:
-		reader.sbuf[spos] = reader.buf[start]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+1]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+2]
-		spos++
+		reader.sbuf[spos+0] = reader.buf[start]
+		reader.sbuf[spos+1] = reader.buf[start+1]
+		reader.sbuf[spos+2] = reader.buf[start+2]
 	case 4:
-		reader.sbuf[spos] = reader.buf[start]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+1]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+2]
-		spos++
-		reader.sbuf[spos] = reader.buf[start+3]
-		spos++
+		reader.sbuf[spos+0] = reader.buf[start]
+		reader.sbuf[spos+1] = reader.buf[start+1]
+		reader.sbuf[spos+2] = reader.buf[start+2]
+		reader.sbuf[spos+3] = reader.buf[start+3]
 	}
 	reader.spos = spos + reader.chLen
 	if scan {
@@ -231,18 +229,28 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 		reader.sbuf[spos] = uint8(r)
 		reader.spos = spos + 1
 	} else {
-		//TODO husd 这里有BUG是因为，r不一定是几个长度 有可能不是4个
-		// 所以在处理中文的时候，有问题 不过这里并没有处理中文，所以暂时还没有暴露这个BUG
-		reader.ensureCapacity(spos, 4)
-		reader.sbuf[spos] = uint8(r >> 24)
-		spos++
-		reader.sbuf[spos] = uint8(r >> 16)
-		spos++
-		reader.sbuf[spos] = uint8(r >> 8)
-		spos++
-		reader.sbuf[spos] = uint8(r)
-		spos++
-		reader.spos = spos + 4
+		//这里要动态判断r有几个字节，所以再解析回来utf8编码
+		//由于这里长度固定不超过4个，不会触发切片的扩容，所以可以直接把reader.utf8Buf传过去
+		//不需要传递指针
+		num := utf8.EncodeRune(reader.utf8Buf, r)
+		reader.ensureCapacity(spos, num)
+		switch num {
+		case 1:
+			reader.sbuf[spos+0] = reader.utf8Buf[0]
+		case 2:
+			reader.sbuf[spos+0] = reader.utf8Buf[0]
+			reader.sbuf[spos+1] = reader.utf8Buf[1]
+		case 3:
+			reader.sbuf[spos+0] = reader.utf8Buf[0]
+			reader.sbuf[spos+1] = reader.utf8Buf[1]
+			reader.sbuf[spos+2] = reader.utf8Buf[2]
+		case 4:
+			reader.sbuf[spos+0] = reader.utf8Buf[0]
+			reader.sbuf[spos+1] = reader.utf8Buf[1]
+			reader.sbuf[spos+2] = reader.utf8Buf[2]
+			reader.sbuf[spos+3] = reader.utf8Buf[3]
+		}
+		reader.spos = reader.spos + num
 	}
 	if scan {
 		reader.scanRune()
@@ -328,12 +336,16 @@ func checkUtf8Start10(b uint8) {
 	}
 }
 
-func (reader *UnicodeReader) ensureCapacity(current int, need int) {
+/**
+ * spos 当前写到切片的什么位置了
+ * need 本次需要写入多个
+ */
+func (reader *UnicodeReader) ensureCapacity(spos int, need int) {
 
 	currentCap := cap(reader.sbuf)
-	if current+need > currentCap {
-		newCap := calcNewLength(currentCap, current+need)
-		newSbuf := make([]byte, current, newCap) //一定要注意，从current开始写数据
+	if spos+need > currentCap {
+		newCap := calcNewLength(currentCap, spos+need)
+		newSbuf := make([]byte, newCap, newCap) //len设置为cap，这样才可以在任意位置写入
 		copy(newSbuf, reader.sbuf)
 		reader.sbuf = newSbuf
 	}
@@ -345,4 +357,9 @@ func calcNewLength(len int, max int) int {
 		len = len * 2
 	}
 	return len
+}
+
+func (reader *UnicodeReader) reachEnd() bool {
+
+	return reader.end
 }

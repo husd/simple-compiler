@@ -11,8 +11,10 @@ func Test_digitRuneRadix16(t *testing.T) {
 		args args
 		want rune
 	}{
-		{"测试16进制", args{65}, 65},
-		{"测试16进制", args{'A'}, 65},
+		{"测试16进制", args{'a'}, 10},
+		{"测试16进制", args{'A'}, 10},
+		{"测试16进制", args{'b'}, 11},
+		{"测试16进制", args{'1'}, 1},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

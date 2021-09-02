@@ -20,4 +20,4 @@ const DEBUG bool = true
 
 const DEBUG_TOKEN bool = DEBUG && true
 
-const DEBUG_SCAN_RUNE bool = DEBUG && true
+const DEBUG_SCAN_RUNE bool = DEBUG && false

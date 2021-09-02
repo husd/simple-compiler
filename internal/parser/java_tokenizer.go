@@ -200,7 +200,7 @@ loop:
 					reader.scanRune()
 					if reader.ch == Layout_char_cr ||
 						reader.ch == Layout_char_lf ||
-						reader.bp >= reader.size { // 一直读到换行或者结束
+						reader.reachEnd() { // 一直读到换行或者结束
 						reader.scanRune() // 读下个字符
 						break
 					}
@@ -211,13 +211,14 @@ loop:
 				 */
 				goto loop
 			} else if reader.ch == '*' { //读到了多行注释
-				for reader.bp < reader.size {
+				for {
 					reader.scanRune()
 					if reader.ch == '*' {
 						// 看下一个是不是 /
 						nextRune, succ := reader.seenNextRune()
 						if succ && nextRune == '/' { //找到了结束符号
-							reader.scanRune()
+							reader.scanRune() // 跳过 结束符号
+							reader.scanRune() // 查看下一个
 							/**
 							 * 这里同单行注释是一样的，找到了结束符号，就需要继续循环
 							 */
@@ -226,8 +227,11 @@ loop:
 					} else {
 						//不是 * 就继续找
 					}
+					if reader.reachEnd() {
+						goto loop
+					}
 				}
-				if reader.bp >= reader.size {
+				if reader.reachEnd() {
 					//找到结束，都没有找到多行注释的结束符号，直接报错
 					jt.lexError(pos, "多行注释没有找到结束符号")
 					break loop
@@ -263,7 +267,7 @@ loop:
 			for reader.ch != '"' &&
 				reader.ch != Layout_char_cr &&
 				reader.ch != Layout_char_lf &&
-				reader.bp < reader.size {
+				!reader.reachEnd() {
 				jt.scanLitChar(pos)
 			}
 			if reader.ch == '"' {
@@ -283,11 +287,9 @@ loop:
 					isJavaIdentifyPart = false
 				} else {
 					//TODO husd 判断是不是标识符
-
 					isJavaIdentifyPart = true
 				}
-				if reader.bp >= reader.size ||
-					reader.bp+1 >= reader.size {
+				if reader.reachEnd() {
 					jt.tk = TOKEN_KIND_EOF
 					pos = reader.size
 					if isJavaIdentifyPart {
@@ -295,9 +297,8 @@ loop:
 					}
 				} else if isJavaIdentifyPart {
 					jt.scanIdentify()
-				} else if reader.bp >= reader.size ||
-					reader.ch == Layout_char_eoi ||
-					reader.bp+1 == reader.size { //JTS 3.5 主要说的EOI的问题
+				} else if reader.ch == Layout_char_eoi ||
+					reader.reachEnd() { //JTS 3.5 主要说的EOI的问题
 					jt.tk = TOKEN_KIND_EOF
 					pos = reader.size
 				} else {
@@ -520,7 +521,6 @@ func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 	} else {
 		jt.lexError(pos, "fp.lt 格式不正确")
 	}
-
 	if reader.ch == 'f' || reader.ch == 'F' {
 		reader.putRune(true)
 		jt.tk = TOKEN_KIND_FLOAT_LITERAL

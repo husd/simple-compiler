@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/util"
 	"testing"
 )
 
@@ -24,27 +25,26 @@ func TestRune(t *testing.T) {
 //测试把一个char放进去
 func TestPutRune(t *testing.T) {
 
-	var str = "中"
-	//str = "a"
-	//str = "a"
+	var str = "abc123&^%$!~中文<>?"
 	buf := []byte(str)
 	reader := NewUnicodeReader(&buf)
-
-	reader.putChar('a')
-	reader.putChar('a')
-	reader.putChar('a')
-	reader.putChar('中')
-	reader.putChar('中')
+	for _, v := range str {
+		reader.putChar(v)
+	}
+	fmt.Println("sbuf:", string(reader.sbuf[:reader.spos]))
+	util.AssertEquals(t, "测试putChar 主要是测试中文", str, string(reader.sbuf[:reader.spos]))
 }
 
 func TestSlice(t *testing.T) {
 
 	const SBUF_MAX = 8
-	sbuf := [1]int{}
-
-	//sbuf = [2]int{}
+	sbuf := make([]int, 10, 10)
+	newSbuf := sbuf[0:]
+	fmt.Println("sbuf len:", len(newSbuf), " cap:", cap(newSbuf))
 	sbuf[0] = 123
-	//sbuf[1] = 124
+	sbuf[1] = 123
+	sbuf[2] = 123
+	sbuf[3] = 123
 	fmt.Println(sbuf)
 }
 
