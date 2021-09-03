@@ -1,14 +1,16 @@
 package util
 
+/**
+ *
+ * @author hushengdong
+ */
 type SharedNameTable struct {
 	HashMask  int     //The mask to be used for hashing
 	NameArray []*Name //The hash table for names.
 	Bytes     []*byte //The shared byte array holding all encountered names.
 
 	HashMap map[string]*Name // 符号表
-
-	nc int //The number of filled bytes in `names'.
-
+	nc      int              //The number of filled bytes in `names'.
 }
 
 func NewSharedNameTable(c *Context) *SharedNameTable {
@@ -34,11 +36,13 @@ func (snt *SharedNameTable) fromUtf8Shared(bytes *[]byte, start int, length int)
 	return n
 }
 
-//还有一个简单的策略，就是存储一个hashmap，直接来表示这个表
+/**
+ * 目前先用一个hashmap来存。
+ * 后续再优化 把key优化为字节数组，计算该字节数组的hash值，这样就省去了把
+ * 字节数组转换为string的这一个步骤。TODO
+ */
 func (snt *SharedNameTable) fromString(s string) *Name {
 
-	//b := []byte(s)
-	//return snt.fromUtf8Shared(&b, 0, len(b))
 	if n, ok := snt.HashMap[s]; ok {
 		return n
 	}

@@ -8,6 +8,7 @@ import (
 /**
  * true false enum void this super byte short char int long float double等
  * 这些都统归为 namedToken 表示的是定义变量的属性的，可以看到大部分都是基本类型
+ * @author hushengdong
  */
 type namedToken struct {
 	tk      *tokenKind

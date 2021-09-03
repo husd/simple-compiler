@@ -5,6 +5,10 @@ import (
 	"unicode/utf8"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
 type StringCharSequence struct {
 	length  int    //长度 这个是字符串的长度
 	content string //内容
@@ -45,7 +49,7 @@ func (f StringCharSequence) SubCharSequence(start int, end int) string {
 	return f.content[start:end]
 }
 
-func (f StringCharSequence) ReadRune() rune {
+func (f StringCharSequence) ScanRune() rune {
 
 	r := f.content[f.pos]
 	f.pos = f.pos + 1

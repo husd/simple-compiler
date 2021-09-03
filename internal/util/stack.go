@@ -2,9 +2,12 @@ package util
 
 import "container/list"
 
-//这里用切片，模拟一个简单的栈，栈的元素是字符串
-//数组是定长的，所以不太适合做栈
-
+/**
+ * 这里用切片，模拟一个简单的栈，栈的元素是字符串
+ * 数组是定长的，所以不太适合做栈，这里是一个实验性质的代码，后续要删除 TODO delete later
+ * 或者优化一下，底层用数组实现 性能可能会更高点
+ * @author hushengdong
+ */
 type DefaultStack struct {
 	data *list.List
 	size int

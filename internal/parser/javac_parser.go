@@ -8,6 +8,11 @@ import (
 	"husd.com/v0/util"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
+
 type JavacParser struct {
 	lex    lexer         // 词法分析器
 	source code.JVersion // 当前JDK的版本

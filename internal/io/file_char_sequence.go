@@ -6,6 +6,10 @@ import (
 	"io/ioutil"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
 type FileCharSequence struct {
 	// 文件的路径
 	path   string
@@ -22,7 +26,7 @@ func NewFileCharSequence(path string) (f CharSequence) {
 	}
 	fcs.path = path
 	fcs.length = len(buffer)
-	fcs.reader = parser.NewUnicodeReader(buffer)
+	fcs.reader = parser.NewUnicodeReader(&buffer)
 	return fcs
 }
 
@@ -41,23 +45,23 @@ func (f FileCharSequence) ByteAt(index int) uint8 {
 	if index < 0 || index >= f.length {
 		panic(fmt.Sprintf("out of index %d", index))
 	}
-	return f.reader.byteAt(index)
+	return f.reader.ByteAt(index)
 }
 
 // 左闭右开
 func (f FileCharSequence) SubCharSequence(start int, end int) string {
 
 	checkScope(start, end, f.length)
-	return string(f.reader.subByteArray(start, end))
+	return string(f.reader.SubByteArray(start, end))
 }
 
-func (f FileCharSequence) ReadRune() rune {
+func (f FileCharSequence) ScanRune() rune {
 
-	r, _ := f.reader.readRune()
-	return r
+	f.reader.ScanRune()
+	return f.reader.CurrentRune()
 }
 
 func (f FileCharSequence) CurrentPos() int {
 
-	return f.reader.currentPos()
+	return f.reader.CurrentPos()
 }

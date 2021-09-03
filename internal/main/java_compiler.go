@@ -9,6 +9,10 @@ import (
 	"husd.com/v0/util"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
 type RES int
 
 const (

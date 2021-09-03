@@ -1,12 +1,17 @@
 package parser
 
+/**
+ *
+ * @author hushengdong
+ */
+
 type tokenKind struct {
 	Name  string
 	Tag   tokenTag
 	Index int // 在key 数组中的位置
 }
 
-var TOKEN_KIND_EOF = &tokenKind{"eof", TOKEN_TAG_DEFAULT, 0}
+var TOKEN_KIND_EOF = &tokenKind{"eof", TOKEN_TAG_DEFAULT, 0} // EOF特指文件结束
 var TOKEN_KIND_ERROR = &tokenKind{"error", TOKEN_TAG_DEFAULT, 1}
 var TOKEN_KIND_IDENTIFIER = &tokenKind{"", TOKEN_TAG_NAMED, 2}
 var TOKEN_KIND_ABSTRACT = &tokenKind{"abstract", TOKEN_TAG_DEFAULT, 3}

@@ -1,5 +1,9 @@
 package util
 
+/**
+ *
+ * @author hushengdong
+ */
 type Name struct {
 	NameStr string
 	Index   int // 符号表的索引

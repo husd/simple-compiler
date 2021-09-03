@@ -1,6 +1,11 @@
 package code
 
-//定义了jdk版本 能做的一些事情 这里仅仅做个示意 不做那么多复杂内容
+/**
+ *
+ * @author hushengdong
+ */
+
+// 定义了jdk版本 能做的一些事情 这里仅仅做个示意 不做那么多复杂内容
 type JVersion int
 
 const (

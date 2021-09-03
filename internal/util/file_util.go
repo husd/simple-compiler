@@ -9,7 +9,12 @@ import (
 	"os"
 )
 
-//ReadLine 按行读取文件
+/**
+ * 这个类是文件的工具类
+ * @author hushengdong
+ */
+
+// ReadLine 按行读取文件
 func ReadLine(filePth string, callback func([]byte)) error {
 	f, err := os.Open(filePth)
 	if err != nil {

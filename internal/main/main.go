@@ -8,6 +8,7 @@ import (
 /**
  * 这里写一个简单的入口，输入的内容是文件列表，只能是java的源文件
  * 这里先不加参数
+ * @author hushengdong
  */
 func main() {
 

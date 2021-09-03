@@ -1,5 +1,10 @@
 package parser
 
+/**
+ * 定义了一些 特殊字符的unicode码
+ * @author hushengdong
+ */
+
 const Layout_char_tabInc = rune(8)
 const Layout_char_diag = rune(4)
 const Layout_char_details = rune(4)

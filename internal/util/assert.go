@@ -5,6 +5,10 @@ import (
 	"testing"
 )
 
+/**
+ * 这个是单元测试的辅助工具类
+ * @author hushengdong
+ */
 func AssertTrue(t *testing.T, msg string, b bool) {
 
 	if !b {

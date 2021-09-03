@@ -7,6 +7,7 @@ import (
 
 /**
  * 这个是java的关键字和运算符号之类
+ * @author hushengdong
  */
 type defaultToken struct {
 	tk *tokenKind

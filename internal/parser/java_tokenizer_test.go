@@ -6,7 +6,12 @@ import (
 	"testing"
 )
 
-//测试空格
+/**
+ *
+ * @author hushengdong
+ */
+
+// 测试空格
 func TestJavaTokenizer_readToken_blank(t *testing.T) {
 
 	c := util.NewContext()
@@ -103,6 +108,7 @@ func TestJavaTokenizer_readToken_num16(t *testing.T) {
 	}
 }
 
+// 测试 expression
 func TestJavaTokenizer_readToken2(t *testing.T) {
 
 	c := util.NewContext()

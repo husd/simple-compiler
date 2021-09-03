@@ -7,6 +7,7 @@ import (
 
 /**
  * 字符串token
+ * @author hushengdong
  */
 type stringToken struct {
 	tk *tokenKind

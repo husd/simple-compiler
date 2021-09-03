@@ -2,9 +2,12 @@ package lexical
 
 import "fmt"
 
-// 这个类主要记录了Java的一些常量 主要是 符号表的常量
-
-// TokenTag 词法分析器的输出结果 Token
+/**
+ * 这个类主要记录了Java的一些常量 主要是 符号表的常量
+ * tokenTag 词法分析器的输出结果 Token
+ *
+ * @author hushengdong
+ */
 type TokenTag struct {
 	LineNum   int         // 源代码多少行
 	Token     interface{} // 标识符

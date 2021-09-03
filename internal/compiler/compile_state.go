@@ -1,6 +1,11 @@
 package compiler
 
-//编译阶段
+/**
+ * 编译阶段的各个状态，这里还定义了几个DEBUG的变量
+ * @author hushengdong
+ */
+
+// 编译阶段
 type CompileState int
 
 const (

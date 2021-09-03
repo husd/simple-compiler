@@ -2,16 +2,10 @@ package parser
 
 import "husd.com/v0/util"
 
-type tokenTag int
-
-const (
-	TOKEN_TAG_DEFAULT tokenTag = 1
-	TOKEN_TAG_NAMED   tokenTag = 2
-	TOKEN_TAG_STRING  tokenTag = 3
-	TOKEN_TAG_NUMERIC tokenTag = 4
-)
-
-// token 词法分析器解析出来的最小单元
+/**
+ * token 词法分析器解析出来的最小单元
+ * @author hushengdong
+ */
 type token interface {
 	GetTokenKind() *tokenKind
 
@@ -29,3 +23,12 @@ type token interface {
 	 */
 	DebugToString() string
 }
+
+type tokenTag int
+
+const (
+	TOKEN_TAG_DEFAULT tokenTag = 1
+	TOKEN_TAG_NAMED   tokenTag = 2
+	TOKEN_TAG_STRING  tokenTag = 3
+	TOKEN_TAG_NUMERIC tokenTag = 4
+)

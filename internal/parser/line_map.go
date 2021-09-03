@@ -1,6 +1,10 @@
 package parser
 
-// 记录字符的绝对位置和行号的关系
+/**
+ * 记录字符的绝对位置和行号的关系
+ * @author hushengdong
+ */
+
 type lineMap struct {
 	lineMap map[int]int
 }

@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
 func TestWordLexical_LexicalAnalysis(t *testing.T) {
 
 	wordLexer := WordLexical{}

@@ -4,6 +4,7 @@ import "husd.com/v0/util"
 
 /**
  * 这里定义Java的词法分析器的所有的token
+ * @author hushengdong
  */
 type Tokens struct {
 	tokenName []*util.Name    // The names of all Tokens.

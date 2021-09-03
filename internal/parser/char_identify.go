@@ -2,6 +2,7 @@ package parser
 
 /**
  * 这个类是判断Java标识符的
+ * @author hushengdong
  */
 
 /**

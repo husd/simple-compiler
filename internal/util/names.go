@@ -2,6 +2,7 @@ package util
 
 /**
  * 定义了编译器的标准的name table，如果你要加新的name，也要在这里定义。
+ * @author hushengdong
  */
 
 type Names struct {

@@ -1,6 +1,11 @@
 package common
 
-//进制
+/**
+ *
+ * @author hushengdong
+ */
+
+// 进制
 type RADIX_NUM int
 
 const (

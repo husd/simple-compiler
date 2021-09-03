@@ -2,6 +2,10 @@ package lexical
 
 import "testing"
 
+/**
+ *
+ * @author hushengdong
+ */
 func TestHandleError(t *testing.T) {
 	type args struct {
 		token *TokenTag

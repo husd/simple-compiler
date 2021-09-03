@@ -6,6 +6,10 @@ import (
 	"unicode/utf8"
 )
 
+/**
+ *
+ * @author hushengdong
+ */
 func TestStringCharSequence_CharAt(t *testing.T) {
 	type fields struct {
 		length  int

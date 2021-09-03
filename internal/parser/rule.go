@@ -1,5 +1,9 @@
 package parser
 
+/**
+ *
+ * @author hushengdong
+ */
 // 字面量是否允许下划线 例如： int a = 124_23 jdk1.7之后可以这么做了
 const allowUnderscoresInLiterals bool = true
 

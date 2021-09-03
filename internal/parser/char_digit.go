@@ -1,5 +1,10 @@
 package parser
 
+/**
+ *
+ * @author hushengdong
+ */
+
 // 如果 ch = 0x10 那么 会挨个解析这个数字 看其是不是符合对应的进制要求
 // 例如 digitRune(3,2) = -1 因为2进制只有0和1
 //  digitRune(0,2) = 0

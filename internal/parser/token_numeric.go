@@ -7,6 +7,7 @@ import (
 
 /**
  * 数字类的token
+ * @author hushengdong
  */
 type numericToken struct {
 	tk      *tokenKind

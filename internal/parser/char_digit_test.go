@@ -2,6 +2,10 @@ package parser
 
 import "testing"
 
+/**
+ *
+ * @author hushengdong
+ */
 func Test_digitRuneRadix16(t *testing.T) {
 	type args struct {
 		r rune

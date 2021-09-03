@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+/**
+ * 主要测试了读取中文的问题，数字和字母的问题都不大
+ * @author hushengdong
+ */
 func TestRune(t *testing.T) {
 
 	var str = "中华人民123\u4E25"
@@ -14,7 +18,7 @@ func TestRune(t *testing.T) {
 	buf := []byte(str)
 	reader := NewUnicodeReader(&buf)
 	for {
-		succ := reader.scanRune()
+		succ := reader.ScanRune()
 		if !succ {
 			break
 		}
@@ -48,9 +52,10 @@ func TestSlice(t *testing.T) {
 	fmt.Println(sbuf)
 }
 
+// go语言的switch 不需要break 空的case也没问题 以下代码什么都不会输出
 func TestSwitch(t *testing.T) {
 
-	a := 2
+	a := 1
 	switch a {
 	case 1:
 	case 2:

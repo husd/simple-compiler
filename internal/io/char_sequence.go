@@ -1,5 +1,9 @@
 package io
 
+/**
+ *
+ * @author hushengdong
+ */
 import "fmt"
 
 //CharSequence 只读的字符流 GO里没有字符
@@ -21,9 +25,13 @@ type CharSequence interface {
 	 * 子序列
 	 */
 	SubCharSequence(start int, end int) string
-
-	ReadRune() rune
-
+	/**
+	 * 扫描下一个char 会移动指针到下一个位置
+	 */
+	ScanRune() rune
+	/**
+	 * 当前指针的位置
+	 */
 	CurrentPos() int
 }
 

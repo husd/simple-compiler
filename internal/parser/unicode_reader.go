@@ -8,7 +8,11 @@ import (
 	"unicode/utf8"
 )
 
-// 实际为utf8解析 utf8 without bom
+/**
+ * 实际为utf8解析 utf8 without bom 这里主要实现了从字节数组中解析utf8编码，然后
+ * 提供了一个切片，缓存了当前识别到的字符，切片可以自动扩容。
+ * @author hushengdong
+ */
 type UnicodeReader struct {
 	buf              []byte //所有的数组
 	size             int    // 数组的大小
@@ -49,7 +53,7 @@ func NewUnicodeReader(bufPoint *[]byte) *UnicodeReader {
 
 	reader.end = false
 
-	reader.scanRune()
+	reader.ScanRune()
 	return &reader
 }
 
@@ -74,12 +78,12 @@ func (reader *UnicodeReader) seenNextRune() (rune, bool) {
 }
 
 //调用这个方法之后，会移动指针到下一个位置
-func (reader *UnicodeReader) scanRune() bool {
+func (reader *UnicodeReader) ScanRune() bool {
 
 	pos := reader.bp
 	if pos >= reader.size {
 		reader.end = true
-		reader.ch = -1 //TODO husd 考虑返回-1是否合适
+		reader.ch = -1 // TODO husd 考虑返回-1是否合适
 		return false
 	}
 	succ, res, count := reader.runeAt(pos)
@@ -94,7 +98,7 @@ func (reader *UnicodeReader) scanRune() bool {
 	//	reader.convertUnicode()
 	//}
 	if compiler.DEBUG_SCAN_RUNE {
-		fmt.Println("----debug----第[", reader.lineNum, "]行 pos :", reader.linePos, "  scanRune ch : ", string(reader.ch))
+		fmt.Println("----debug----第[", reader.lineNum, "]行 pos :", reader.linePos, "  ScanRune ch : ", string(reader.ch))
 	}
 	if reader.ch == Layout_char_lf {
 		reader.lineNum++
@@ -116,7 +120,7 @@ func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
 	if pos >= reader.size {
 		return false, 0, 0
 	}
-	currentByte := reader.byteAt(pos)
+	currentByte := reader.ByteAt(pos)
 	succ, count := utf8Start(currentByte)
 	if !succ {
 		panic("解析utf8编码失败")
@@ -139,15 +143,20 @@ func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
 
 func (reader *UnicodeReader) currentByte() uint8 {
 
-	return reader.byteAt(reader.bp)
+	return reader.ByteAt(reader.bp)
 }
 
-func (reader *UnicodeReader) currentPos() int {
+func (reader *UnicodeReader) CurrentPos() int {
 
 	return reader.bp
 }
 
-func (reader *UnicodeReader) byteAt(pos int) uint8 {
+func (reader *UnicodeReader) CurrentRune() rune {
+
+	return reader.ch
+}
+
+func (reader *UnicodeReader) ByteAt(pos int) uint8 {
 
 	reader.checkPos(pos)
 	return reader.buf[pos]
@@ -160,7 +169,7 @@ func (reader *UnicodeReader) checkPos(pos int) {
 	}
 }
 
-func (reader *UnicodeReader) subByteArray(start int, end int) []byte {
+func (reader *UnicodeReader) SubByteArray(start int, end int) []byte {
 
 	return reader.buf[start:end]
 }
@@ -212,7 +221,7 @@ func (reader *UnicodeReader) putRune(scan bool) {
 	}
 	reader.spos = spos + reader.chLen
 	if scan {
-		reader.scanRune()
+		reader.ScanRune()
 	}
 }
 
@@ -253,7 +262,7 @@ func (reader *UnicodeReader) putRuneChar(r rune, scan bool) {
 		reader.spos = reader.spos + num
 	}
 	if scan {
-		reader.scanRune()
+		reader.ScanRune()
 	}
 }
 

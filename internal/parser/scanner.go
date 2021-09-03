@@ -6,7 +6,10 @@ import (
 	"husd.com/v0/util"
 )
 
-//Scanner 在CharSequence里处理好unicode的事情
+/**
+ * Scanner 在CharSequence里处理好unicode的事情
+ * @author hushengdong
+ */
 type Scanner struct {
 	token    token
 	preToken token
@@ -31,10 +34,10 @@ func NewScannerLexer(path string, context *util.Context) *Scanner {
 func (scan *Scanner) NextToken() {
 
 	scan.preToken = scan.token
-	list := scan.tokenList
-	if list.Len() > 0 {
-		first := list.Front()
-		list.Remove(first)
+	tokenList := scan.tokenList
+	if tokenList.Len() > 0 {
+		first := tokenList.Front()
+		tokenList.Remove(first)
 		scan.token = first.Value.(token)
 	} else {
 		scan.token = scan.javaTokenizer.readToken()
