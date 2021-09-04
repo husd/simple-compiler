@@ -14,11 +14,15 @@ type namedToken struct {
 	lineNum int // 多少行
 	linePos int // 位置
 	n       *util.Name
+
+	pos    int // 开始位置
+	endPos int //结束位置
 }
 
-func newNamedToken(tk *tokenKind, lineNum int, linePos int, n *util.Name) *namedToken {
+func newNamedToken(tk *tokenKind, lineNum int, linePos int,
+	n *util.Name, pos int, endPos int) *namedToken {
 
-	res := namedToken{tk, lineNum, linePos, n}
+	res := namedToken{tk, lineNum, linePos, n, pos, endPos}
 	return &res
 }
 
@@ -53,4 +57,14 @@ func (nt *namedToken) CheckTokenKind() {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_NAMED))
 	}
 
+}
+
+func (dt *namedToken) Pos() int {
+
+	return dt.pos
+}
+
+func (dt *namedToken) EndPos() int {
+
+	return dt.endPos
 }

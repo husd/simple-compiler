@@ -14,11 +14,13 @@ type defaultToken struct {
 	lineNum int // 多少行
 	linePos int // 位置
 
+	pos    int // 开始位置
+	endPos int //结束位置
 }
 
-func newDefaultToken(tk *tokenKind, lineNum int, linePos int) *defaultToken {
+func newDefaultToken(tk *tokenKind, lineNum int, linePos int, pos int, endPos int) *defaultToken {
 
-	res := defaultToken{tk, lineNum, linePos}
+	res := defaultToken{tk, lineNum, linePos, pos, endPos}
 	return &res
 }
 
@@ -53,4 +55,14 @@ func (dt *defaultToken) CheckTokenKind() {
 	if dt.tk.Tag != TOKEN_TAG_DEFAULT {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_DEFAULT))
 	}
+}
+
+func (dt *defaultToken) Pos() int {
+
+	return dt.pos
+}
+
+func (dt *defaultToken) EndPos() int {
+
+	return dt.endPos
 }

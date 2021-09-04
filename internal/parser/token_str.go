@@ -16,11 +16,14 @@ type stringToken struct {
 
 	val string //字面量
 
+	pos    int // 开始位置
+	endPos int //结束位置
 }
 
-func newStringToken(tk *tokenKind, lineNum int, linePos int, val string) *stringToken {
+func newStringToken(tk *tokenKind, lineNum int, linePos int,
+	val string, pos int, endPos int) *stringToken {
 
-	res := stringToken{tk, lineNum, linePos, val}
+	res := stringToken{tk, lineNum, linePos, val, pos, endPos}
 	return &res
 }
 
@@ -53,4 +56,14 @@ func (st *stringToken) CheckTokenKind() {
 	if st.tk.Tag != TOKEN_TAG_STRING {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_STRING))
 	}
+}
+
+func (dt *stringToken) Pos() int {
+
+	return dt.pos
+}
+
+func (dt *stringToken) EndPos() int {
+
+	return dt.endPos
 }

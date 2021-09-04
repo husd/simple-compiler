@@ -15,11 +15,15 @@ type numericToken struct {
 
 	val   string
 	radix int
+
+	pos    int // 开始位置
+	endPos int //结束位置
 }
 
-func newNumericToken(tk *tokenKind, lineNum int, linePos int, val string, radix int) *numericToken {
+func newNumericToken(tk *tokenKind, lineNum int, linePos int,
+	val string, radix int, pos int, endPos int) *numericToken {
 
-	res := numericToken{tk, lineNum, linePos, val, radix}
+	res := numericToken{tk, lineNum, linePos, val, radix, pos, endPos}
 	return &res
 }
 
@@ -51,4 +55,14 @@ func (nt *numericToken) CheckTokenKind() {
 	if nt.tk.Tag != TOKEN_TAG_NUMERIC {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_NUMERIC))
 	}
+}
+
+func (dt *numericToken) Pos() int {
+
+	return dt.pos
+}
+
+func (dt *numericToken) EndPos() int {
+
+	return dt.endPos
 }

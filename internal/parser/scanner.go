@@ -15,7 +15,16 @@ type Scanner struct {
 	javaTokenizer *JavaTokenizer
 }
 
-func NewScannerLexer(path string, context *util.Context) *Scanner {
+func InstanceScannerLexer(path string, c *util.Context) *Scanner {
+
+	ok, obj := c.Get(util.C_LEXER)
+	if ok {
+		return obj.(*Scanner)
+	}
+	return NewScannerLexer(path, c)
+}
+
+func NewScannerLexer(path string, c *util.Context) *Scanner {
 
 	scanner := Scanner{}
 	scanner.tokenList = list.New()
@@ -23,7 +32,7 @@ func NewScannerLexer(path string, context *util.Context) *Scanner {
 	dummy := dummyToken()
 	scanner.token = dummy
 	scanner.preToken = dummy
-	scanner.javaTokenizer = NewJavaTokenizer(path, context)
+	scanner.javaTokenizer = NewJavaTokenizer(path, c)
 
 	return &scanner
 }
@@ -98,6 +107,6 @@ func (scan *Scanner) ensureLookahead(lookahead int) {
 
 func dummyToken() token {
 
-	token := newDefaultToken(TOKEN_KIND_ERROR, 0, 0)
+	token := newDefaultToken(TOKEN_KIND_ERROR, 0, 0, 0, 0)
 	return token
 }

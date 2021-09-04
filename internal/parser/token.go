@@ -28,4 +28,12 @@ type token interface {
 	 * DEBUG使用的
 	 */
 	DebugToString() string
+	/**
+	 * position started in the source file
+	 */
+	Pos() int
+	/**
+	 * position ended in the source file
+	 */
+	EndPos() int
 }
