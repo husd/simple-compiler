@@ -4,6 +4,6 @@ package io
 func GetCharSequenceFromFactory(path string) *CharSequence {
 
 	//默认的文件类型的字符
-	charSeq := NewFileCharSequence(path)
+	charSeq := NewStringCharSequence(path)
 	return &charSeq
 }

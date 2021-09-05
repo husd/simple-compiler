@@ -12,12 +12,13 @@ type JavacParser struct {
 	c            *util.Context //
 	ScannerLexer lexer         // 词法分析器
 	source       code.JVersion // 当前JDK的版本
-	token        token
+	token        Token
 
 	endPosTable *SimpleEndPosTable
 
-	TreeMaker *ast_tree.AstTreeMaker
-	names     *util.Names
+	TreeMaker   *ast_tree.AstTreeMaker
+	names       *util.Names
+	symbolTable *SymbolTable
 }
 
 func NewJavacParser(path string, context *util.Context) *JavacParser {
@@ -29,12 +30,13 @@ func NewJavacParser(path string, context *util.Context) *JavacParser {
 	parser.endPosTable = NewSimpleEndPosTable(&parser)
 	parser.TreeMaker = ast_tree.InstanceAstTreeMaker(context)
 	parser.names = util.InstanceNames(context)
+	parser.symbolTable = InstanceSymbolTable(context)
 
 	return &parser
 }
 
-// ----------------- token 相关的方法
-func (jp *JavacParser) currentToken() token {
+// ----------------- Token 相关的方法
+func (jp *JavacParser) currentToken() Token {
 
 	return jp.token
 }
@@ -46,16 +48,16 @@ func (jp *JavacParser) nextToken() {
 	jp.token = lex.Token()
 }
 
-// ----------------- token 相关的方法
+// ----------------- Token 相关的方法
 
 //core function
 func (jp *JavacParser) ParseJCCompilationUnit() ast_tree.JCCompilationUnit {
 
 	//seenImport := false
-
 	//consumedToplevelDoc := false
 	for {
 		tok := jp.token
+		jp.symbolTable.PutToken(tok)
 		if compiler.DEBUG_TOKEN {
 			fmt.Println(tok.DebugToString())
 		}
@@ -64,8 +66,9 @@ func (jp *JavacParser) ParseJCCompilationUnit() ast_tree.JCCompilationUnit {
 		}
 		jp.nextToken()
 	}
+	jp.symbolTable.GetTokenByIndex(1000)
 	seenPackage := false
-	//firstToken := jp.token
+	//firstToken := jp.Token
 	var pid *ast_tree.JCExpression
 	var mods *ast_tree.JCModifiers
 	packageAnnotations := make([]ast_tree.JCAnnotation, 0, 10)

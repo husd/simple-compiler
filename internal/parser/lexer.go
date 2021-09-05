@@ -6,17 +6,17 @@ package parser
  */
 type lexer interface {
 	/**
-	 * 移动指针到下一个 token
+	 * 移动指针到下一个 Token
 	 */
 	NextToken()
 	/**
-	 * 返回当前指针指向的 token
+	 * 返回当前指针指向的 Token
 	 */
-	Token() token
+	Token() Token
 
-	Ahead(len int) token
+	Ahead(len int) Token
 
-	PreToken() token
+	PreToken() Token
 
 	ErrPos() int
 

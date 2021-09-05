@@ -288,5 +288,6 @@ func NewNames(c *Context) *Names {
 	ns.metafactory = ns.fromString("metafactory")
 	ns.altMetafactory = ns.fromString("altMetafactory")
 
+	c.Put(C_NAMES, ns)
 	return ns
 }

@@ -116,7 +116,7 @@ func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
 	if pos >= reader.size {
 		return false, 0, 0
 	}
-	currentByte := reader.byteAt(pos)
+	currentByte := reader.ByteAt(pos)
 	succ, count := utf8Start(currentByte)
 	if !succ {
 		panic("解析utf8编码失败")
@@ -139,7 +139,7 @@ func (reader *UnicodeReader) runeAt(pos int) (bool, rune, int) {
 
 func (reader *UnicodeReader) currentByte() uint8 {
 
-	return reader.byteAt(reader.bp)
+	return reader.ByteAt(reader.bp)
 }
 
 func (reader *UnicodeReader) currentPos() int {
@@ -147,7 +147,7 @@ func (reader *UnicodeReader) currentPos() int {
 	return reader.bp
 }
 
-func (reader *UnicodeReader) byteAt(pos int) uint8 {
+func (reader *UnicodeReader) ByteAt(pos int) uint8 {
 
 	reader.checkPos(pos)
 	return reader.buf[pos]

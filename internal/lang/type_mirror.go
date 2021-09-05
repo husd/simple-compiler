@@ -6,59 +6,30 @@ package lang
  * @author hushengdong
  */
 type TypeMirror interface {
-
 	/**
-	 * 返回类型的类型
+	 * 返回类型的类型 这个是具体的类型
 	 */
 	GetTypeKind() TypeKind
 	/**
 	 * 是不是同一个类型
 	 */
-	Equals() bool
+	Equals(t TypeMirror) bool
 }
 
-//下面的类型，都是TypeMirror类型的子类型
-
-type ReferenceType interface {
+//引用类型
+type TypeMirrorReference interface {
 	/**
-	 * 获取到具体的类型
+	 * 属于哪几种类型
 	 */
-	GetTypeMirror() TypeMirror
+	GetTypeMirrorGroup() TypeMirrorGroup
 }
 
-/**
- *
- */
-type NoType interface {
-	/**
-	 * 获取到具体的类型
-	 */
-	GetTypeMirror() TypeMirror
-}
+type TypeMirrorGroup string
 
-//原始类型
-type PrimitiveType interface {
-	/**
-	 * 获取到具体的类型
-	 */
-	GetTypeMirror() TypeMirror
-}
-
-type UnionType interface {
-	/**
-	 * 获取到具体的类型
-	 */
-	GetTypeMirror() TypeMirror
-}
-
-/**
- *   ?
- *   ? extends Number
- *   ? super T
- */
-type WildcardType interface {
-	/**
-	 * 获取到具体的类型
-	 */
-	GetTypeMirror() TypeMirror
-}
+const (
+	Type_group_ReferenceType TypeMirrorGroup = "ReferenceType"
+	Type_group_NoType        TypeMirrorGroup = "NoType"
+	Type_group_PrimitiveType TypeMirrorGroup = "PrimitiveType"
+	Type_group_UnionType     TypeMirrorGroup = "UnionType"
+	Type_group_WildcardType  TypeMirrorGroup = "WildcardType" // ? extends Number or ? super T
+)

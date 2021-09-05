@@ -61,7 +61,7 @@ func NewJavaTokenizerWithString(str string, c *util.Context) *JavaTokenizer {
 	return &javaTokenizer
 }
 
-func (jt *JavaTokenizer) readToken() token {
+func (jt *JavaTokenizer) readToken() Token {
 
 	pos := 0
 	reader := jt.reader
@@ -86,8 +86,8 @@ loop:
 				reader.scanRune()
 			}
 		case
-			'A', 'B', 'C', 'D', 'E', 'TreeMaker', 'G', 'H', 'I', 'J',
-			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'ScannerLexer', 'T',
+			'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
 			'U', 'V', 'W', 'X', 'Y', 'Z',
 			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
 			'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -110,7 +110,7 @@ loop:
 					jt.scanNumber(pos, 16)
 				}
 			} else if reader.ch == 'b' || reader.ch == 'B' {
-				if !util.allowBinaryLiterals {
+				if !allowBinaryLiterals {
 					jt.lexError(pos, "不允许使用二进制字面量", jt.source)
 				}
 				reader.scanRune()
@@ -350,8 +350,8 @@ func (jt *JavaTokenizer) scanIdentify() {
 loop:
 	for {
 		switch reader.ch {
-		case 'A', 'B', 'C', 'D', 'E', 'TreeMaker', 'G', 'H', 'I', 'J',
-			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'ScannerLexer', 'T',
+		case 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+			'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
 			'U', 'V', 'W', 'X', 'Y', 'Z',
 			'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
 			'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
@@ -439,7 +439,7 @@ func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 		jt.scanFractionAndSuffix(pos)
 	} else if digitRadix == 10 &&
 		(reader.ch == 'e' || reader.ch == 'E' ||
-			reader.ch == 'f' || reader.ch == 'TreeMaker' ||
+			reader.ch == 'f' || reader.ch == 'F' ||
 			reader.ch == 'd' || reader.ch == 'D') {
 		jt.scanFractionAndSuffix(pos)
 	} else {
@@ -510,9 +510,9 @@ func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 		jt.skipUnderLine()
 		if reader.ch >= 0 && reader.ch <= 9 {
 			jt.scanDigits(pos, 10)
-			if !util.allowHexFloats {
+			if !allowHexFloats {
 				jt.lexError(pos, "不允许十六进制浮点文本")
-			} else if !util.hexFloatsWork {
+			} else if !hexFloatsWork {
 				jt.lexError(pos, "不允许十六进制浮点文本")
 			}
 		} else {
@@ -521,7 +521,7 @@ func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 	} else {
 		jt.lexError(pos, "fp.lt 格式不正确")
 	}
-	if reader.ch == 'f' || reader.ch == 'TreeMaker' {
+	if reader.ch == 'f' || reader.ch == 'F' {
 		reader.putRune(true)
 		jt.tk = TOKEN_KIND_FLOAT_LITERAL
 		jt.radix = 16
@@ -545,7 +545,7 @@ func (jt *JavaTokenizer) scanDigits(pos int, radix int) {
 		if reader.ch != '_' {
 			reader.putRune(false)
 		} else {
-			if !util.allowUnderscoresInLiterals {
+			if !allowUnderscoresInLiterals {
 				jt.lexError(pos, "error:数字不支持下划线")
 			}
 			res = reader.ch
@@ -638,7 +638,7 @@ func (jt *JavaTokenizer) scanFractionAndSuffix(pos int) {
 	jt.radix = 10
 	jt.scanFraction(pos)
 	reader := jt.reader
-	if reader.ch == 'f' || reader.ch == 'TreeMaker' {
+	if reader.ch == 'f' || reader.ch == 'F' {
 		reader.putRune(true)
 		jt.tk = TOKEN_KIND_FLOAT_LITERAL
 	} else {

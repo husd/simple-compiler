@@ -23,14 +23,15 @@ func TestJavaTokenizer_readToken(t *testing.T) {
 	str := []string{
 		"/** 多行注释 **/     ",
 		"/** sadf     **/    ",
-		"/**" +
-			"* 1234 " +
-			"// sdf " +
-			" **/     ",
+		`/**
+			"* 1234 
+			"// sdf 
+			" **/     `,
 		"//",
 		"////",
 		"// public static void main //    ",
-		"// sdf */", "// /* ",
+		"// sdf */",
+		"// /* ",
 	}
 	for inx, s := range str {
 		tokenizer := NewJavaTokenizerWithString(s, c)
@@ -42,7 +43,7 @@ func TestJavaTokenizer_readToken(t *testing.T) {
 //测试10进制数字
 func TestJavaTokenizer_readToken_num(t *testing.T) {
 
-	var tt token
+	var tt Token
 	//var str string
 	c := util.NewContext()
 
@@ -61,7 +62,7 @@ func TestJavaTokenizer_readToken_num(t *testing.T) {
 //测试2进制数字
 func TestJavaTokenizer_readToken_num2(t *testing.T) {
 
-	var tt token
+	var tt Token
 	c := util.NewContext()
 	strArr := []string{"0b1010", "0b1_010", "0b_1010"}
 	for _, str := range strArr {
@@ -76,7 +77,7 @@ func TestJavaTokenizer_readToken_num2(t *testing.T) {
 //测试8进制数字
 func TestJavaTokenizer_readToken_num8(t *testing.T) {
 
-	var tt token
+	var tt Token
 	c := util.NewContext()
 	strArr := []string{"01072", "01_072", "0_1072"}
 	for _, str := range strArr {
@@ -91,7 +92,7 @@ func TestJavaTokenizer_readToken_num8(t *testing.T) {
 //测试16进制数字
 func TestJavaTokenizer_readToken_num16(t *testing.T) {
 
-	var tt token
+	var tt Token
 	c := util.NewContext()
 	strArr := []string{"0Xfffe", "0xf_ffe", "0X_fffe"}
 	for _, str := range strArr {
@@ -108,7 +109,7 @@ func TestJavaTokenizer_readToken2(t *testing.T) {
 	c := util.NewContext()
 	str := "   int a  = 10;   "
 	tokenizer := NewJavaTokenizerWithString(str, c)
-	var tt token
+	var tt Token
 
 	tt = tokenizer.readToken()
 	//tt = tokenizer.readToken()

@@ -11,8 +11,8 @@ const (
 	TOKEN_TAG_NUMERIC tokenTag = 4
 )
 
-// token 词法分析器解析出来的最小单元
-type token interface {
+// Token 词法分析器解析出来的最小单元
+type Token interface {
 	GetTokenKind() *tokenKind
 
 	GetName() *util.Name
@@ -36,4 +36,10 @@ type token interface {
 	 * position ended in the source file
 	 */
 	EndPos() int
+	/**
+	 * 在符号表里的位置
+	 */
+	GetSymbolTableIndex() int
+
+	SetSymbolTableIndex(index int)
 }
