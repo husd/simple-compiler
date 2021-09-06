@@ -12,3 +12,5 @@ const hexFloatsWork bool = false
 const allowHexFloats bool = false
 
 const allowBinaryLiterals bool = true
+
+const allowAssert = false

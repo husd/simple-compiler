@@ -16,6 +16,7 @@ type SharedNameTable struct {
 func NewSharedNameTable(c *Context) *SharedNameTable {
 
 	snt := SharedNameTable{}
+	snt.HashMap = make(map[string]*Name, 128)
 
 	return &snt
 }

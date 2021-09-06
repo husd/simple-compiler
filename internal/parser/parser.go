@@ -1,6 +1,6 @@
 package parser
 
-import "husd.com/v0/jc"
+import "husd.com/v0/ast_tree"
 
 //Parser
 /**
@@ -9,15 +9,14 @@ import "husd.com/v0/jc"
  * JCCompilationUnit
  * JCExpression 表达式 类似： a = a + 1;
  * JCStatement 声明 类似： String str = "123";
- * @author hushengdong
  */
 type Parser interface {
 	// Parse a compilation unit.
-	ParseJCCompilationUnit() jc.JCCompilationUnit
+	ParseJCCompilationUnit() ast_tree.JCCompilationUnit
 	//Parse an expression.
-	ParseExpression() jc.JCExpression
+	ParseExpression() ast_tree.JCExpression
 	//Parse a statement.
-	ParseStatement() jc.JCStatement
+	ParseStatement() ast_tree.JCStatement
 	//Parse a type.
-	ParseType() jc.JCExpression
+	ParseType() ast_tree.JCExpression
 }

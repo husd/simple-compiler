@@ -61,7 +61,7 @@ func NewJavaTokenizerWithString(str string, c *util.Context) *JavaTokenizer {
 	return &javaTokenizer
 }
 
-func (jt *JavaTokenizer) readToken() token {
+func (jt *JavaTokenizer) readToken() Token {
 
 	pos := 0
 	reader := jt.reader
@@ -312,13 +312,13 @@ loop:
 	endPos = reader.bp
 	switch jt.tk.Tag {
 	case TOKEN_TAG_DEFAULT:
-		return newDefaultToken(jt.tk, reader.lineNum, reader.linePos)
+		return newDefaultToken(jt.tk, reader.lineNum, reader.linePos, pos, endPos)
 	case TOKEN_TAG_STRING:
-		return newStringToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr)
+		return newStringToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, pos, endPos)
 	case TOKEN_TAG_NUMERIC:
-		return newNumericToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, jt.radix)
+		return newNumericToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, jt.radix, pos, endPos)
 	case TOKEN_TAG_NAMED:
-		return newNamedToken(jt.tk, reader.lineNum, reader.linePos, jt.name)
+		return newNamedToken(jt.tk, reader.lineNum, reader.linePos, jt.name, pos, endPos)
 	default:
 		panic(fmt.Sprintf("错误的tokenKind pos:%v endPos:%v", pos, endPos))
 	}

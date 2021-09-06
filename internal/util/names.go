@@ -36,7 +36,7 @@ type Names struct {
 	deserializeLambda      *Name
 	desiredAssertionStatus *Name
 	equals                 *Name
-	error                  *Name
+	Error                  *Name
 	family                 *Name
 	finalize               *Name
 	forName                *Name
@@ -145,6 +145,15 @@ func (ns *Names) fromString(s string) *Name {
 	return ns.table.fromString(s)
 }
 
+func InstanceNames(c *Context) *Names {
+
+	ok, obj := c.Get(C_NAMES)
+	if ok {
+		return obj.(*Names)
+	}
+	return NewNames(c)
+}
+
 func NewNames(c *Context) *Names {
 
 	ns := &Names{}
@@ -179,7 +188,7 @@ func NewNames(c *Context) *Names {
 	ns.deserializeLambda = ns.fromString("$deserializeLambda$")
 	ns.desiredAssertionStatus = ns.fromString("desiredAssertionStatus")
 	ns.equals = ns.fromString("equals")
-	ns.error = ns.fromString("<error>")
+	ns.Error = ns.fromString("<error>")
 	ns.family = ns.fromString("family")
 	ns.finalize = ns.fromString("finalize")
 	ns.forName = ns.fromString("forName")
@@ -280,5 +289,6 @@ func NewNames(c *Context) *Names {
 	ns.metafactory = ns.fromString("metafactory")
 	ns.altMetafactory = ns.fromString("altMetafactory")
 
+	c.Put(C_NAMES, ns)
 	return ns
 }

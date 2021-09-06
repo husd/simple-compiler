@@ -83,7 +83,7 @@ func (reader *UnicodeReader) ScanRune() bool {
 	pos := reader.bp
 	if pos >= reader.size {
 		reader.end = true
-		reader.ch = -1 // TODO husd 考虑返回-1是否合适
+		reader.ch = -1 // TODO husd 考虑返回-1是否合适 目的是为了switch能走到default
 		return false
 	}
 	succ, res, count := reader.runeAt(pos)
