@@ -25,5 +25,4 @@ const (
 type AstTreeNode struct {
 	nodeType TreeType
 	msg      string //描述信息
-
 }

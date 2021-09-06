@@ -39,6 +39,10 @@ func parseFiles(files []string) *list.List {
 		f := files[i]
 		if _, ok := fileMap[f]; !ok {
 			fmt.Println("开始编译文件: ", f)
+			if !util.Exists(f) {
+				fmt.Println("编译文件失败，文件不存在:", f)
+				continue
+			}
 			fileMap[f] = 1
 			context := util.NewContext()
 			parseFile(f, context)

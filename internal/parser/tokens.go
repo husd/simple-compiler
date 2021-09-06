@@ -8,17 +8,26 @@ import "husd.com/v0/util"
  */
 type Tokens struct {
 	tokenName []*util.Name    // The names of all Tokens.
-	key       [114]*tokenKind //Keyword array. Maps name indices to Token.
+	key       [114]*tokenKind // Keyword array. Maps name indices to Token.
 	maxKey    int             // key的最大索引
 
 	keyword map[string]*tokenKind
 }
 
+func InstanceTokens(c *util.Context) *Tokens {
+
+	ok, obj := c.Get(util.C_TOKENS)
+	if ok {
+		return obj.(*Tokens)
+	}
+	return NewTokens(c)
+}
+
 func NewTokens(c *util.Context) *Tokens {
 
-	tks := Tokens{}
+	tks := &Tokens{}
 
-	//初始化所有的关键字
+	// 初始化所有的关键字
 	tks.keyword = make(map[string]*tokenKind)
 	// 先这么用hashmap解决，后续再考虑优化成数组解决 TODO husd
 	tks.keyword[TOKEN_KIND_EOF.Name] = TOKEN_KIND_EOF
@@ -136,7 +145,8 @@ func NewTokens(c *util.Context) *Tokens {
 	tks.keyword[TOKEN_KIND_MONKEYS_AT.Name] = TOKEN_KIND_MONKEYS_AT
 	tks.keyword[TOKEN_KIND_CUSTOM.Name] = TOKEN_KIND_CUSTOM
 
-	return &tks
+	c.Put(util.C_TOKENS, tks)
+	return tks
 }
 
 //这个是根据Name，返回是关键字 还是标识符 还是什么其它的

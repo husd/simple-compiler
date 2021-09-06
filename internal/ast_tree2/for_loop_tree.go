@@ -1,7 +1,11 @@
 package ast_tree2
 
 /**
- *
+ * For example:
+ * <pre>
+ *   for ( <em>initializer</em> ; <em>condition</em> ; <em>update</em> )
+ *       <em>statement</em>
+ * </pre>
  * @author hushengdong
  */
 type ForLoopTreeV2 interface {

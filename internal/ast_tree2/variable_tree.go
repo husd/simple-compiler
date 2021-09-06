@@ -11,7 +11,7 @@ package ast_tree2
 type VariableTreeV2 interface {
 	TreeType() TreeType
 	StatementTreeV2_()
-
+	VariableTreeV2_()
 	// --
 	GetModifier() ModifiersTreeV2
 	GetName() string

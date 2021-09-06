@@ -1,10 +1,14 @@
 package ast_tree2
 
 /**
- * switch a {
- *   case 10:
- *   default:
- * }
+ * For example:
+ * <pre>
+ *   case <em>expression</em> :
+ *       <em>statements</em>
+ *
+ *   default :
+ *       <em>statements</em>
+ * </pre>
  * @author hushengdong
  */
 type CaseTreeV2 interface {

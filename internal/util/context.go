@@ -15,7 +15,8 @@ const (
 	C_TREE_MAKER   string = "AstTreeMaker"
 	C_NAMES        string = "Names"
 	C_LEXER        string = "ScannerLexer"
-	C_SYMBOL_TABLE string = "SymbolTable" //符号表
+	C_SYMBOL_TABLE string = "SymbolTable" // 符号表
+	C_TOKENS       string = "Tokens"      // 符号表
 )
 
 func NewContext() *Context {

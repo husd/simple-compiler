@@ -41,7 +41,7 @@ func NewJavaTokenizer(path string, c *util.Context) *JavaTokenizer {
 	javaTokenizer.source = v
 	javaTokenizer.tk = TOKEN_KIND_DEF
 	javaTokenizer.context = c
-	javaTokenizer.tokenFactory = NewTokens(c)
+	javaTokenizer.tokenFactory = InstanceTokens(c)
 
 	return &javaTokenizer
 }
@@ -56,7 +56,7 @@ func NewJavaTokenizerWithString(str string, c *util.Context) *JavaTokenizer {
 	javaTokenizer.source = v
 	javaTokenizer.tk = TOKEN_KIND_ERROR
 	javaTokenizer.context = c
-	javaTokenizer.tokenFactory = NewTokens(c)
+	javaTokenizer.tokenFactory = InstanceTokens(c)
 
 	return &javaTokenizer
 }

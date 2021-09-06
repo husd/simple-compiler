@@ -18,14 +18,14 @@ func main() {
 		fmt.Println("请输入要编译的文件的路径")
 		return
 	}
-	//compiler(args[1:])
+	// compiler(args[1:])
 
-	f := []string{"D:\\test.java"}
-	//f := []string{"/tmp/test.java"}
+	// f := []string{"D:\\test.java"}
+	f := []string{"/tmp/test.java"}
 	compiler(f)
 
-	//v3 := lexical.WordLexicalV3{}
-	//for _,path := range f {
+	// v3 := lexical.WordLexicalV3{}
+	// for _,path := range f {
 	//	v3.LexicalAnalysis(path)
-	//}
+	// }
 }
