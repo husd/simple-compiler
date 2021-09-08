@@ -12,11 +12,11 @@ import "husd.com/v0/ast_tree"
  */
 type Parser interface {
 	// Parse a compilation unit.
-	ParseJCCompilationUnit() ast_tree.JCCompilationUnit
+	ParseJCCompilationUnit() *ast_tree.JCCompilationUnit
 	//Parse an expression.
-	ParseExpression() ast_tree.JCExpression
+	ParseExpression() *ast_tree.JCExpression
 	//Parse a statement.
-	ParseStatement() ast_tree.JCStatement
+	ParseStatement() *ast_tree.JCStatement
 	//Parse a type.
-	ParseType() ast_tree.JCExpression
+	ParseType() *ast_tree.JCExpression
 }

@@ -24,6 +24,9 @@ type JavacParser struct {
 	TreeMaker   *ast_tree.AstTreeMaker
 	names       *util.Names
 	symbolTable *SymbolTable
+
+	mode     parseMode // 当前正在进行转换的模式
+	lastMode parseMode // 上一个模式 lastMode = 2 then mode = 1  from 1 to 2
 }
 
 func NewJavacParser(path string, context *util.Context) *JavacParser {
@@ -56,10 +59,10 @@ func (jp *JavacParser) nextToken() {
 // ----------------- Token 相关的方法
 
 //core function
-func (jp *JavacParser) ParseJCCompilationUnit() ast_tree.JCCompilationUnit {
+func (jp *JavacParser) ParseJCCompilationUnit() *ast_tree.JCCompilationUnit {
 
-	//seenImport := false
-	//consumedToplevelDoc := false
+	// seenImport := false
+	// consumedToplevelDoc := false
 	for {
 		tok := jp.token
 		jp.symbolTable.PutToken(tok)
@@ -100,22 +103,46 @@ func (jp *JavacParser) ParseJCCompilationUnit() ast_tree.JCCompilationUnit {
 		jp.accept(TOKEN_KIND_SEMI) // 处理分号
 	}
 
-	//防止报错才加的打印 todo delete later
+	// 防止报错才加的打印 todo delete later
 	fmt.Println(pid)
 	fmt.Println(seenPackage)
 	fmt.Println(packageAnnotations)
-	return ast_tree.JCCompilationUnit{}
+	return &ast_tree.JCCompilationUnit{}
 }
 
-func (jp *JavacParser) ParseExpression() ast_tree.JCExpression {
+type parseMode int
+
+/** When terms are parsed, the mode determines which is expected:
+ *     mode = EXPR        : an expression
+ *     mode = TYPE        : a type
+ *     mode = NOPARAMS    : no parameters allowed for type
+ *     mode = TYPEARG     : type argument
+ */
+const mode_expr parseMode = 0x1
+const mode_type parseMode = 0x2
+const mode_noparams parseMode = 0x4
+const mode_typearg parseMode = 0x8
+const mode_diamond parseMode = 0x10
+
+func (jp *JavacParser) ParseExpression() *ast_tree.JCExpression {
 	panic("implement me")
 }
 
-func (jp *JavacParser) ParseStatement() ast_tree.JCStatement {
+func (jp *JavacParser) termWithMode(newMode parseMode) *ast_tree.JCExpression {
+
+	preMode := jp.mode
+	jp.mode = newMode
+	t := jp.term()
+	jp.lastMode = jp.mode
+	jp.mode = preMode
+	return t
+}
+
+func (jp *JavacParser) ParseStatement() *ast_tree.JCStatement {
 	panic("implement me")
 }
 
-func (jp *JavacParser) ParseType() ast_tree.JCExpression {
+func (jp *JavacParser) ParseType() *ast_tree.JCExpression {
 	panic("implement me")
 }
 
@@ -198,7 +225,6 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *ast_tree.JCExpression {
 		//if allowAnnotations {
 		//	annotations = typeAnnotationsOpt()
 		//}
-
 		// todo
 		expression = jp.toExpression(jp.TreeMaker.At(pos).Select(expression, jp.ident()).GetExpression().GetJCTree())
 		//我们这里没有注解 todo annotation
@@ -228,11 +254,16 @@ func (jp *JavacParser) ident() *util.Name {
 	} else if tk.GetTokenKind() == TOKEN_KIND_ENUM {
 
 	}
-	//todo next
+	// todo next
 	return nil
 }
 
 func (jp *JavacParser) toExpression(t *ast_tree.JCTree) *ast_tree.JCExpression {
 
 	return jp.endPosTable.toP(t)
+}
+
+func (jp *JavacParser) term() *ast_tree.JCExpression {
+
+	return &ast_tree.JCExpression{}
 }
