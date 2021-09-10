@@ -40,6 +40,8 @@ type Token interface {
 	 * 在符号表里的位置
 	 */
 	GetSymbolTableIndex() int
-
+	/**
+	 * 设置token在符号表的位置
+	 */
 	SetSymbolTableIndex(index int)
 }
