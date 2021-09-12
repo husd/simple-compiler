@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"husd.com/v0/jc"
 	"husd.com/v0/lang"
 	"husd.com/v0/util"
 )
@@ -19,7 +20,7 @@ type SymbolTable struct {
 	doubleType  *lang.JCPrimitiveType
 	booleanType *lang.JCPrimitiveType
 
-	symbol Symbol //符号
+	symbol jc.Symbol //符号
 
 	tokenTable []Token // 符号表的数据
 	tpos       int     // 符号表目前写到哪个位置了

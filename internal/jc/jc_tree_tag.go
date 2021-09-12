@@ -1,14 +1,14 @@
-package ast_tree
+package jc
 
 /**
  *
  * @author hushengdong
  */
-type AstTreeTag int
+type JCTreeTag int
 
 const (
-	NO_TAG   AstTreeTag = iota //For methods that return an invalid tag if a given condition is not met
-	TOPLEVEL                   // Toplevel nodes of type TopLevel representing entire source files.
+	NO_TAG   JCTreeTag = iota //For methods that return an invalid tag if a given condition is not met
+	TOPLEVEL                  // Toplevel nodes of type TopLevel representing entire source files.
 	IMPORT
 	CLASSDEF
 	METHODDEF
@@ -38,54 +38,18 @@ const (
 	NEWARRAY
 	LAMBDA
 	PARENS
-
-	/** Assignment expressions of type Assign.
-	 */
-	ASSIGN
-
-	/** Type cast expressions of type TypeCast.
-	 */
-	TYPECAST
-
-	/** Type test expressions of type TypeTest.
-	 */
-	TYPETEST
-
-	/** Indexed array expressions of type Indexed.
-	 */
-	INDEXED
-
-	/** Selections of type Select.
-	 */
-	SELECT
-
-	/** Member references of type Reference.
-	 */
-	REFERENCE
-
-	/** Simple identifiers of type Ident.
-	 */
-	IDENT
-
-	/** Literals of type Literal.
-	 */
-	LITERAL
-
-	/** Basic type identifiers of type TypeIdent.
-	 */
-	TYPEIDENT
-
-	/** Array types of type TypeArray.
-	 */
-	TYPEARRAY
-
-	/** Parameterized types of type TypeApply.
-	 */
-	TYPEAPPLY
-
-	/** Union types of type TypeUnion.
-	 */
-	TYPEUNION
+	ASSIGN           /** Assignment expressions of type Assign.*/
+	TYPECAST         /** Type cast expressions of type TypeCast.*/
+	TYPETEST         /** Type test expressions of type TypeTest.*/
+	INDEXED          /** Indexed array expressions of type Indexed.*/
+	SELECT           /** Selections of type Select.*/
+	REFERENCE        /** Member references of type Reference.*/
+	IDENT            /** Simple identifiers of type Ident.*/
+	LITERAL          /** Literals of type Literal.*/
+	TYPEIDENT        /** Basic type identifiers of type TypeIdent.*/
+	TYPEARRAY        /** Array types of type TypeArray.*/
+	TYPEAPPLY        /** Parameterized types of type TypeApply.*/
+	TYPEUNION        /** Union types of type TypeUnion.*/
 	TYPEINTERSECTION //Intersection types of type TypeIntersection.
 	TYPEPARAMETER    //Formal type parameters of type TypeParameter.
 	WILDCARD         //Type argument.

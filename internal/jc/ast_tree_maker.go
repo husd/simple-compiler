@@ -1,6 +1,8 @@
-package ast_tree
+package jc
 
-import "husd.com/v0/util"
+import (
+	"husd.com/v0/util"
+)
 
 /**
  * The factory to be used for abstract syntax tree construction.

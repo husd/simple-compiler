@@ -1,6 +1,9 @@
-package ast_tree
+package jc
 
-import "husd.com/v0/lang"
+import (
+	"husd.com/v0/ast_tree2"
+	"husd.com/v0/lang"
+)
 
 /**
  * statement 语句主要描述的是代码里的控制语句，例如：
@@ -15,27 +18,33 @@ import "husd.com/v0/lang"
  *
  * @author hushengdong
  */
-
-type StatementTree interface {
+type JCStatement struct {
+	*JCTree
 }
 
-type JCStatement struct {
-	jcTree *JCTree
+func (jc *JCStatement) TreeType() ast_tree2.TreeType {
+
+	panic("implement me")
+}
+
+func (jc *JCStatement) StatementTreeV2_() {
+
+	panic("implement me")
 }
 
 func NewJCStatement(tree *JCTree) *JCStatement {
 
-	return &JCStatement{jcTree: tree}
+	return &JCStatement{tree}
 }
 
 func (jc *JCStatement) SetType(javaType *lang.JavaType) *JCStatement {
 
-	jc.jcTree.SetJavaType(javaType)
+	jc.JavaType = javaType
 	return jc
 }
 
 func (jc *JCStatement) SetPos(pos int) *JCStatement {
 
-	jc.jcTree.SetPos(pos)
+	jc.Pos = pos
 	return jc
 }

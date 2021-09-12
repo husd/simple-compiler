@@ -1,6 +1,9 @@
-package ast_tree
+package jc
 
-import "husd.com/v0/lang"
+import (
+	"husd.com/v0/ast_tree2"
+	"husd.com/v0/lang"
+)
 
 /**
  * expression主要描述了代码里的表达式，例如：
@@ -12,27 +15,36 @@ import "husd.com/v0/lang"
  * @author hushengdong
  */
 type JCExpression struct {
-	jcTree *JCTree
+	*JCTree
+}
+
+func (jc *JCExpression) TreeType() ast_tree2.TreeType {
+
+	panic("implement me")
+}
+
+func (jc *JCExpression) ExpressionTreeV2_() {
+	panic("implement me")
 }
 
 func NewJCExpression(tree *JCTree) *JCExpression {
 
-	return &JCExpression{jcTree: tree}
+	return &JCExpression{tree}
 }
 
 func (jc *JCExpression) SetType(javaType *lang.JavaType) *JCExpression {
 
-	jc.jcTree.SetJavaType(javaType)
+	jc.JavaType = javaType
 	return jc
 }
 
 func (jc *JCExpression) SetPos(pos int) *JCExpression {
 
-	jc.jcTree.SetPos(pos)
+	jc.Pos = pos
 	return jc
 }
 
 func (jc *JCExpression) GetJCTree() *JCTree {
 
-	return jc.jcTree
+	return jc.getTree()
 }

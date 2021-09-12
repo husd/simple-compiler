@@ -2,9 +2,9 @@ package parser
 
 import (
 	"fmt"
-	"husd.com/v0/ast_tree"
 	"husd.com/v0/code"
 	"husd.com/v0/compiler"
+	"husd.com/v0/jc"
 	"husd.com/v0/util"
 )
 
@@ -21,7 +21,7 @@ type JavacParser struct {
 
 	endPosTable *SimpleEndPosTable
 
-	TreeMaker   *ast_tree.AstTreeMaker
+	TreeMaker   *jc.AstTreeMaker
 	names       *util.Names
 	symbolTable *SymbolTable
 
@@ -36,7 +36,7 @@ func NewJavacParser(path string, context *util.Context) *JavacParser {
 	parser.nextToken()
 
 	parser.endPosTable = NewSimpleEndPosTable(&parser)
-	parser.TreeMaker = ast_tree.InstanceAstTreeMaker(context)
+	parser.TreeMaker = jc.InstanceAstTreeMaker(context)
 	parser.names = util.InstanceNames(context)
 	parser.symbolTable = InstanceSymbolTable(context)
 
@@ -59,10 +59,8 @@ func (jp *JavacParser) nextToken() {
 // ----------------- Token 相关的方法
 
 //core function
-func (jp *JavacParser) ParseJCCompilationUnit() *ast_tree.JCCompilationUnit {
+func (jp *JavacParser) ParseJCCompilationUnit() *jc.JCCompilationUnit {
 
-	// seenImport := false
-	// consumedToplevelDoc := false
 	for {
 		tok := jp.token
 		jp.symbolTable.PutToken(tok)
@@ -76,10 +74,11 @@ func (jp *JavacParser) ParseJCCompilationUnit() *ast_tree.JCCompilationUnit {
 	}
 	jp.symbolTable.GetTokenByIndex(1000)
 	seenPackage := false
+	seenImport := false
 	//firstToken := jp.Token
-	var pid *ast_tree.JCExpression
-	var mods *ast_tree.JCModifiers
-	packageAnnotations := make([]ast_tree.JCAnnotation, 0, 10)
+	var pid *jc.JCExpression
+	var mods *jc.JCModifiers
+	packageAnnotations := make([]jc.JCAnnotation, 0, 10)
 
 	/**
 	 * 读到了 @ 这里的注解，指的是包的注释内容 package-info 例如：
@@ -103,11 +102,36 @@ func (jp *JavacParser) ParseJCCompilationUnit() *ast_tree.JCCompilationUnit {
 		jp.accept(TOKEN_KIND_SEMI) // 处理分号
 	}
 
+	jcTreeList := make([]*jc.JCTree, 0, 100)
+	checkForImports := true
+	//firstTypeDecl := true
+
+	for jp.token.GetTokenKind() != TOKEN_KIND_EOF {
+
+		if jp.token.Pos() > 0 &&
+			jp.token.Pos() <= jp.endPosTable.errorEndPos {
+			jp.skip(checkForImports, false, false, false)
+			if jp.token.GetTokenKind() == TOKEN_KIND_EOF {
+				break
+			}
+		}
+		if checkForImports &&
+			mods == nil &&
+			jp.token.GetTokenKind() == TOKEN_KIND_IMPORT {
+			seenImport = true
+			jcTreeList = append(jcTreeList, jp.importDeclaration())
+		} else {
+			def := jp.typeDeclaration(mods)
+			jcTreeList = append(jcTreeList, def)
+		}
+	}
+
 	// 防止报错才加的打印 todo delete later
 	fmt.Println(pid)
 	fmt.Println(seenPackage)
+	fmt.Println(seenImport)
 	fmt.Println(packageAnnotations)
-	return &ast_tree.JCCompilationUnit{}
+	return &jc.JCCompilationUnit{}
 }
 
 type parseMode int
@@ -124,11 +148,11 @@ const mode_noparams parseMode = 0x4
 const mode_typearg parseMode = 0x8
 const mode_diamond parseMode = 0x10
 
-func (jp *JavacParser) ParseExpression() *ast_tree.JCExpression {
+func (jp *JavacParser) ParseExpression() *jc.JCExpression {
 	panic("implement me")
 }
 
-func (jp *JavacParser) termWithMode(newMode parseMode) *ast_tree.JCExpression {
+func (jp *JavacParser) termWithMode(newMode parseMode) *jc.JCExpression {
 
 	preMode := jp.mode
 	jp.mode = newMode
@@ -138,11 +162,11 @@ func (jp *JavacParser) termWithMode(newMode parseMode) *ast_tree.JCExpression {
 	return t
 }
 
-func (jp *JavacParser) ParseStatement() *ast_tree.JCStatement {
+func (jp *JavacParser) ParseStatement() *jc.JCStatement {
 	panic("implement me")
 }
 
-func (jp *JavacParser) ParseType() *ast_tree.JCExpression {
+func (jp *JavacParser) ParseType() *jc.JCExpression {
 	panic("implement me")
 }
 
@@ -151,10 +175,10 @@ func (jp *JavacParser) ParseType() *ast_tree.JCExpression {
  *           | NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | "@"
  *           | "@" Annotation
  */
-func (jp *JavacParser) modifiersOpt() *ast_tree.JCModifiers {
+func (jp *JavacParser) modifiersOpt() *jc.JCModifiers {
 
 	//todo 暂时先不解析注解
-	return &ast_tree.JCModifiers{}
+	return &jc.JCModifiers{}
 }
 
 func (jp *JavacParser) checkNoMods(flags int64) {
@@ -213,10 +237,10 @@ func (jp *JavacParser) setErrorEndPos(pos int) {
  * 要读取 com.husd 分号不处理
  * 这里先不处理注解 todo Annotations
  */
-func (jp *JavacParser) qualident(allowAnnotations bool) *ast_tree.JCExpression {
+func (jp *JavacParser) qualident(allowAnnotations bool) *jc.JCExpression {
 
 	tk := jp.token
-	expression := jp.toExpression(jp.TreeMaker.At(tk.Pos()).Identify(jp.ident()).JcTree)
+	expression := jp.toExpression(jp.TreeMaker.At(tk.Pos()).Identify(jp.ident()).JCExpression.JCTree)
 	// 解析这个逗号
 	for jp.token.GetTokenKind() == TOKEN_KIND_DOT {
 		pos := jp.token.Pos()
@@ -258,12 +282,72 @@ func (jp *JavacParser) ident() *util.Name {
 	return nil
 }
 
-func (jp *JavacParser) toExpression(t *ast_tree.JCTree) *ast_tree.JCExpression {
+func (jp *JavacParser) toExpression(t *jc.JCTree) *jc.JCExpression {
 
 	return jp.endPosTable.toP(t)
 }
 
-func (jp *JavacParser) term() *ast_tree.JCExpression {
+func (jp *JavacParser) term() *jc.JCExpression {
 
-	return &ast_tree.JCExpression{}
+	return &jc.JCExpression{}
+}
+
+/** Skip forward until a suitable stop token is found.
+ */
+func (jp *JavacParser) skip(stopAtImport bool, stopAtMemberDecl bool,
+	stopAtIdentifier bool, stopAtStatement bool) {
+	for {
+		switch jp.token.GetTokenKind() {
+		case
+			TOKEN_KIND_SEMI:
+			jp.nextToken()
+			return
+		case TOKEN_KIND_PUBLIC, TOKEN_KIND_FINAL, TOKEN_KIND_ABSTRACT,
+			TOKEN_KIND_MONKEYS_AT, TOKEN_KIND_EOF, TOKEN_KIND_CLASS,
+			TOKEN_KIND_INTERFACE, TOKEN_KIND_ENUM:
+			return
+		case TOKEN_KIND_IMPORT:
+			if stopAtImport {
+				return
+			}
+			break
+		case TOKEN_KIND_LBRACE, TOKEN_KIND_RBRACE, TOKEN_KIND_PRIVATE,
+			TOKEN_KIND_PROTECTED, TOKEN_KIND_STATIC, TOKEN_KIND_TRANSIENT,
+			TOKEN_KIND_NATIVE, TOKEN_KIND_VOLATILE, TOKEN_KIND_SYNCHRONIZED,
+			TOKEN_KIND_STRICTFP, TOKEN_KIND_LT, TOKEN_KIND_BYTE, TOKEN_KIND_SHORT,
+			TOKEN_KIND_CHAR, TOKEN_KIND_INT, TOKEN_KIND_LONG, TOKEN_KIND_FLOAT,
+			TOKEN_KIND_DOUBLE, TOKEN_KIND_BOOLEAN, TOKEN_KIND_VOID:
+			if stopAtMemberDecl {
+				return
+			}
+			break
+		case TOKEN_KIND_UNDERSCORE, TOKEN_KIND_IDENTIFIER:
+			if stopAtIdentifier {
+				return
+			}
+			break
+		case TOKEN_KIND_CASE, TOKEN_KIND_DEF, TOKEN_KIND_IF, TOKEN_KIND_FOR, TOKEN_KIND_WHILE,
+			TOKEN_KIND_DO, TOKEN_KIND_TRY, TOKEN_KIND_SWITCH, TOKEN_KIND_RETURN, TOKEN_KIND_THROW, TOKEN_KIND_BREAK,
+			TOKEN_KIND_CONTINUE, TOKEN_KIND_ELSE, TOKEN_KIND_FINALLY, TOKEN_KIND_CATCH:
+			if stopAtStatement {
+				return
+			}
+			break
+		}
+		jp.nextToken()
+	}
+}
+
+func (jp *JavacParser) importDeclaration() *jc.JCTree {
+
+	t := &jc.JCTree{}
+
+	return t
+}
+
+func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.JCTree {
+
+	t := &jc.JCTree{}
+
+	return t
 }

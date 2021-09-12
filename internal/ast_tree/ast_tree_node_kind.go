@@ -1,39 +1,9 @@
 package ast_tree
 
 /**
- * AST的每一个子树的结构，可能会不同，树的类型也可能会不同，所以 AstTree的子接口，
- * 会实现这个AstTree的接口 统一的先把AST区分为4种类型的树，这4种类型的树再去细分
- * 1、JCCompilationUnit
- * 2、JCStatement
- * 3、JCExpression
- * 4、JCMethodDecl
  *
- * 以上这4种，是通用类型的 几乎所有的语言都可以用的到，剩下的几种，都是Java相关的，其它的语言
- * 不一定有
- * other:
- *
- * 5、JCImport
- * 6、JCCatch
- * 7、JCTypeParameter
- * 8、JCModifiers
  * @author hushengdong
  */
-type Tree interface {
-	/**
-	 * 这个是树的节点的类型
-	 */
-	GetKind() *AstTreeNodeKind
-	/**
-	 * Accept method used to implement the visitor pattern.  The
-	 * visitor pattern is used to implement operations on trees.
-	 */
-	Accept(visitor AstTreeVisitor)
-	/**
-	 * 这个是为了区分树节点的类型
-	 */
-	GetTreeType() TreeType
-}
-
 type TreeType string
 
 const (

@@ -1,118 +1,120 @@
 package ast_tree
 
+import "husd.com/v0/jc"
+
 /**
  *
  * @author hushengdong
  */
 
-func treeTag2TreeKind(tag AstTreeTag) *AstTreeNodeKind {
+func treeTag2TreeKind(tag jc.AstTreeTag) *AstTreeNodeKind {
 
 	switch tag {
 	// Postfix expressions
-	case POSTINC: // _ ++
+	case jc.POSTINC: // _ ++
 		return TREE_POSTFIX_INCREMENT
-	case POSTDEC: // _ --
+	case jc.POSTDEC: // _ --
 		return TREE_POSTFIX_DECREMENT
 
 	// Unary operators
-	case PREINC: // ++ _
+	case jc.PREINC: // ++ _
 		return TREE_PREFIX_INCREMENT
-	case PREDEC: // -- _
+	case jc.PREDEC: // -- _
 		return TREE_PREFIX_DECREMENT
-	case POS: // +
+	case jc.POS: // +
 		return TREE_UNARY_PLUS
-	case NEG: // -
+	case jc.NEG: // -
 		return TREE_UNARY_MINUS
-	case COMPL: // ~
+	case jc.COMPL: // ~
 		return TREE_BITWISE_COMPLEMENT
-	case NOT: // !
+	case jc.NOT: // !
 		return TREE_LOGICAL_COMPLEMENT
 
 	// Binary operators
 
 	// Multiplicative operators
-	case MUL: // *
+	case jc.MUL: // *
 		return TREE_MULTIPLY
-	case DIV: // /
+	case jc.DIV: // /
 		return TREE_DIVIDE
-	case MOD: // %
+	case jc.MOD: // %
 		return TREE_REMAINDER
 
 	// Additive operators
-	case PLUS: // +
+	case jc.PLUS: // +
 		return TREE_PLUS
-	case MINUS: // -
+	case jc.MINUS: // -
 		return TREE_MINUS
 
 	// Shift operators
-	case SL: // <<
+	case jc.SL: // <<
 		return TREE_LEFT_SHIFT
-	case SR: // >>
+	case jc.SR: // >>
 		return TREE_RIGHT_SHIFT
-	case USR: // >>>
+	case jc.USR: // >>>
 		return TREE_UNSIGNED_RIGHT_SHIFT
 
 	// Relational operators
-	case LT: // <
+	case jc.LT: // <
 		return TREE_LESS_THAN
-	case GT: // >
+	case jc.GT: // >
 		return TREE_GREATER_THAN
-	case LE: // <=
+	case jc.LE: // <=
 		return TREE_LESS_THAN_EQUAL
-	case GE: // >=
+	case jc.GE: // >=
 		return TREE_GREATER_THAN_EQUAL
 
 	// Equality operators
-	case EQ: // ==
+	case jc.EQ: // ==
 		return TREE_EQUAL_TO
-	case NE: // !=
+	case jc.NE: // !=
 		return TREE_NOT_EQUAL_TO
 
 	// Bitwise and logical operators
-	case BITAND: // &
+	case jc.BITAND: // &
 		return TREE_AND
-	case BITXOR: // ^
+	case jc.BITXOR: // ^
 		return TREE_XOR
-	case BITOR: // |
+	case jc.BITOR: // |
 		return TREE_OR
 
 	// Conditional operators
-	case AND: // &&
+	case jc.AND: // &&
 		return TREE_CONDITIONAL_AND
-	case OR: // ||
+	case jc.OR: // ||
 		return TREE_CONDITIONAL_OR
 
 	// Assignment operators
-	case MUL_ASG: // *=
+	case jc.MUL_ASG: // *=
 		return TREE_MULTIPLY_ASSIGNMENT
-	case DIV_ASG: // /=
+	case jc.DIV_ASG: // /=
 		return TREE_DIVIDE_ASSIGNMENT
-	case MOD_ASG: // %=
+	case jc.MOD_ASG: // %=
 		return TREE_REMAINDER_ASSIGNMENT
-	case PLUS_ASG: // +=
+	case jc.PLUS_ASG: // +=
 		return TREE_PLUS_ASSIGNMENT
-	case MINUS_ASG: // -=
+	case jc.MINUS_ASG: // -=
 		return TREE_MINUS_ASSIGNMENT
-	case SL_ASG: // <<=
+	case jc.SL_ASG: // <<=
 		return TREE_LEFT_SHIFT_ASSIGNMENT
-	case SR_ASG: // >>=
+	case jc.SR_ASG: // >>=
 		return TREE_RIGHT_SHIFT_ASSIGNMENT
-	case USR_ASG: // >>>=
+	case jc.USR_ASG: // >>>=
 		return TREE_UNSIGNED_RIGHT_SHIFT_ASSIGNMENT
-	case BITAND_ASG: // &=
+	case jc.BITAND_ASG: // &=
 		return TREE_AND_ASSIGNMENT
-	case BITXOR_ASG: // ^=
+	case jc.BITXOR_ASG: // ^=
 		return TREE_XOR_ASSIGNMENT
-	case BITOR_ASG: // |=
+	case jc.BITOR_ASG: // |=
 		return TREE_OR_ASSIGNMENT
 
 	// Null check (implementation detail), for example, __.getClass()
-	case NULLCHK:
+	case jc.NULLCHK:
 		return TREE_OTHER
 
-	case ANNOTATION:
+	case jc.ANNOTATION:
 		return TREE_ANNOTATION
-	case TYPE_ANNOTATION:
+	case jc.TYPE_ANNOTATION:
 		return TREE_TYPE_ANNOTATION
 
 	default:

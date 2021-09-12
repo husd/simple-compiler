@@ -1,4 +1,4 @@
-package parser
+package jc
 
 /**
  * 符号接口

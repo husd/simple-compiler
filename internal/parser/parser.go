@@ -1,6 +1,8 @@
 package parser
 
-import "husd.com/v0/ast_tree"
+import (
+	"husd.com/v0/jc"
+)
 
 //Parser
 /**
@@ -12,11 +14,11 @@ import "husd.com/v0/ast_tree"
  */
 type Parser interface {
 	// Parse a compilation unit.
-	ParseJCCompilationUnit() *ast_tree.JCCompilationUnit
+	ParseJCCompilationUnit() *jc.JCCompilationUnit
 	//Parse an expression.
-	ParseExpression() *ast_tree.JCExpression
+	ParseExpression() *jc.JCExpression
 	//Parse a statement.
-	ParseStatement() *ast_tree.JCStatement
+	ParseStatement() *jc.JCStatement
 	//Parse a type.
-	ParseType() *ast_tree.JCExpression
+	ParseType() *jc.JCExpression
 }

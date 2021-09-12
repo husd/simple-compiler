@@ -10,8 +10,8 @@ package ast_tree2
 type IdentifierTreeV2 interface {
 	TreeType() TreeType
 	ExpressionTreeV2_()
+	IdentifierTreeV2_()
 
 	//--
 	GetName() string
-	IdentifierTreeV2_()
 }

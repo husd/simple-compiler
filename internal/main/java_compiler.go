@@ -3,8 +3,8 @@ package main
 import (
 	"container/list"
 	"fmt"
-	"husd.com/v0/ast_tree"
 	jcComp "husd.com/v0/compiler"
+	"husd.com/v0/jc"
 	"husd.com/v0/parser"
 	"husd.com/v0/util"
 )
@@ -51,7 +51,7 @@ func parseFiles(files []string) *list.List {
 	return res
 }
 
-func parseFile(path string, context *util.Context) ast_tree.JCCompilationUnit {
+func parseFile(path string, context *util.Context) *jc.JCCompilationUnit {
 
 	p := parser.GetParserFromFactory(path, context)
 	res := p.ParseJCCompilationUnit()
