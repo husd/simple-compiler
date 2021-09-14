@@ -61,21 +61,21 @@ func (jp *JavacParser) nextToken() {
 //core function
 func (jp *JavacParser) ParseJCCompilationUnit() *jc.JCCompilationUnit {
 
-	for {
-		tok := jp.token
-		jp.symbolTable.PutToken(tok)
-		if compiler.DEBUG_TOKEN {
-			fmt.Println(tok.DebugToString())
-		}
-		if tok.GetTokenKind() == TOKEN_KIND_EOF {
-			break
-		}
-		jp.nextToken()
-	}
+	// for {
+	// 	tok := jp.token
+	// 	jp.symbolTable.PutToken(tok)
+	// 	if compiler.DEBUG_TOKEN {
+	// 		fmt.Println(tok.DebugToString())
+	// 	}
+	// 	if tok.GetTokenKind() == TOKEN_KIND_EOF {
+	// 		break
+	// 	}
+	// 	jp.nextToken()
+	// }
 	jp.symbolTable.GetTokenByIndex(1000)
 	seenPackage := false
 	seenImport := false
-	//firstToken := jp.Token
+	// firstToken := jp.Token
 	var pid *jc.JCExpression
 	var mods *jc.JCModifiers
 	packageAnnotations := make([]jc.JCAnnotation, 0, 10)
@@ -162,6 +162,26 @@ func (jp *JavacParser) termWithMode(newMode parseMode) *jc.JCExpression {
 	return t
 }
 
+/** Statement =
+ *       Block
+ *     | IF ParExpression Statement [ELSE Statement]
+ *     | FOR "(" ForInitOpt ";" [Expression] ";" ForUpdateOpt ")" Statement
+ *     | FOR "(" FormalParameter : Expression ")" Statement
+ *     | WHILE ParExpression Statement
+ *     | DO Statement WHILE ParExpression ";"
+ *     | TRY Block ( Catches | [Catches] FinallyPart )
+ *     | TRY "(" ResourceSpecification ";"opt ")" Block [Catches] [FinallyPart]
+ *     | SWITCH ParExpression "{" SwitchBlockStatementGroups "}"
+ *     | SYNCHRONIZED ParExpression Block
+ *     | RETURN [Expression] ";"
+ *     | THROW Expression ";"
+ *     | BREAK [Ident] ";"
+ *     | CONTINUE [Ident] ";"
+ *     | ASSERT Expression [ ":" Expression ] ";"
+ *     | ";"
+ *     | ExpressionStatement
+ *     | Ident ":" Statement
+ */
 func (jp *JavacParser) ParseStatement() *jc.JCStatement {
 	panic("implement me")
 }
@@ -246,25 +266,27 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *jc.JCExpression {
 		pos := jp.token.Pos()
 		jp.nextToken() // 查看点之后是什么
 		//var annotations []ast_tree.JCAnnotation
-		//if allowAnnotations {
+		// if allowAnnotations {
 		//	annotations = typeAnnotationsOpt()
-		//}
+		// }
 		// todo
 		expression = jp.toExpression(jp.TreeMaker.At(pos).Select(expression, jp.ident()).GetExpression().GetJCTree())
-		//我们这里没有注解 todo annotation
+		// 我们这里没有注解 todo annotation
 	}
 	return expression
 }
 
-//
+/* ---------- parsing -------------- */
+
+// Ident = IDENTIFIER
 func (jp *JavacParser) ident() *util.Name {
 
 	tk := jp.token
-	if tk.GetTokenKind() == TOKEN_KIND_IDENTIFIER {
+	if jp.token.GetTokenKind() == TOKEN_KIND_IDENTIFIER {
 		name := tk.GetName()
 		jp.nextToken()
 		return name
-	} else if tk.GetTokenKind() == TOKEN_KIND_ASSERT {
+	} else if jp.token.GetTokenKind() == TOKEN_KIND_ASSERT {
 		if allowAssert {
 			jp.error(tk.Pos(), "错误的assert位置")
 			jp.nextToken()
@@ -275,11 +297,36 @@ func (jp *JavacParser) ident() *util.Name {
 			jp.nextToken()
 			return name
 		}
-	} else if tk.GetTokenKind() == TOKEN_KIND_ENUM {
-
+	} else if jp.token.GetTokenKind() == TOKEN_KIND_ENUM {
+		if allowEnums {
+			jp.error(jp.token.Pos(), "enum as identifier")
+			jp.nextToken()
+			return jp.names.Error
+		} else {
+			jp.warn(jp.token.Pos(), "enum as identifier")
+			_name := jp.token.GetName()
+			jp.nextToken()
+			return _name
+		}
+	} else if jp.token.GetTokenKind() == TOKEN_KIND_THIS {
+		if allowThisIdent {
+			_name := jp.token.GetName()
+			jp.nextToken()
+			return _name
+		} else {
+			jp.error(jp.token.Pos(), "this as identifier")
+			jp.nextToken()
+			return jp.names.Error
+		}
+	} else if jp.token.GetTokenKind() == TOKEN_KIND_UNDERSCORE {
+		jp.warn(jp.token.Pos(), "underscore.as.identifier")
+		_name := jp.token.GetName()
+		jp.nextToken()
+		return _name
+	} else {
+		jp.accept(TOKEN_KIND_IDENTIFIER)
+		return jp.names.Error
 	}
-	// todo next
-	return nil
 }
 
 func (jp *JavacParser) toExpression(t *jc.JCTree) *jc.JCExpression {
@@ -338,10 +385,41 @@ func (jp *JavacParser) skip(stopAtImport bool, stopAtMemberDecl bool,
 	}
 }
 
+/** ImportDeclaration = IMPORT [ STATIC ] Ident { "." Ident } [ "." "*" ] ";"
+ * 这个是import的语法，这个语法应该比较好解析，固定的格式。
+ */
 func (jp *JavacParser) importDeclaration() *jc.JCTree {
 
 	t := &jc.JCTree{}
-
+	pos := jp.token.Pos()
+	jp.nextToken()
+	importStatic := false
+	// 这里先允许 import static com.husd; 这样的语法
+	if jp.token.GetTokenKind() == TOKEN_KIND_STATIC {
+		importStatic = true
+		jp.nextToken()
+	}
+	var pid *jc.JCExpression = &jc.JCExpression{}
+	for {
+		pos1 := jp.token.Pos()
+		jp.accept(TOKEN_KIND_DOT)
+		if jp.token.GetTokenKind() == TOKEN_KIND_STAR {
+			pid = &jc.JCExpression{}
+			pos1++
+			jp.nextToken()
+			break
+		} else {
+			pid = &jc.JCExpression{}
+			pos1++
+		}
+		if jp.token.GetTokenKind() != TOKEN_KIND_DOT {
+			break
+		}
+	}
+	jp.accept(TOKEN_KIND_SEMI)
+	if compiler.DEBUG {
+		fmt.Println("import static", importStatic, " pid:", pid, pos)
+	}
 	return t
 }
 
