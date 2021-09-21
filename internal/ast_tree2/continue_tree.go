@@ -9,7 +9,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ContinueTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	StatementTreeV2_()
 
 	// --

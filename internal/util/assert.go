@@ -24,8 +24,16 @@ func AssertFalse(t *testing.T, msg string, b bool) {
 }
 
 func AssertEquals(t *testing.T, msg string, want, got interface{}) {
-
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("msg: %v 期望值:    %v     实际值:    %v    ", msg, want, got)
+	switch want.(type) {
+	case int, int8, int16, int32, int64, float32, float64, string:
+		if want != got {
+			goto printError
+		}
 	}
+	if !reflect.DeepEqual(want, got) {
+		goto printError
+	}
+	return
+printError:
+	t.Errorf("msg: %v 期望值:    %v     实际值:    %v    ", msg, want, got)
 }

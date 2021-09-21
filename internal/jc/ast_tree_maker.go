@@ -1,6 +1,7 @@
 package jc
 
 import (
+	"husd.com/v0/code"
 	"husd.com/v0/util"
 )
 
@@ -35,14 +36,21 @@ func (treeMaker *AstTreeMaker) At(pos int) *AstTreeMaker {
 	return treeMaker
 }
 
-func (treeMaker *AstTreeMaker) Identify(name *util.Name) *JCIdent {
+func (treeMaker *AstTreeMaker) Identify(name *util.Name) *AbstractJCExpression {
 
 	ident := NewJCIdent(name)
 	ident.pos = treeMaker.pos
-	return ident
+	return ident.AbstractJCExpression
 }
 
-func (treeMaker *AstTreeMaker) Select(selected *JCExpression, selector *util.Name) *JCFieldAccess {
+func (treeMaker *AstTreeMaker) Select(selected *AbstractJCExpression, selector *util.Name) *JCFieldAccess {
 
 	return NewJCFieldAccess(selected, selector)
+}
+
+func (treeMaker *AstTreeMaker) Literal(tag *code.TypeTag, n int) *JCLiteral {
+
+	res := NewJCLiteral(tag, n)
+	res.Pos = treeMaker.pos
+	return res
 }

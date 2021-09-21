@@ -6,7 +6,7 @@ package jc
  */
 
 type JCAnnotation struct {
-	*JCExpression
-	tag  JCTreeTag      // Either Tag.ANNOTATION or Tag.TYPE_ANNOTATION
-	args []JCExpression //参数
+	*AbstractJCExpression
+	tag  JCTreeTag              // Either Tag.ANNOTATION or Tag.TYPE_ANNOTATION
+	args []AbstractJCExpression //参数
 }

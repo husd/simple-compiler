@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type EnhancedForLoopTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	StatementTreeV2_()
 
 	//--

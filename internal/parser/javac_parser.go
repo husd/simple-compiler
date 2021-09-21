@@ -43,6 +43,20 @@ func NewJavacParser(path string, context *util.Context) *JavacParser {
 	return &parser
 }
 
+func NewJavacParserWithString(str string, context *util.Context) *JavacParser {
+
+	parser := JavacParser{}
+	parser.ScannerLexer = NewScannerLexerWithString(str, context)
+	parser.nextToken()
+
+	parser.endPosTable = NewSimpleEndPosTable(&parser)
+	parser.TreeMaker = jc.InstanceAstTreeMaker(context)
+	parser.names = util.InstanceNames(context)
+	parser.symbolTable = InstanceSymbolTable(context)
+
+	return &parser
+}
+
 // ----------------- Token 相关的方法
 func (jp *JavacParser) currentToken() Token {
 
@@ -76,7 +90,7 @@ func (jp *JavacParser) ParseJCCompilationUnit() *jc.JCCompilationUnit {
 	seenPackage := false
 	seenImport := false
 	// firstToken := jp.Token
-	var pid *jc.JCExpression
+	var pid *jc.AbstractJCExpression
 	var mods *jc.JCModifiers
 	packageAnnotations := make([]jc.JCAnnotation, 0, 10)
 
@@ -102,7 +116,7 @@ func (jp *JavacParser) ParseJCCompilationUnit() *jc.JCCompilationUnit {
 		jp.accept(TOKEN_KIND_SEMI) // 处理分号
 	}
 
-	jcTreeList := make([]*jc.JCTree, 0, 100)
+	jcTreeList := make([]*jc.AbstractJCTree, 0, 100)
 	checkForImports := true
 	//firstTypeDecl := true
 
@@ -136,29 +150,36 @@ func (jp *JavacParser) ParseJCCompilationUnit() *jc.JCCompilationUnit {
 
 type parseMode int
 
-/** When terms are parsed, the mode determines which is expected:
+/**  条件有4种情况，分别是以下4种情况：
  *     mode = EXPR        : an expression
  *     mode = TYPE        : a type
  *     mode = NOPARAMS    : no parameters allowed for type
  *     mode = TYPEARG     : type argument
  */
-const mode_expr parseMode = 0x1
-const mode_type parseMode = 0x2
-const mode_noparams parseMode = 0x4
-const mode_typearg parseMode = 0x8
-const mode_diamond parseMode = 0x10
+const term_mode_expr parseMode = 0x1
+const term_mode_type parseMode = 0x2
+const term_mode_noparams parseMode = 0x4
+const term_mode_typearg parseMode = 0x8
+const term_mode_diamond parseMode = 0x10
 
-func (jp *JavacParser) ParseExpression() *jc.JCExpression {
-	panic("implement me")
+func (jp *JavacParser) ParseExpression() *jc.AbstractJCExpression {
+
+	// a > 10
+	// a == 10 && b == 15
+	// sum(1,5) == 20
+	//
+	// term有条件得意思 泛指Java里的表达式条件
+	return jp.termWithMode(term_mode_expr)
 }
 
-func (jp *JavacParser) termWithMode(newMode parseMode) *jc.JCExpression {
+func (jp *JavacParser) termWithMode(newMode parseMode) *jc.AbstractJCExpression {
 
 	preMode := jp.mode
 	jp.mode = newMode
-	t := jp.term()
-	jp.lastMode = jp.mode
-	jp.mode = preMode
+	var t *jc.AbstractJCExpression //这么做仅仅为了表达以下t的类型
+	t = jp.term()
+	jp.lastMode = jp.mode //jp.lastMode =  newMode 是最终生效的mode
+	jp.mode = preMode     //  jp.mode =
 	return t
 }
 
@@ -182,12 +203,39 @@ func (jp *JavacParser) termWithMode(newMode parseMode) *jc.JCExpression {
  *     | ExpressionStatement
  *     | Ident ":" Statement
  */
-func (jp *JavacParser) ParseStatement() *jc.JCStatement {
+func (jp *JavacParser) ParseStatement() *jc.AbstractJCStatement {
 	panic("implement me")
 }
 
-func (jp *JavacParser) ParseType() *jc.JCExpression {
+func (jp *JavacParser) ParseType() *jc.AbstractJCExpression {
 	panic("implement me")
+}
+
+/**
+ * Literal =
+ *     INTLITERAL
+ *   | LONGLITERAL
+ *   | FLOATLITERAL
+ *   | DOUBLELITERAL
+ *   | CHARLITERAL
+ *   | STRINGLITERAL
+ *   | TRUE
+ *   | FALSE
+ *   | NULL
+ */
+func (jp *JavacParser) literal(pre *util.Name, pos int) *jc.AbstractJCExpression {
+
+	var t *jc.AbstractJCExpression
+	t = jc.NewJCError()
+	switch jp.token.GetTokenKind() {
+	case TOKEN_KIND_INT_LITERAL:
+		num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix(), 32)
+		if err != nil {
+			jp.error(jp.token.Pos(), err.Error())
+		}
+		t = jp.TreeMaker.At(pos).Literal(code.TYPE_TAG_INT, int(num)).AbstractJCExpression
+	}
+	return t
 }
 
 /** ModifiersOpt = { Modifier }
@@ -252,15 +300,15 @@ func (jp *JavacParser) setErrorEndPos(pos int) {
 
 /**
  * Qualident = Ident { DOT [Annotations] Ident }
- * 这里先忽略注解的因素，就是要解析出来包 ，把解析出来的包，转换为 JCExpression
+ * 这里先忽略注解的因素，就是要解析出来包 ，把解析出来的包，转换为 AbstractJCExpression
  * 例如： package com.husd;
  * 要读取 com.husd 分号不处理
  * 这里先不处理注解 todo Annotations
  */
-func (jp *JavacParser) qualident(allowAnnotations bool) *jc.JCExpression {
+func (jp *JavacParser) qualident(allowAnnotations bool) *jc.AbstractJCExpression {
 
 	tk := jp.token
-	expression := jp.toExpression(jp.TreeMaker.At(tk.Pos()).Identify(jp.ident()).JCExpression.JCTree)
+	expression := jp.toExpression(jp.TreeMaker.At(tk.Pos()).Identify(jp.ident()).AbstractJCTree)
 	// 解析这个逗号
 	for jp.token.GetTokenKind() == TOKEN_KIND_DOT {
 		pos := jp.token.Pos()
@@ -270,7 +318,7 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *jc.JCExpression {
 		//	annotations = typeAnnotationsOpt()
 		// }
 		// todo
-		expression = jp.toExpression(jp.TreeMaker.At(pos).Select(expression, jp.ident()).GetExpression().GetJCTree())
+		expression = jp.toExpression(jp.TreeMaker.At(pos).Select(expression, jp.ident()).AbstractJCTree)
 		// 我们这里没有注解 todo annotation
 	}
 	return expression
@@ -329,14 +377,204 @@ func (jp *JavacParser) ident() *util.Name {
 	}
 }
 
-func (jp *JavacParser) toExpression(t *jc.JCTree) *jc.JCExpression {
+func (jp *JavacParser) toExpression(t *jc.AbstractJCTree) *jc.AbstractJCExpression {
 
 	return jp.endPosTable.toP(t)
 }
 
-func (jp *JavacParser) term() *jc.JCExpression {
+/**
+ * 这里是整个表达式的BNF
+ *  {@literal
+ *  Expression = Expression1 [ExpressionRest]
+ *  ExpressionRest = [AssignmentOperator Expression1]
+ *  AssignmentOperator = "=" | "+=" | "-=" | "*=" | "/=" |
+ *                       "&=" | "|=" | "^=" |
+ *                       "%=" | "<<=" | ">>=" | ">>>="
+ *  Type = Type1
+ *  TypeNoParams = TypeNoParams1
+ *  StatementExpression = Expression
+ *  ConstantExpression = Expression
+ *  }
+ */
+func (jp *JavacParser) term() *jc.AbstractJCExpression {
 
-	return &jc.JCExpression{}
+	e := jp.term1()
+	if (jp.mode&term_mode_expr) != 0 &&
+		jp.token.GetTokenKind() == TOKEN_KIND_EQ ||
+		jp.token.GetTokenKind().Index >= TOKEN_KIND_PLUSEQ.Index &&
+			jp.token.GetTokenKind().Index <= TOKEN_KIND_GTGTGTEQ.Index {
+		return jp.termRest(e)
+	} else {
+		return e
+	}
+}
+
+/** Expression1   = Expression2 [Expression1Rest]
+ *  Type1         = Type2
+ *  TypeNoParams1 = TypeNoParams2
+ */
+func (jp *JavacParser) term1() *jc.AbstractJCExpression {
+
+	e := jp.term2()
+	if (jp.mode&term_mode_expr) != 0 &&
+		jp.token.GetTokenKind().Index == TOKEN_KIND_QUES.Index {
+		jp.mode = term_mode_expr
+		return jp.term1Rest(e)
+	} else {
+		return e
+	}
+}
+
+/** Expression2   = Expression3 [Expression2Rest]
+ *  Type2         = Type3
+ *  TypeNoParams2 = TypeNoParams3
+ */
+func (jp *JavacParser) term2() *jc.AbstractJCExpression {
+
+	const OR_PREC int = 4
+	e := jp.term3()
+	if (jp.mode&term_mode_expr) != 0 &&
+		prec(jp.token.GetTokenKind()) >= OR_PREC {
+		jp.mode = term_mode_expr
+		return jp.term2Rest(e, OR_PREC)
+	} else {
+		return e
+	}
+}
+
+/**
+ *  Expression3    = PrefixOp Expression3
+ *                 | "(" Expr | TypeNoParams ")" Expression3
+ *                 | Primary {Selector} {PostfixOp}
+ *
+ *  {@literal
+ *  Primary        = "(" Expression ")"
+ *                 | Literal
+ *                 | [TypeArguments] THIS [Arguments]
+ *                 | [TypeArguments] SUPER SuperSuffix
+ *                 | NEW [TypeArguments] Creator
+ *                 | "(" Arguments ")" "->" ( Expression | Block )
+ *                 | Ident "->" ( Expression | Block )
+ *                 | [Annotations] Ident { "." [Annotations] Ident }
+ *                 | Expression3 MemberReferenceSuffix
+ *                   [ [Annotations] "[" ( "]" BracketsOpt "." CLASS | Expression "]" )
+ *                   | Arguments
+ *                   | "." ( CLASS | THIS | [TypeArguments] SUPER Arguments | NEW [TypeArguments] InnerCreator )
+ *                   ]
+ *                 | BasicType BracketsOpt "." CLASS
+ *  }
+ *
+ *  PrefixOp       = "++" | "--" | "!" | "~" | "+" | "-"
+ *  PostfixOp      = "++" | "--"
+ *  Type3          = Ident { "." Ident } [TypeArguments] {TypeSelector} BracketsOpt
+ *                 | BasicType
+ *  TypeNoParams3  = Ident { "." Ident } BracketsOpt
+ *  Selector       = "." [TypeArguments] Ident [Arguments]
+ *                 | "." THIS
+ *                 | "." [TypeArguments] SUPER SuperSuffix
+ *                 | "." NEW [TypeArguments] InnerCreator
+ *                 | "[" Expression "]"
+ *  TypeSelector   = "." Ident [TypeArguments]
+ *  SuperSuffix    = Arguments | "." Ident [Arguments]
+ */
+func (jp *JavacParser) term3() *jc.AbstractJCExpression {
+
+	return &jc.AbstractJCExpression{}
+}
+
+func (jp *JavacParser) termRest(e *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	return &jc.AbstractJCExpression{}
+}
+
+func (jp *JavacParser) term1Rest(e *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	return &jc.AbstractJCExpression{}
+}
+
+func (jp *JavacParser) term2Rest(e *jc.AbstractJCExpression, perc int) *jc.AbstractJCExpression {
+
+	return &jc.AbstractJCExpression{}
+}
+
+func prec(tk *tokenKind) int {
+
+	treeTag := opTag(tk)
+	if treeTag != jc.TREE_TAG_NO_TAG {
+		return jc.OpPrec(treeTag)
+	} else {
+		return -1
+	}
+}
+
+func opTag(tk *tokenKind) jc.JCTreeTag {
+
+	switch tk {
+	case TOKEN_KIND_BARBAR:
+		return jc.TREE_TAG_OR
+	case TOKEN_KIND_AMPAMP:
+		return jc.TREE_TAG_AND
+	case TOKEN_KIND_BAR:
+		return jc.TREE_TAG_BITOR
+	case TOKEN_KIND_BAREQ:
+		return jc.TREE_TAG_BITOR_ASG
+	case TOKEN_KIND_CARET:
+		return jc.TREE_TAG_BITXOR
+	case TOKEN_KIND_CARETEQ:
+		return jc.TREE_TAG_BITXOR_ASG
+	case TOKEN_KIND_AMP:
+		return jc.TREE_TAG_BITAND
+	case TOKEN_KIND_AMPEQ:
+		return jc.TREE_TAG_BITAND_ASG
+	case TOKEN_KIND_EQEQ:
+		return jc.TREE_TAG_EQ
+	case TOKEN_KIND_BANGEQ:
+		return jc.TREE_TAG_NE
+	case TOKEN_KIND_LT:
+		return jc.TREE_TAG_LT
+	case TOKEN_KIND_GT:
+		return jc.TREE_TAG_GT
+	case TOKEN_KIND_LTEQ:
+		return jc.TREE_TAG_LE
+	case TOKEN_KIND_GTEQ:
+		return jc.TREE_TAG_GE
+	case TOKEN_KIND_LTLT:
+		return jc.TREE_TAG_SL
+	case TOKEN_KIND_LTLTEQ:
+		return jc.TREE_TAG_SL_ASG
+	case TOKEN_KIND_GTGT:
+		return jc.TREE_TAG_SR
+	case TOKEN_KIND_GTGTEQ:
+		return jc.TREE_TAG_SR_ASG
+	case TOKEN_KIND_GTGTGT:
+		return jc.TREE_TAG_USR
+	case TOKEN_KIND_GTGTGTEQ:
+		return jc.TREE_TAG_USR_ASG
+	case TOKEN_KIND_PLUS:
+		return jc.TREE_TAG_PLUS
+	case TOKEN_KIND_PLUSEQ:
+		return jc.TREE_TAG_PLUS_ASG
+	case TOKEN_KIND_SUB:
+		return jc.TREE_TAG_MINUS
+	case TOKEN_KIND_SUBEQ:
+		return jc.TREE_TAG_MINUS_ASG
+	case TOKEN_KIND_STAR:
+		return jc.TREE_TAG_MUL
+	case TOKEN_KIND_STAREQ:
+		return jc.TREE_TAG_MUL_ASG
+	case TOKEN_KIND_SLASH:
+		return jc.TREE_TAG_DIV
+	case TOKEN_KIND_SLASHEQ:
+		return jc.TREE_TAG_DIV_ASG
+	case TOKEN_KIND_PERCENT:
+		return jc.TREE_TAG_MOD
+	case TOKEN_KIND_PERCENTEQ:
+		return jc.TREE_TAG_MOD_ASG
+	case TOKEN_KIND_INSTANCEOF:
+		return jc.TREE_TAG_TYPETEST
+	default:
+		return jc.TREE_TAG_NO_TAG
+	}
 }
 
 /** Skip forward until a suitable stop token is found.
@@ -388,9 +626,9 @@ func (jp *JavacParser) skip(stopAtImport bool, stopAtMemberDecl bool,
 /** ImportDeclaration = IMPORT [ STATIC ] Ident { "." Ident } [ "." "*" ] ";"
  * 这个是import的语法，这个语法应该比较好解析，固定的格式。
  */
-func (jp *JavacParser) importDeclaration() *jc.JCTree {
+func (jp *JavacParser) importDeclaration() *jc.AbstractJCTree {
 
-	t := &jc.JCTree{}
+	t := &jc.AbstractJCTree{}
 	pos := jp.token.Pos()
 	jp.nextToken()
 	importStatic := false
@@ -399,17 +637,17 @@ func (jp *JavacParser) importDeclaration() *jc.JCTree {
 		importStatic = true
 		jp.nextToken()
 	}
-	var pid *jc.JCExpression = &jc.JCExpression{}
+	var pid *jc.AbstractJCExpression = &jc.AbstractJCExpression{}
 	for {
 		pos1 := jp.token.Pos()
 		jp.accept(TOKEN_KIND_DOT)
 		if jp.token.GetTokenKind() == TOKEN_KIND_STAR {
-			pid = &jc.JCExpression{}
+			pid = &jc.AbstractJCExpression{}
 			pos1++
 			jp.nextToken()
 			break
 		} else {
-			pid = &jc.JCExpression{}
+			pid = &jc.AbstractJCExpression{}
 			pos1++
 		}
 		if jp.token.GetTokenKind() != TOKEN_KIND_DOT {
@@ -423,9 +661,9 @@ func (jp *JavacParser) importDeclaration() *jc.JCTree {
 	return t
 }
 
-func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.JCTree {
+func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.AbstractJCTree {
 
-	t := &jc.JCTree{}
+	t := &jc.AbstractJCTree{}
 
 	return t
 }

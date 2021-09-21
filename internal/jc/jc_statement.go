@@ -18,32 +18,32 @@ import (
  *
  * @author hushengdong
  */
-type JCStatement struct {
-	*JCTree
+type AbstractJCStatement struct {
+	*AbstractJCTree
 }
 
-func (jc *JCStatement) TreeType() ast_tree2.TreeType {
+func (jc *AbstractJCStatement) TreeType() ast_tree2.TreeType {
 
 	panic("implement me")
 }
 
-func (jc *JCStatement) StatementTreeV2_() {
+func (jc *AbstractJCStatement) StatementTreeV2_() {
 
-	panic("implement me")
+	//panic("implement me")
 }
 
-func NewJCStatement(tree *JCTree) *JCStatement {
+func NewJCStatement(tree *AbstractJCTree) *AbstractJCStatement {
 
-	return &JCStatement{tree}
+	return &AbstractJCStatement{tree}
 }
 
-func (jc *JCStatement) SetType(javaType *lang.JavaType) *JCStatement {
+func (jc *AbstractJCStatement) SetType(javaType *lang.JavaType) *AbstractJCStatement {
 
 	jc.JavaType = javaType
 	return jc
 }
 
-func (jc *JCStatement) SetPos(pos int) *JCStatement {
+func (jc *AbstractJCStatement) SetPos(pos int) *AbstractJCStatement {
 
 	jc.Pos = pos
 	return jc

@@ -12,7 +12,7 @@ package ast_tree2
  * @author hushengdong
  */
 type WildcardTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	WildcardTreeV2_()
 	// --
 	GetBound() TreeV2

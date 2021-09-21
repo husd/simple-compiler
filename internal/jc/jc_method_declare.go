@@ -9,10 +9,10 @@ import (
  * @author hushengdong
  */
 type JCMethodDecl struct {
-	*JCTree
+	*AbstractJCTree
 }
 
-func NewJCMethodDecl(tree *JCTree) *JCMethodDecl {
+func NewJCMethodDecl(tree *AbstractJCTree) *JCMethodDecl {
 
 	return &JCMethodDecl{tree}
 }

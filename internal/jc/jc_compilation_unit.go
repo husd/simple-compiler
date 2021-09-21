@@ -9,10 +9,10 @@ import (
  * @author hushengdong
  */
 type JCCompilationUnit struct {
-	*JCTree
+	*AbstractJCTree
 }
 
-func NewJCCompilationUnit(tree *JCTree) *JCCompilationUnit {
+func NewJCCompilationUnit(tree *AbstractJCTree) *JCCompilationUnit {
 
 	return &JCCompilationUnit{tree}
 }

@@ -21,16 +21,25 @@ func (this *abstractPerson) run() {
 	fmt.Println("abstractPerson run")
 }
 
-// Man 继承了抽象类
-type Man struct {
-	abstractPerson
+func eatAndRun(p *abstractPerson) {
+
+	fmt.Println("eat and run -----------------")
+	p.eat()
+	p.run()
+	fmt.Println("eat and run end -----------------")
 }
 
-func NewMan() *Man {
+// Man 继承了抽象类
+type Man struct {
+	*abstractPerson
+}
+
+func NewMan() *abstractPerson {
 
 	p := &Man{}
+	p.abstractPerson = &abstractPerson{}
 	p.Sleep = p.sleep
-	return p
+	return p.abstractPerson
 }
 
 func (this *Man) sleep() {
@@ -40,17 +49,20 @@ func (this *Man) sleep() {
 
 // Women 继承了抽象类
 type Women struct {
-	abstractPerson
+	*abstractPerson
 }
 
-func NewWomen() *Women {
+func NewWomen() *abstractPerson {
 
 	p := &Women{}
+	p.abstractPerson = &abstractPerson{}
 	p.Sleep = p.sleep
-	return p
+	return p.abstractPerson
 }
 
 func (this *Women) sleep() {
 
 	fmt.Println("Women sleep")
 }
+
+// ---

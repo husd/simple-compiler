@@ -12,7 +12,7 @@ package ast_tree2
  * @author hushengdong
  */
 type CaseTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	//--
 	GetExpression() ExpressionTreeV2
 	GetStatements() StatementTreeV2

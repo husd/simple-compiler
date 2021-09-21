@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type SwitchTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	StatementTreeV2_()
 	SwitchTreeV2_()
 	// --

@@ -15,7 +15,7 @@ package ast_tree2
  * @author hushengdong
  */
 type NewClassTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ExpressionTreeV2_()
 	NewClassTreeV2_()
 	// --

@@ -10,7 +10,7 @@ import (
  * @author hushengdong
  */
 type JCIdent struct {
-	*JCExpression
+	*AbstractJCExpression
 
 	pos    int
 	name   *util.Name
@@ -22,7 +22,7 @@ func (jc *JCIdent) TreeType() ast_tree2.TreeType {
 }
 
 func (jc *JCIdent) ExpressionTreeV2_() {
-	panic("implement me")
+	//panic("implement me")
 }
 
 func (jc *JCIdent) GetName() string {
@@ -30,7 +30,7 @@ func (jc *JCIdent) GetName() string {
 }
 
 func (jc *JCIdent) IdentifierTreeV2_() {
-	panic("implement me")
+	//panic("implement me")
 }
 
 func NewJCIdent(name *util.Name) *JCIdent {

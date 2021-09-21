@@ -9,7 +9,7 @@ package ast_tree2
  * @author hushengdong
  */
 type VariableTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	StatementTreeV2_()
 	VariableTreeV2_()
 	// --

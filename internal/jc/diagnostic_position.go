@@ -9,7 +9,7 @@ package jc
 type DiagnosticPosition interface {
 
 	/** Gets the tree node, if any, to which the diagnostic applies. */
-	getTree() *JCTree
+	getTree() *AbstractJCTree
 	/** If there is a tree node, get the start position of the tree node.
 	 *  Otherwise, just returns the same as getPreferredPosition(). */
 	getStartPosition() int

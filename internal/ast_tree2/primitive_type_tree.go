@@ -10,7 +10,7 @@ import "husd.com/v0/lang"
  * @author hushengdong
  */
 type PrimitiveTypeTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	PrimitiveTypeTreeV2_()
 	// --
 	GetPrimitiveTypeKind() lang.TypeKind

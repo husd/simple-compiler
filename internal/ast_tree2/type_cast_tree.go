@@ -8,7 +8,7 @@ package ast_tree2
  * @author hushengdong
  */
 type TypeCastTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ExpressionTreeV2_()
 	TypeCastTreeV2_()
 	// --

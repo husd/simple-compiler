@@ -6,7 +6,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ErroneousTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ExpressionTreeV2_()
 
 	//--

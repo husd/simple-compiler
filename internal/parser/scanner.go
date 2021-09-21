@@ -38,6 +38,20 @@ func NewScannerLexer(path string, c *util.Context) *Scanner {
 	return &scanner
 }
 
+func NewScannerLexerWithString(str string, c *util.Context) *Scanner {
+
+	scanner := Scanner{}
+	scanner.tokenList = list.New()
+	//设置了一个假的节点
+	dummy := dummyToken()
+	scanner.token = dummy
+	scanner.preToken = dummy
+	scanner.javaTokenizer = NewJavaTokenizerWithString(str, c)
+
+	c.Put(util.C_LEXER, &scanner)
+	return &scanner
+}
+
 func (scan *Scanner) NextToken() {
 
 	scan.preToken = scan.token

@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ImportTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ImportTreeV2_()
 	// --
 	IsStatic() bool

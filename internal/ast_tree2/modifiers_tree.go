@@ -7,7 +7,7 @@ import "husd.com/v0/lang"
  * @author hushengdong
  */
 type ModifiersTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 
 	// --
 	GetFlags() *[]lang.Modifier

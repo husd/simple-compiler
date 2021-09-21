@@ -9,55 +9,60 @@ import (
  * JCTree是树的基本操作
  * @author hushengdong
  */
-type JCTree struct {
+type AbstractJCTree struct {
 	Pos      int // 源代码里的位置
 	JavaType *lang.JavaType
 
 	// abstract method
-	AstTreeType func() ast_tree2.TreeType
+	getTreeType func() *ast_tree2.TreeType
 	getTag      func() JCTreeTag
 }
 
-func (jc *JCTree) hasTag(tag JCTreeTag) bool {
+func NewJCTree() *AbstractJCTree {
+
+	return &AbstractJCTree{}
+}
+
+func (jc *AbstractJCTree) hasTag(tag JCTreeTag) bool {
 
 	return tag == jc.getTag()
 }
 
-func (jc *JCTree) setType(t *lang.JavaType) *JCTree {
+func (jc *AbstractJCTree) setType(t *lang.JavaType) *AbstractJCTree {
 
 	jc.JavaType = t
 	return jc
 }
 
-func (jc *JCTree) pos() DiagnosticPosition {
+func (jc *AbstractJCTree) pos() DiagnosticPosition {
 
 	return jc
 }
 
-func (jc *JCTree) Cloneable_() {
+func (jc *AbstractJCTree) Cloneable_() {
 
-	panic("implement me")
+	//panic("implement me")
 }
 
-func (jc *JCTree) TreeType() ast_tree2.TreeType {
+func (jc *AbstractJCTree) TreeType() *ast_tree2.TreeType {
 
-	return jc.AstTreeType()
+	return jc.getTreeType()
 }
 
 // DiagnosticPosition
-func (jc *JCTree) getTree() *JCTree {
+func (jc *AbstractJCTree) getTree() *AbstractJCTree {
 	return jc
 }
 
-func (jc *JCTree) getStartPosition() int {
+func (jc *AbstractJCTree) getStartPosition() int {
 	panic(" getStartPosition implement me")
 }
 
-func (jc *JCTree) getPreferredPosition() int {
+func (jc *AbstractJCTree) getPreferredPosition() int {
 	return jc.Pos
 }
 
-func (jc *JCTree) getEndPosition(endPosTable *EndPosTable) int {
+func (jc *AbstractJCTree) getEndPosition(endPosTable *EndPosTable) int {
 	panic("implement me")
 }
 

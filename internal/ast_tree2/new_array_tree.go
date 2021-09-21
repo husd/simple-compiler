@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type NewArrayTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ExpressionTreeV2_()
 	NewArrayTreeV2_()
 	// --

@@ -2,7 +2,6 @@ package jc
 
 import (
 	"husd.com/v0/ast_tree2"
-	"husd.com/v0/lang"
 )
 
 /**
@@ -14,37 +13,23 @@ import (
  * expression是代码解析里比较基础的类型
  * @author hushengdong
  */
-type JCExpression struct {
-	*JCTree
+type AbstractJCExpression struct {
+	*AbstractJCTree
 }
 
-func (jc *JCExpression) TreeType() ast_tree2.TreeType {
+func (jc *AbstractJCExpression) TreeType() *ast_tree2.TreeType {
 
-	panic("implement me")
+	return jc.getTreeType()
 }
 
-func (jc *JCExpression) ExpressionTreeV2_() {
-	panic("implement me")
+func (jc *AbstractJCExpression) ExpressionTreeV2_() {
+
+	//panic("implement me")
 }
 
-func NewJCExpression(tree *JCTree) *JCExpression {
+func NewJCExpression() *AbstractJCExpression {
 
-	return &JCExpression{tree}
-}
-
-func (jc *JCExpression) SetType(javaType *lang.JavaType) *JCExpression {
-
-	jc.JavaType = javaType
-	return jc
-}
-
-func (jc *JCExpression) SetPos(pos int) *JCExpression {
-
-	jc.Pos = pos
-	return jc
-}
-
-func (jc *JCExpression) GetJCTree() *JCTree {
-
-	return jc.getTree()
+	res := &AbstractJCExpression{}
+	res.AbstractJCTree = NewJCTree()
+	return res
 }

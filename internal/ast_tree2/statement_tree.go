@@ -6,6 +6,6 @@ package ast_tree2
  * @author hushengdong
  */
 type StatementTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	StatementTreeV2_()
 }

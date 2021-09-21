@@ -6,7 +6,7 @@ package ast_tree2
  * @author hushengdong
  */
 type BinaryTreeV2 interface {
-	TreeType() TreeType
+	TreeType() *TreeType
 	ExpressionTreeV2_()
 
 	//--

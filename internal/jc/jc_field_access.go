@@ -9,18 +9,18 @@ import (
  * @author hushengdong
  */
 type JCFieldAccess struct {
-	*JCExpression
+	*AbstractJCExpression
 	name *util.Name
 }
 
-func NewJCFieldAccess(selected *JCExpression, name *util.Name) *JCFieldAccess {
+func NewJCFieldAccess(selected *AbstractJCExpression, name *util.Name) *JCFieldAccess {
 
 	res := &JCFieldAccess{selected, name}
 
 	return res
 }
 
-func (jc *JCFieldAccess) GetExpression() *JCExpression {
+func (jc *JCFieldAccess) GetExpression() *AbstractJCExpression {
 
-	return jc.JCExpression
+	return jc.AbstractJCExpression
 }
