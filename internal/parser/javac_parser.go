@@ -226,7 +226,7 @@ func (jp *JavacParser) ParseType() *jc.AbstractJCExpression {
 func (jp *JavacParser) literal(pre *util.Name, pos int) *jc.AbstractJCExpression {
 
 	var t *jc.AbstractJCExpression
-	t = jc.NewJCError()
+	t = jc.NewJCError(pos)
 	switch jp.token.GetTokenKind() {
 	case TOKEN_KIND_INT_LITERAL:
 		num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix(), 32)
@@ -479,7 +479,30 @@ func (jp *JavacParser) term2() *jc.AbstractJCExpression {
  */
 func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 
-	return &jc.AbstractJCExpression{}
+	pos := jp.token.Pos()
+	var t *jc.AbstractJCExpression
+	// 处理这样的范型表达式的，这里先忽略范型
+	// TypeArguments  = "<" TypeArgument {"," TypeArgument} ">"
+	// List<JCExpression> typeArgs = typeArgumentsOpt(EXPR);
+	switch jp.token.GetTokenKind() {
+
+	case TOKEN_KIND_INT_LITERAL, TOKEN_KIND_LONG_LITERAL, TOKEN_KIND_FLOAT_LITERAL,
+		TOKEN_KIND_DOUBLE_LITERAL, TOKEN_KIND_CHAR_LITERAL, TOKEN_KIND_STRING_LITERAL,
+		TOKEN_KIND_TRUE, TOKEN_KIND_FALSE, TOKEN_KIND_NULL: // 最简单的 boolean a = false;
+		if (jp.mode & term_mode_expr) != 0 {
+			jp.mode = term_mode_expr
+			t = jp.literal(jp.names.Empty, jp.token.Pos())
+		} else {
+			return jp.illegal("无效的表达式")
+		}
+
+	case TOKEN_KIND_BYTE, TOKEN_KIND_SHORT, TOKEN_KIND_CHAR, TOKEN_KIND_INT,
+		TOKEN_KIND_LONG, TOKEN_KIND_FLOAT, TOKEN_KIND_DOUBLE, TOKEN_KIND_BOOLEAN: // 最简单的 boolean a = false;
+		// t = jp.bracketsSuffix(jp.bracketsOpt(jp.basicType()))
+	}
+
+	fmt.Println("delete after .... pos is:", pos)
+	return t
 }
 
 func (jp *JavacParser) termRest(e *jc.AbstractJCExpression) *jc.AbstractJCExpression {
@@ -666,4 +689,22 @@ func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.AbstractJCTree 
 	t := &jc.AbstractJCTree{}
 
 	return t
+}
+
+func (jp *JavacParser) illegal(msg string) *jc.AbstractJCExpression {
+
+	jp.reportSyntaxError(jp.token.Pos(), msg, jp.token.GetTokenKind())
+	return jp.syntaxError(jp.token.Pos())
+}
+
+func (jp *JavacParser) syntaxError(pos int) *jc.AbstractJCExpression {
+
+	jp.TreeMaker.At(jp.token.Pos())
+	err := jc.NewJCError(pos)
+	return err
+}
+
+func (jp *JavacParser) basicType() *jc.JCPrimitiveTypeTree {
+
+	panic("todo this")
 }

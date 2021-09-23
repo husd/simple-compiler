@@ -10,7 +10,7 @@ type Names struct {
 	// operators and punctuation
 	asterisk    *Name
 	comma       *Name
-	empty       *Name
+	Empty       *Name
 	hyphen      *Name
 	one         *Name
 	period      *Name
@@ -162,7 +162,7 @@ func NewNames(c *Context) *Names {
 	// operators and punctuation
 	ns.asterisk = ns.fromString("*")
 	ns.comma = ns.fromString(",")
-	ns.empty = ns.fromString("")
+	ns.Empty = ns.fromString("")
 	ns.hyphen = ns.fromString("-")
 	ns.one = ns.fromString("1")
 	ns.period = ns.fromString(".")

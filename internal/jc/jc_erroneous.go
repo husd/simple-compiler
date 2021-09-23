@@ -12,7 +12,7 @@ type JCErroneous struct {
 	*AbstractJCExpression
 }
 
-func NewJCError() *AbstractJCExpression {
+func NewJCError(pos int) *AbstractJCExpression {
 
 	jcError := &JCErroneous{}
 	jcError.AbstractJCExpression = NewJCExpression()
@@ -22,5 +22,6 @@ func NewJCError() *AbstractJCExpression {
 	jcError.getTag = func() JCTreeTag {
 		return TREE_TAG_ERRONEOUS
 	}
+	jcError.Pos = pos
 	return jcError.AbstractJCExpression
 }

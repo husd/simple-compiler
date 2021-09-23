@@ -14,7 +14,7 @@ func TestJavacParser_literal(t *testing.T) {
 
 	var str string
 	c := util.NewContext()
-	str = " int a = 10 ; "
+	str = " boolean a = false ; "
 	p := NewJavacParserWithString(str, c)
-	p.ParseStatement()
+	p.ParseExpression()
 }
