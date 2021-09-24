@@ -1,7 +1,8 @@
 package parser
 
 /**
- *
+ * 所有词法分析器解析出来的符号，都被归类为tokenKind了，肯定属于其中之一
+ * 设计程序语言，这里可以是入口。
  * @author hushengdong
  */
 
@@ -52,6 +53,8 @@ var TOKEN_KIND_PUBLIC = &tokenKind{"public", TOKEN_TAG_DEFAULT, 37}
 var TOKEN_KIND_RETURN = &tokenKind{"return", TOKEN_TAG_DEFAULT, 38}
 var TOKEN_KIND_SHORT = &tokenKind{"short", TOKEN_TAG_NAMED, 39}
 var TOKEN_KIND_STATIC = &tokenKind{"static", TOKEN_TAG_DEFAULT, 40}
+
+// java2开始有的一个关键字 声明 类、接口、方法，作用是严格按IEEE-754执行浮点数字计算，否则Java怎么来无法确认
 var TOKEN_KIND_STRICTFP = &tokenKind{"strictfp", TOKEN_TAG_DEFAULT, 41}
 var TOKEN_KIND_SUPER = &tokenKind{"super", TOKEN_TAG_NAMED, 42}
 var TOKEN_KIND_SWITCH = &tokenKind{"switch", TOKEN_TAG_DEFAULT, 43}

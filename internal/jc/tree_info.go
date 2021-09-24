@@ -12,113 +12,113 @@ func treeTag2TreeKind(tag JCTreeTag) *ast_tree2.TreeType {
 	switch tag {
 	// Postfix expressions
 	case TREE_TAG_POSTINC: // _ ++
-		return ast_tree2.AST_TREE_KIND_POSTFIX_INCREMENT
+		return ast_tree2.TREE_TYPE_POSTFIX_INCREMENT
 	case TREE_TAG_POSTDEC: // _ --
-		return ast_tree2.AST_TREE_KIND_POSTFIX_DECREMENT
+		return ast_tree2.TREE_TYPE_POSTFIX_DECREMENT
 
 	// Unary operators
 	case TREE_TAG_PREINC: // ++ _
-		return ast_tree2.AST_TREE_KIND_PREFIX_INCREMENT
+		return ast_tree2.TREE_TYPE_PREFIX_INCREMENT
 	case TREE_TAG_PREDEC: // -- _
-		return ast_tree2.AST_TREE_KIND_PREFIX_DECREMENT
+		return ast_tree2.TREE_TYPE_PREFIX_DECREMENT
 	case TREE_TAG_POS: // +
-		return ast_tree2.AST_TREE_KIND_UNARY_PLUS
+		return ast_tree2.TREE_TYPE_UNARY_PLUS
 	case TREE_TAG_NEG: // -
-		return ast_tree2.AST_TREE_KIND_UNARY_MINUS
+		return ast_tree2.TREE_TYPE_UNARY_MINUS
 	case TREE_TAG_COMPL: // ~
-		return ast_tree2.AST_TREE_KIND_BITWISE_COMPLEMENT
+		return ast_tree2.TREE_TYPE_BITWISE_COMPLEMENT
 	case TREE_TAG_NOT: // !
-		return ast_tree2.AST_TREE_KIND_LOGICAL_COMPLEMENT
+		return ast_tree2.TREE_TYPE_LOGICAL_COMPLEMENT
 
 	// Binary operators
 
 	// Multiplicative operators
 	case TREE_TAG_MUL: // *
-		return ast_tree2.AST_TREE_KIND_MULTIPLY
+		return ast_tree2.TREE_TYPE_MULTIPLY
 	case TREE_TAG_DIV: // /
-		return ast_tree2.AST_TREE_KIND_DIVIDE
+		return ast_tree2.TREE_TYPE_DIVIDE
 	case TREE_TAG_MOD: // %
-		return ast_tree2.AST_TREE_KIND_REMAINDER
+		return ast_tree2.TREE_TYPE_REMAINDER
 
 	// Additive operators
 	case TREE_TAG_PLUS: // +
-		return ast_tree2.AST_TREE_KIND_PLUS
+		return ast_tree2.TREE_TYPE_PLUS
 	case TREE_TAG_MINUS: // -
-		return ast_tree2.AST_TREE_KIND_MINUS
+		return ast_tree2.TREE_TYPE_MINUS
 
 	// Shift operators
 	case TREE_TAG_SL: // <<
-		return ast_tree2.AST_TREE_KIND_LEFT_SHIFT
+		return ast_tree2.TREE_TYPE_LEFT_SHIFT
 	case TREE_TAG_SR: // >>
-		return ast_tree2.AST_TREE_KIND_RIGHT_SHIFT
+		return ast_tree2.TREE_TYPE_RIGHT_SHIFT
 	case TREE_TAG_USR: // >>>
-		return ast_tree2.AST_TREE_KIND_UNSIGNED_RIGHT_SHIFT
+		return ast_tree2.TREE_TYPE_UNSIGNED_RIGHT_SHIFT
 
 	// Relational operators
 	case TREE_TAG_LT: // <
-		return ast_tree2.AST_TREE_KIND_LESS_THAN
+		return ast_tree2.TREE_TYPE_LESS_THAN
 	case TREE_TAG_GT: // >
-		return ast_tree2.AST_TREE_KIND_GREATER_THAN
+		return ast_tree2.TREE_TYPE_GREATER_THAN
 	case TREE_TAG_LE: // <=
-		return ast_tree2.AST_TREE_KIND_LESS_THAN_EQUAL
+		return ast_tree2.TREE_TYPE_LESS_THAN_EQUAL
 	case TREE_TAG_GE: // >=
-		return ast_tree2.AST_TREE_KIND_GREATER_THAN_EQUAL
+		return ast_tree2.TREE_TYPE_GREATER_THAN_EQUAL
 
 	// Equality operators
 	case TREE_TAG_EQ: // ==
-		return ast_tree2.AST_TREE_KIND_EQUAL_TO
+		return ast_tree2.TREE_TYPE_EQUAL_TO
 	case TREE_TAG_NE: // !=
-		return ast_tree2.AST_TREE_KIND_NOT_EQUAL_TO
+		return ast_tree2.TREE_TYPE_NOT_EQUAL_TO
 
 	// Bitwise and logical operators
 	case TREE_TAG_BITAND: // &
-		return ast_tree2.AST_TREE_KIND_AND
+		return ast_tree2.TREE_TYPE_AND
 	case TREE_TAG_BITXOR: // ^
-		return ast_tree2.AST_TREE_KIND_XOR
+		return ast_tree2.TREE_TYPE_XOR
 	case TREE_TAG_BITOR: // |
-		return ast_tree2.AST_TREE_KIND_OR
+		return ast_tree2.TREE_TYPE_OR
 
 	// Conditional operators
 	case TREE_TAG_AND: // &&
-		return ast_tree2.AST_TREE_KIND_CONDITIONAL_AND
+		return ast_tree2.TREE_TYPE_CONDITIONAL_AND
 	case TREE_TAG_OR: // ||
-		return ast_tree2.AST_TREE_KIND_CONDITIONAL_OR
+		return ast_tree2.TREE_TYPE_CONDITIONAL_OR
 
 	// Assignment operators
 	case TREE_TAG_MUL_ASG: // *=
-		return ast_tree2.AST_TREE_KIND_MULTIPLY_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_MULTIPLY_ASSIGNMENT
 	case TREE_TAG_DIV_ASG: // /=
-		return ast_tree2.AST_TREE_KIND_DIVIDE_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_DIVIDE_ASSIGNMENT
 	case TREE_TAG_MOD_ASG: // %=
-		return ast_tree2.AST_TREE_KIND_REMAINDER_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_REMAINDER_ASSIGNMENT
 	case TREE_TAG_PLUS_ASG: // +=
-		return ast_tree2.AST_TREE_KIND_PLUS_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_PLUS_ASSIGNMENT
 	case TREE_TAG_MINUS_ASG: // -=
-		return ast_tree2.AST_TREE_KIND_MINUS_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_MINUS_ASSIGNMENT
 	case TREE_TAG_SL_ASG: // <<=
-		return ast_tree2.AST_TREE_KIND_LEFT_SHIFT_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_LEFT_SHIFT_ASSIGNMENT
 	case TREE_TAG_SR_ASG: // >>=
-		return ast_tree2.AST_TREE_KIND_RIGHT_SHIFT_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_RIGHT_SHIFT_ASSIGNMENT
 	case TREE_TAG_USR_ASG: // >>>=
-		return ast_tree2.AST_TREE_KIND_UNSIGNED_RIGHT_SHIFT_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_UNSIGNED_RIGHT_SHIFT_ASSIGNMENT
 	case TREE_TAG_BITAND_ASG: // &=
-		return ast_tree2.AST_TREE_KIND_AND_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_AND_ASSIGNMENT
 	case TREE_TAG_BITXOR_ASG: // ^=
-		return ast_tree2.AST_TREE_KIND_XOR_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_XOR_ASSIGNMENT
 	case TREE_TAG_BITOR_ASG: // |=
-		return ast_tree2.AST_TREE_KIND_OR_ASSIGNMENT
+		return ast_tree2.TREE_TYPE_OR_ASSIGNMENT
 
 	// Null check (implementation detail), for example, __.getClass()
 	case TREE_TAG_NULLCHK:
-		return ast_tree2.AST_TREE_KIND_OTHER
+		return ast_tree2.TREE_TYPE_OTHER
 
 	case TREE_TAG_ANNOTATION:
-		return ast_tree2.AST_TREE_KIND_ANNOTATION
+		return ast_tree2.TREE_TYPE_ANNOTATION
 	case TREE_TAG_TYPE_ANNOTATION:
-		return ast_tree2.AST_TREE_KIND_TYPE_ANNOTATION
+		return ast_tree2.TREE_TYPE_TYPE_ANNOTATION
 
 	default:
-		return ast_tree2.AST_TREE_KIND_NIL
+		return ast_tree2.TREE_TYPE_NIL
 	}
 }
 

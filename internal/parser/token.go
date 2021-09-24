@@ -13,6 +13,9 @@ const (
 
 // Token 词法分析器解析出来的最小单元
 type Token interface {
+	/**
+	 * token的类型
+	 */
 	GetTokenKind() *tokenKind
 
 	GetName() *util.Name

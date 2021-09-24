@@ -489,6 +489,7 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 	case TOKEN_KIND_INT_LITERAL, TOKEN_KIND_LONG_LITERAL, TOKEN_KIND_FLOAT_LITERAL,
 		TOKEN_KIND_DOUBLE_LITERAL, TOKEN_KIND_CHAR_LITERAL, TOKEN_KIND_STRING_LITERAL,
 		TOKEN_KIND_TRUE, TOKEN_KIND_FALSE, TOKEN_KIND_NULL: // 最简单的 boolean a = false;
+
 		if (jp.mode & term_mode_expr) != 0 {
 			jp.mode = term_mode_expr
 			t = jp.literal(jp.names.Empty, jp.token.Pos())
@@ -498,7 +499,15 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 
 	case TOKEN_KIND_BYTE, TOKEN_KIND_SHORT, TOKEN_KIND_CHAR, TOKEN_KIND_INT,
 		TOKEN_KIND_LONG, TOKEN_KIND_FLOAT, TOKEN_KIND_DOUBLE, TOKEN_KIND_BOOLEAN: // 最简单的 boolean a = false;
-		// t = jp.bracketsSuffix(jp.bracketsOpt(jp.basicType()))
+
+		emptyAnnotations := &[]jc.JCAnnotation{}
+		primitiveTypeTree := jp.basicType()
+		t = jp.bracketsSuffix(jp.bracketsOpt(primitiveTypeTree.AbstractJCExpression, emptyAnnotations))
+
+	case TOKEN_KIND_UNDERSCORE, TOKEN_KIND_IDENTIFIER,
+		TOKEN_KIND_ASSERT, TOKEN_KIND_ENUM:
+
+		// 开始处理标识符
 	}
 
 	fmt.Println("delete after .... pos is:", pos)
@@ -687,7 +696,6 @@ func (jp *JavacParser) importDeclaration() *jc.AbstractJCTree {
 func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.AbstractJCTree {
 
 	t := &jc.AbstractJCTree{}
-
 	return t
 }
 
@@ -706,5 +714,80 @@ func (jp *JavacParser) syntaxError(pos int) *jc.AbstractJCExpression {
 
 func (jp *JavacParser) basicType() *jc.JCPrimitiveTypeTree {
 
-	panic("todo this")
+	jp.TreeMaker.At(jp.token.Pos())
+	return jp.TreeMaker.TypeIdent(typeTag(jp.token.GetTokenKind()))
+}
+
+/**
+ * 解析方括号里的内容
+ * BracketsOpt = [ "[" "]" { [Annotations] "[" "]"} ]
+ *
+ * 考虑这样的代码
+ * void m(String [] m) { }
+ * void m(String ... m) { }
+ * void m(String @A [] m) { }
+ * void m(String @A ... m) { }
+ */
+func (jp *JavacParser) bracketsOpt(expression *jc.AbstractJCExpression, annotations *[]jc.JCAnnotation) *jc.AbstractJCExpression {
+
+	// nextLevelAnnotations := jp.typeAnnotationsOpt()
+	// 这里我们不处理注解，所以先返回空
+	return expression
+}
+
+/**
+ * 要解析出来注解 ，这里我们暂时不支持注解，先忽略，返回空 TODO annotation
+ */
+func (jp *JavacParser) typeAnnotationsOpt() *[]jc.JCAnnotation {
+
+	return &[]jc.JCAnnotation{}
+}
+
+/** BracketsSuffixExpr = "." CLASS
+ *  BracketsSuffixType =
+ *
+ * 这个函数处理内部类 例如有2个类：A B B类是A类的内部类
+ *
+ * TODO 先不处理
+ */
+func (jp *JavacParser) bracketsSuffix(opt *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	if (jp.mode&term_mode_expr) != 0 &&
+		jp.token.GetTokenKind() == TOKEN_KIND_DOT {
+		jp.mode = term_mode_expr
+		// newPos := jp.token.Pos()
+		jp.nextToken()
+		jp.accept(TOKEN_KIND_CLASS)
+		// TODO
+	} else if (jp.mode & term_mode_type) != 0 {
+
+	} else if jp.token.GetTokenKind() != TOKEN_KIND_COLCOL {
+		jp.syntaxError(jp.token.Pos())
+	}
+	return opt
+}
+
+// 返回none就是没有类型
+func typeTag(tk *tokenKind) *code.TypeTag {
+
+	switch tk {
+	case TOKEN_KIND_BYTE:
+		return code.TYPE_TAG_BYTE
+	case TOKEN_KIND_CHAR:
+		return code.TYPE_TAG_CHAR
+	case TOKEN_KIND_SHORT:
+		return code.TYPE_TAG_SHORT
+	case TOKEN_KIND_INT:
+		return code.TYPE_TAG_INT
+	case TOKEN_KIND_LONG:
+		return code.TYPE_TAG_LONG
+	case TOKEN_KIND_FLOAT:
+		return code.TYPE_TAG_FLOAT
+	case TOKEN_KIND_DOUBLE:
+		return code.TYPE_TAG_DOUBLE
+	case TOKEN_KIND_BOOLEAN:
+		return code.TYPE_TAG_BOOLEAN
+	default:
+		return code.TYPE_TAG_NONE
+	}
 }

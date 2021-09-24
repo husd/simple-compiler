@@ -10,5 +10,5 @@ type AnnotationTreeV2 interface {
 	AnnotationTreeV2_()
 	// --
 	GetAnnotationType() TreeV2
-	GetArguments() ExpressionTreeV2
+	GetArguments() *[]ExpressionTreeV2
 }

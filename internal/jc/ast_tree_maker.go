@@ -54,3 +54,10 @@ func (treeMaker *AstTreeMaker) Literal(tag *code.TypeTag, n int) *JCLiteral {
 	res.Pos = treeMaker.pos
 	return res
 }
+
+func (treeMaker *AstTreeMaker) TypeIdent(tag *code.TypeTag) *JCPrimitiveTypeTree {
+
+	pt := NewJCPrimitiveTypeTree(tag)
+	pt.Pos = treeMaker.pos
+	return pt
+}
