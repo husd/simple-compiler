@@ -237,7 +237,8 @@ func (jp *JavacParser) literal(pre *util.Name, pos int) *jc.AbstractJCExpression
 		if err != nil {
 			jp.error(jp.token.Pos(), err.Error())
 		}
-		t = jp.F.At(pos).Literal(code.TYPE_TAG_INT, int(num)).AbstractJCExpression
+		literal := jp.F.At(pos).Literal(code.TYPE_TAG_INT, int(num))
+		return literal.AbstractJCExpression
 	}
 	return t
 }
