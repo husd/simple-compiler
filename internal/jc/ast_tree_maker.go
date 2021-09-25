@@ -45,7 +45,9 @@ func (treeMaker *AstTreeMaker) Identify(name *util.Name) *AbstractJCExpression {
 
 func (treeMaker *AstTreeMaker) Select(selected *AbstractJCExpression, selector *util.Name) *JCFieldAccess {
 
-	return NewJCFieldAccess(selected, selector)
+	tree := NewJCFieldAccess(selected, selector, nil)
+	tree.Pos = treeMaker.pos
+	return tree
 }
 
 func (treeMaker *AstTreeMaker) Literal(tag *code.TypeTag, n int) *JCLiteral {
@@ -60,4 +62,32 @@ func (treeMaker *AstTreeMaker) TypeIdent(tag *code.TypeTag) *JCPrimitiveTypeTree
 	pt := NewJCPrimitiveTypeTree(tag)
 	pt.Pos = treeMaker.pos
 	return pt
+}
+
+func (treeMaker *AstTreeMaker) Indexed(t *AbstractJCExpression, t1 *AbstractJCExpression) *JCArrayAccess {
+
+	tree := NewJCArrayAccess(t, t1)
+	tree.Pos = treeMaker.pos
+	return tree
+}
+
+func (treeMaker *AstTreeMaker) Assign(left *AbstractJCExpression, right *AbstractJCExpression) *JCAssign {
+
+	tree := NewJCAssign(left, right)
+	tree.Pos = treeMaker.pos
+	return tree
+}
+
+func (treeMaker *AstTreeMaker) Assignop(tag JCTreeTag, left *AbstractJCExpression, right *AbstractJCExpression) *JCAssignOp {
+
+	tree := NewJCAssignOp(tag, left, right, nil)
+	tree.Pos = treeMaker.pos
+	return tree
+}
+
+func (treeMaker *AstTreeMaker) Conditional(condition *AbstractJCExpression, truePart *AbstractJCExpression, falsePart *AbstractJCExpression) *JCConditional {
+
+	tree := NewJCConditional(condition, truePart, falsePart)
+	tree.Pos = treeMaker.pos
+	return tree
 }

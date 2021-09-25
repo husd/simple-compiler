@@ -23,13 +23,13 @@ func (jc *AbstractJCExpression) TreeType() *ast_tree2.TreeType {
 }
 
 func (jc *AbstractJCExpression) ExpressionTreeV2_() {
-
-	//panic("implement me")
 }
 
 func NewJCExpression() *AbstractJCExpression {
 
 	res := &AbstractJCExpression{}
 	res.AbstractJCTree = NewJCTree()
+
+	//这里不实现2个抽象方法，因为AbstractJCExpression也是抽象类
 	return res
 }

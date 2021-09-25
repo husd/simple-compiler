@@ -87,12 +87,6 @@ func (scan *Scanner) LookAheadByIndex(inx int) Token {
 	}
 }
 
-func (scan *Scanner) Ahead(len int) Token {
-	fmt.Println("implement me")
-	dummy := dummyToken()
-	return dummy
-}
-
 func (scan *Scanner) PreToken() Token {
 
 	return scan.preToken

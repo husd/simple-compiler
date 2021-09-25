@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"husd.com/v0/util"
 	"testing"
 )
@@ -16,5 +17,7 @@ func TestJavacParser_literal(t *testing.T) {
 	c := util.NewContext()
 	str = " boolean a = false ; "
 	p := NewJavacParserWithString(str, c)
-	p.ParseExpression()
+	tree := p.ParseExpression()
+
+	fmt.Println(tree)
 }

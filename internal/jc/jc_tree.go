@@ -40,8 +40,6 @@ func (jc *AbstractJCTree) pos() DiagnosticPosition {
 }
 
 func (jc *AbstractJCTree) Cloneable_() {
-
-	//panic("implement me")
 }
 
 func (jc *AbstractJCTree) TreeType() *ast_tree2.TreeType {

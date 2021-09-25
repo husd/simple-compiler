@@ -28,8 +28,6 @@ func (jc *AbstractJCStatement) TreeType() ast_tree2.TreeType {
 }
 
 func (jc *AbstractJCStatement) StatementTreeV2_() {
-
-	//panic("implement me")
 }
 
 func NewJCStatement(tree *AbstractJCTree) *AbstractJCStatement {

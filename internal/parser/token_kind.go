@@ -128,3 +128,13 @@ var TOKEN_KIND_GTGTEQ = &tokenKind{">>=", TOKEN_TAG_DEFAULT, 110}
 var TOKEN_KIND_GTGTGTEQ = &tokenKind{">>>=", TOKEN_TAG_DEFAULT, 111}
 var TOKEN_KIND_MONKEYS_AT = &tokenKind{"@", TOKEN_TAG_DEFAULT, 112}
 var TOKEN_KIND_CUSTOM = &tokenKind{"", TOKEN_TAG_DEFAULT, 113}
+
+// Filter接口 ---
+func (t2 *tokenKind) Accept(t interface{}) bool {
+
+	tk := t.(tokenKind)
+	return t2.Index == tk.Index
+}
+func (t2 *tokenKind) Filter_() {}
+
+// Filter接口 ---

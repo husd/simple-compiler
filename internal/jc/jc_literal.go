@@ -17,7 +17,6 @@ type JCLiteral struct {
 }
 
 func (jc *JCLiteral) LiteralTreeV2_() {
-	//panic("implement me")
 }
 
 func (jc *JCLiteral) GetValue() interface{} {
@@ -45,6 +44,8 @@ func (jc *JCLiteral) GetValue() interface{} {
 func NewJCLiteral(tg *code.TypeTag, v int) *JCLiteral {
 
 	res := &JCLiteral{}
+	res.AbstractJCExpression = NewJCExpression()
+
 	res.tg = tg
 	res.val = v
 

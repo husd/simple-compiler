@@ -10,5 +10,5 @@ type ArrayAccessTreeV2 interface {
 
 	// --
 	GetExpression() ExpressionTreeV2
-	GetIndex() int
+	GetIndex() ExpressionTreeV2
 }

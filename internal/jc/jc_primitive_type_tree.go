@@ -19,6 +19,7 @@ func NewJCPrimitiveTypeTree(tg *code.TypeTag) *JCPrimitiveTypeTree {
 
 	res := &JCPrimitiveTypeTree{}
 	res.tg = tg
+	res.AbstractJCExpression = NewJCExpression()
 
 	res.getTreeType = func() *ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_PRIMITIVE_TYPE
@@ -31,8 +32,6 @@ func NewJCPrimitiveTypeTree(tg *code.TypeTag) *JCPrimitiveTypeTree {
 }
 
 func (jc *JCPrimitiveTypeTree) PrimitiveTypeTreeV2_() {
-
-	panic("implement me")
 }
 
 func (jc *JCPrimitiveTypeTree) GetPrimitiveTypeKind() lang.TypeKind {

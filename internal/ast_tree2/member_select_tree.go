@@ -1,5 +1,7 @@
 package ast_tree2
 
+import "husd.com/v0/util"
+
 /**
  * For example:
  * <pre>
@@ -14,5 +16,5 @@ type MemberSelectTreeV2 interface {
 
 	// --
 	GetExpression() ExpressionTreeV2
-	GetIdentifier() string
+	GetIdentifier() *util.Name
 }

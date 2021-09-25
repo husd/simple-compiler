@@ -44,8 +44,8 @@ const (
 	TREE_TAG_INDEXED          /** Indexed array expressions of type Indexed.*/
 	TREE_TAG_SELECT           /** Selections of type Select.*/
 	TREE_TAG_REFERENCE        /** Member references of type Reference.*/
-	TREE_TAG_IDENT            /** Simple identifiers of type Ident.*/
-	TREE_TAG_LITERAL          /** Literals of type Literal.*/
+	TREE_TAG_IDENT            /** 标识符号 */
+	TREE_TAG_LITERAL          /** 字面量 */
 	TREE_TAG_TYPEIDENT        /** Basic type identifiers of type TypeIdent.*/
 	TREE_TAG_TYPEARRAY        /** Array types of type TypeArray.*/
 	TREE_TAG_TYPEAPPLY        /** Parameterized types of type TypeApply.*/

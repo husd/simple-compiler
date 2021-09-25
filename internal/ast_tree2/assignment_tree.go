@@ -9,7 +9,14 @@ type AssignmentTreeV2 interface {
 	TreeType() *TreeType
 	ExpressionTreeV2_()
 
+	/**
+	 * 变量就是左边的 例如 : a=10; 里的 a
+	 */
 	GetVariable() ExpressionTreeV2
+	/**
+	 * 表达式就是右边的表达式 例如： a=10; 里面的10
+	 * 可能是字面量，也可能是另外的一个表达式，例如: a = sum(10);
+	 */
 	GetExpression() ExpressionTreeV2
 	AssignmentTreeV2_()
 }

@@ -57,8 +57,7 @@ func (table *SimpleEndPosTable) SetErrorPos(pos int) {
 	}
 }
 
-func (table *SimpleEndPosTable) toP(jcTree *jc.AbstractJCTree) *jc.AbstractJCExpression {
+func (table *SimpleEndPosTable) toP(jcTree *jc.AbstractJCTree) {
 
 	table.SetEnd(jcTree, table.parser.token.EndPos())
-	return jc.NewJCExpression()
 }

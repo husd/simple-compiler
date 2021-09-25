@@ -14,9 +14,13 @@ type lexer interface {
 	 * 返回当前指针指向的 Token
 	 */
 	Token() Token
-
-	Ahead(len int) Token
-
+	/**
+	 * 向前看几个token
+	 */
+	LookAheadByIndex(lookahead int) Token
+	/**
+	 * 前面1个token
+	 */
 	PreToken() Token
 
 	ErrPos() int

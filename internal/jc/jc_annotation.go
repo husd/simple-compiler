@@ -18,6 +18,8 @@ type JCAnnotation struct {
 func NewJCAnnotation(tag JCTreeTag, annotationType *AbstractJCTree, args *[]ast_tree2.ExpressionTreeV2) *JCAnnotation {
 
 	res := &JCAnnotation{}
+	res.AbstractJCExpression = NewJCExpression()
+
 	res.tag = tag
 	res.annotationType = annotationType
 	res.args = args
@@ -34,7 +36,6 @@ func NewJCAnnotation(tag JCTreeTag, annotationType *AbstractJCTree, args *[]ast_
 
 // AnnotationTree
 func (jc *JCAnnotation) AnnotationTreeV2_() {
-	panic("implement me")
 }
 
 func (jc *JCAnnotation) GetAnnotationType() ast_tree2.TreeV2 {

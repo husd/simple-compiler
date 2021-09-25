@@ -31,3 +31,9 @@ func AllowForeach(version JVersion) bool {
 func AllowHexFloats(v JVersion) bool {
 	return false
 }
+
+//先不支持泛型
+func AllowGenerics(v JVersion) bool {
+
+	return false
+}

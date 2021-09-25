@@ -14,16 +14,18 @@ import (
  */
 
 type JavacParser struct {
-	c            *util.Context //
-	ScannerLexer lexer         // 词法分析器
-	source       code.JVersion // 当前JDK的版本
-	token        Token
+	c      *util.Context //
+	S      lexer         // 词法分析器
+	source code.JVersion // 当前JDK的版本
+	token  Token         //当前读到的token
 
 	endPosTable *SimpleEndPosTable
 
-	TreeMaker   *jc.AstTreeMaker
+	F           *jc.AstTreeMaker
 	names       *util.Names
-	symbolTable *SymbolTable
+	symbolTable *SymbolTable // 符号表
+
+	allowGenerics bool // 是否允许泛型
 
 	mode     parseMode // 当前正在进行转换的模式
 	lastMode parseMode // 上一个模式 lastMode = 2 then mode = 1  from 1 to 2
@@ -32,13 +34,15 @@ type JavacParser struct {
 func NewJavacParser(path string, context *util.Context) *JavacParser {
 
 	parser := JavacParser{}
-	parser.ScannerLexer = GetScannerLexerFromFactory(path, context)
+	parser.S = GetScannerLexerFromFactory(path, context)
 	parser.nextToken()
 
 	parser.endPosTable = NewSimpleEndPosTable(&parser)
-	parser.TreeMaker = jc.InstanceAstTreeMaker(context)
+	parser.F = jc.InstanceAstTreeMaker(context)
 	parser.names = util.InstanceNames(context)
 	parser.symbolTable = InstanceSymbolTable(context)
+	parser.source = code.JDK8
+	parser.allowGenerics = code.AllowGenerics(parser.source)
 
 	return &parser
 }
@@ -46,11 +50,11 @@ func NewJavacParser(path string, context *util.Context) *JavacParser {
 func NewJavacParserWithString(str string, context *util.Context) *JavacParser {
 
 	parser := JavacParser{}
-	parser.ScannerLexer = NewScannerLexerWithString(str, context)
+	parser.S = NewScannerLexerWithString(str, context)
 	parser.nextToken()
 
 	parser.endPosTable = NewSimpleEndPosTable(&parser)
-	parser.TreeMaker = jc.InstanceAstTreeMaker(context)
+	parser.F = jc.InstanceAstTreeMaker(context)
 	parser.names = util.InstanceNames(context)
 	parser.symbolTable = InstanceSymbolTable(context)
 
@@ -65,7 +69,7 @@ func (jp *JavacParser) currentToken() Token {
 
 // 设置下一个token
 func (jp *JavacParser) nextToken() {
-	lex := jp.ScannerLexer
+	lex := jp.S
 	lex.NextToken()
 	jp.token = lex.Token()
 }
@@ -233,7 +237,7 @@ func (jp *JavacParser) literal(pre *util.Name, pos int) *jc.AbstractJCExpression
 		if err != nil {
 			jp.error(jp.token.Pos(), err.Error())
 		}
-		t = jp.TreeMaker.At(pos).Literal(code.TYPE_TAG_INT, int(num)).AbstractJCExpression
+		t = jp.F.At(pos).Literal(code.TYPE_TAG_INT, int(num)).AbstractJCExpression
 	}
 	return t
 }
@@ -282,7 +286,7 @@ func (jp *JavacParser) accept(tk *tokenKind) {
 		jp.nextToken()
 	} else {
 		jp.setErrorEndPos(jp.token.EndPos())
-		jp.reportSyntaxError(jp.ScannerLexer.PreToken().EndPos(), "期望是", tk)
+		jp.reportSyntaxError(jp.S.PreToken().EndPos(), "期望是", tk)
 	}
 }
 
@@ -308,7 +312,7 @@ func (jp *JavacParser) setErrorEndPos(pos int) {
 func (jp *JavacParser) qualident(allowAnnotations bool) *jc.AbstractJCExpression {
 
 	tk := jp.token
-	expression := jp.toExpression(jp.TreeMaker.At(tk.Pos()).Identify(jp.ident()).AbstractJCTree)
+	expression := jp.toExpression(jp.F.At(tk.Pos()).Identify(jp.ident()))
 	// 解析这个逗号
 	for jp.token.GetTokenKind() == TOKEN_KIND_DOT {
 		pos := jp.token.Pos()
@@ -318,7 +322,7 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *jc.AbstractJCExpression
 		//	annotations = typeAnnotationsOpt()
 		// }
 		// todo
-		expression = jp.toExpression(jp.TreeMaker.At(pos).Select(expression, jp.ident()).AbstractJCTree)
+		expression = jp.toExpression(jp.F.At(pos).Select(expression, jp.ident()).AbstractJCExpression)
 		// 我们这里没有注解 todo annotation
 	}
 	return expression
@@ -377,9 +381,10 @@ func (jp *JavacParser) ident() *util.Name {
 	}
 }
 
-func (jp *JavacParser) toExpression(t *jc.AbstractJCTree) *jc.AbstractJCExpression {
+func (jp *JavacParser) toExpression(t *jc.AbstractJCExpression) *jc.AbstractJCExpression {
 
-	return jp.endPosTable.toP(t)
+	jp.endPosTable.toP(t.AbstractJCTree)
+	return t
 }
 
 /**
@@ -481,6 +486,8 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 
 	pos := jp.token.Pos()
 	var t *jc.AbstractJCExpression
+	typeArgs := jp.typeArgumentsOpt(term_mode_expr)
+
 	// 处理这样的范型表达式的，这里先忽略范型
 	// TypeArguments  = "<" TypeArgument {"," TypeArgument} ">"
 	// List<JCExpression> typeArgs = typeArgumentsOpt(EXPR);
@@ -507,26 +514,116 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 	case TOKEN_KIND_UNDERSCORE, TOKEN_KIND_IDENTIFIER,
 		TOKEN_KIND_ASSERT, TOKEN_KIND_ENUM:
 
-		// 开始处理标识符
+		//  ->  lambda表达式 如果前面一个token是 -> 表示接下来要解析的是lambda表达式
+		if jp.termExpr() && jp.peekToken(TOKEN_KIND_ARROW) {
+			return jp.lambdaExpressionOrStatement(false, false, pos)
+		} else {
+			t = jp.toP(jp.F.At(pos).Identify(jp.ident()))
+		loop:
+			for {
+				pos := jp.token.Pos()
+				annos := jp.typeAnnotationsOpt() //注解无处不在，这里先不处理注解
+				// need to report an error later if LBRACKET is for array
+				// index access rather than array creation level 可以是 @Some [] ，如果是 @Some [1] 就是错误的
+				if len(*annos) > 0 &&
+					jp.token.GetTokenKind() != TOKEN_KIND_LBRACKET &&
+					jp.token.GetTokenKind() != TOKEN_KIND_ELLIPSIS {
+					return jp.illegal("无效的对数组的注解")
+				}
+				switch jp.token.GetTokenKind() {
+				case TOKEN_KIND_LBRACKET: // [
+					jp.nextToken()
+					if jp.token.GetTokenKind() == TOKEN_KIND_RBRACKET {
+						// 读到了 []
+						fmt.Println("读到了 [] ignore ..................")
+					} else {
+						if jp.termExpr() {
+							jp.mode = term_mode_expr
+							t1 := jp.term()
+							if len(*annos) > 0 {
+								t = jp.illegal("无效的.............")
+							}
+							arrayAccess := jp.F.At(pos).Indexed(t, t1)
+							jp.to(arrayAccess)
+							t = arrayAccess.AbstractJCExpression
+						}
+					}
+				case TOKEN_KIND_LPAREN: // (
+				case TOKEN_KIND_DOT: // .
+				case TOKEN_KIND_ELLIPSIS: // ... 多个参数
+				case TOKEN_KIND_LT: // <
+				default:
+					break loop
+				}
+				goto loop
+			}
+		}
+	default:
+		jp.illegal("")
 	}
-
 	fmt.Println("delete after .... pos is:", pos)
+	return jp.term3Rest(t, typeArgs)
+}
+
+func (jp *JavacParser) termExpr() bool {
+
+	return (jp.mode & term_mode_expr) != 0
+}
+
+/**
+ * 解析表达式的结果部分，例如： int a = 10; 就是解析10
+ */
+func (jp *JavacParser) termRest(t *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	switch jp.token.GetTokenKind() {
+	case TOKEN_KIND_EQ: // = 表示是赋值语句
+		pos := jp.token.Pos()
+		jp.nextToken()
+		jp.mode = term_mode_expr
+		t1 := jp.term() // 这里就是递归了 结果值也可以是一个表达式，例如 int a = sum(10);
+		return jp.toP(jp.F.At(pos).Assign(t, t1).AbstractJCExpression)
+	case TOKEN_KIND_PLUSEQ, // ++ -- 这样的，例如 a++
+		TOKEN_KIND_SUBEQ,
+		TOKEN_KIND_STAREQ,
+		TOKEN_KIND_SLASHEQ,
+		TOKEN_KIND_PERCENTEQ,
+		TOKEN_KIND_AMPEQ,
+		TOKEN_KIND_BAREQ,
+		TOKEN_KIND_CARETEQ,
+		TOKEN_KIND_LTLTEQ,
+		TOKEN_KIND_GTGTEQ,
+		TOKEN_KIND_GTGTGTEQ:
+		pos := jp.token.Pos()
+		tk := jp.token.GetTokenKind()
+		jp.nextToken()
+		jp.mode = term_mode_expr
+		t1 := jp.term()
+		return jp.F.At(pos).Assignop(opTag(tk), t, t1).AbstractJCExpression
+	default:
+		return t
+	}
+}
+
+/** Expression1Rest = ["?" Expression ":" Expression1]
+ */
+func (jp *JavacParser) term1Rest(t *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	if jp.token.GetTokenKind() == TOKEN_KIND_QUES {
+		pos := jp.token.Pos()
+		jp.nextToken()
+		t1 := jp.term()
+		jp.accept(TOKEN_KIND_COLON) // 期望下一个字符是冒号 (:)
+		t2 := jp.term1()
+		return jp.F.At(pos).Conditional(t, t1, t2).AbstractJCExpression
+	} else {
+		return t
+	}
+}
+
+func (jp *JavacParser) term2Rest(t *jc.AbstractJCExpression, perc int) *jc.AbstractJCExpression {
+
+	//TODO
 	return t
-}
-
-func (jp *JavacParser) termRest(e *jc.AbstractJCExpression) *jc.AbstractJCExpression {
-
-	return &jc.AbstractJCExpression{}
-}
-
-func (jp *JavacParser) term1Rest(e *jc.AbstractJCExpression) *jc.AbstractJCExpression {
-
-	return &jc.AbstractJCExpression{}
-}
-
-func (jp *JavacParser) term2Rest(e *jc.AbstractJCExpression, perc int) *jc.AbstractJCExpression {
-
-	return &jc.AbstractJCExpression{}
 }
 
 func prec(tk *tokenKind) int {
@@ -707,15 +804,15 @@ func (jp *JavacParser) illegal(msg string) *jc.AbstractJCExpression {
 
 func (jp *JavacParser) syntaxError(pos int) *jc.AbstractJCExpression {
 
-	jp.TreeMaker.At(jp.token.Pos())
+	jp.F.At(jp.token.Pos())
 	err := jc.NewJCError(pos)
 	return err
 }
 
 func (jp *JavacParser) basicType() *jc.JCPrimitiveTypeTree {
 
-	jp.TreeMaker.At(jp.token.Pos())
-	return jp.TreeMaker.TypeIdent(typeTag(jp.token.GetTokenKind()))
+	jp.F.At(jp.token.Pos())
+	return jp.F.TypeIdent(typeTag(jp.token.GetTokenKind()))
 }
 
 /**
@@ -765,6 +862,82 @@ func (jp *JavacParser) bracketsSuffix(opt *jc.AbstractJCExpression) *jc.Abstract
 		jp.syntaxError(jp.token.Pos())
 	}
 	return opt
+}
+
+/**
+ * 向前看0个token，是不是指定的token，是就返回true
+ */
+func (jp *JavacParser) peekToken(tk *tokenKind) bool {
+
+	lookahead := 0
+	return jp.peekTokenLookahead(lookahead, tk)
+}
+
+/**
+ * 向前看指定数量个token，是不是指定的token，是就返回true
+ */
+func (jp *JavacParser) peekTokenLookahead(lookahead int, tk *tokenKind) bool {
+
+	return tk.Accept(jp.S.LookAheadByIndex(lookahead + 1).GetTokenKind())
+}
+
+// 暂时不实现lambda表达式 todo lambda
+func (jp *JavacParser) lambdaExpressionOrStatement(hasParens bool, explicitParams bool, pos int) *jc.AbstractJCExpression {
+
+	panic("implement me lambda")
+}
+
+//记录 pos 到 endPosTable
+func (jp *JavacParser) toP(expr *jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	jp.endPosTable.toP(expr.AbstractJCTree)
+	return expr
+}
+
+func (jp *JavacParser) to(expr *jc.JCArrayAccess) interface{} {
+
+	jp.endPosTable.toP(expr.AbstractJCTree)
+	return expr
+}
+
+/**
+ * 泛型 先不支持 TODO 泛型
+ */
+func (jp *JavacParser) typeArgumentsOpt(pm parseMode) *[]jc.AbstractJCExpression {
+
+	if jp.token.GetTokenKind() == TOKEN_KIND_LT {
+		jp.checkGenerics()
+		if (jp.mode&pm) == 0 ||
+			(jp.mode&term_mode_noparams) != 0 {
+			jp.illegal("")
+		}
+		jp.mode = pm
+		return typeArguments(false)
+	}
+	return &[]jc.AbstractJCExpression{}
+}
+
+/**
+ * TypeArguments  = "<" TypeArgument {"," TypeArgument} ">"
+ * 目前先不支持
+ */
+func typeArguments(b bool) *[]jc.AbstractJCExpression {
+
+	return &[]jc.AbstractJCExpression{}
+}
+
+// 检查是否支持泛型
+func (jp *JavacParser) checkGenerics() {
+
+	if jp.allowGenerics == false {
+		jp.error(jp.token.Pos(), "不支持泛型")
+	}
+}
+
+func (jp *JavacParser) term3Rest(t *jc.AbstractJCExpression, args *[]jc.AbstractJCExpression) *jc.AbstractJCExpression {
+
+	//TODO
+	return t
 }
 
 // 返回none就是没有类型

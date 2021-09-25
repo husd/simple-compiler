@@ -38,5 +38,11 @@ func NewJCIdent(name *util.Name) *JCIdent {
 	ident := &JCIdent{}
 	ident.name = name
 
+	ident.getTreeType = func() *ast_tree2.TreeType {
+		return ast_tree2.TREE_TYPE_IDENTIFIER
+	}
+	ident.getTag = func() JCTreeTag {
+		return TREE_TAG_IDENT
+	}
 	return ident
 }
