@@ -6,22 +6,22 @@ import "fmt"
  * 抽象类得关键是这个函数指针
  * @author hushengdong
  */
-type abstractPerson struct {
-	Sleep func() //函数指针
+type AbstractPerson struct {
+	Sleep func() // 函数指针
 }
 
-func (this *abstractPerson) eat() {
+func (this *AbstractPerson) eat() {
 
-	fmt.Println("abstractPerson eat")
+	fmt.Println("AbstractPerson eat")
 	this.Sleep()
 }
 
-func (this *abstractPerson) run() {
+func (this *AbstractPerson) run() {
 
-	fmt.Println("abstractPerson run")
+	fmt.Println("AbstractPerson run")
 }
 
-func eatAndRun(p *abstractPerson) {
+func eatAndRun(p *AbstractPerson) {
 
 	fmt.Println("eat and run -----------------")
 	p.eat()
@@ -31,15 +31,15 @@ func eatAndRun(p *abstractPerson) {
 
 // Man 继承了抽象类
 type Man struct {
-	*abstractPerson
+	*AbstractPerson
 }
 
-func NewMan() *abstractPerson {
+func NewMan() *Man {
 
 	p := &Man{}
-	p.abstractPerson = &abstractPerson{}
+	p.AbstractPerson = &AbstractPerson{}
 	p.Sleep = p.sleep
-	return p.abstractPerson
+	return p
 }
 
 func (this *Man) sleep() {
@@ -49,15 +49,15 @@ func (this *Man) sleep() {
 
 // Women 继承了抽象类
 type Women struct {
-	*abstractPerson
+	*AbstractPerson
 }
 
-func NewWomen() *abstractPerson {
+func NewWomen() *Women {
 
 	p := &Women{}
-	p.abstractPerson = &abstractPerson{}
+	p.AbstractPerson = &AbstractPerson{}
 	p.Sleep = p.sleep
-	return p.abstractPerson
+	return p
 }
 
 func (this *Women) sleep() {

@@ -28,6 +28,9 @@ func NewJCArrayAccess(indexed *AbstractJCExpression, index *AbstractJCExpression
 	res.getTag = func() JCTreeTag {
 		return TREE_TAG_INDEXED
 	}
+	res.toString = func() string {
+		return res.indexed.toString() + res.index.toString()
+	}
 
 	return res
 }

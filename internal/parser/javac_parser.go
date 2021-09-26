@@ -230,7 +230,7 @@ func (jp *JavacParser) ParseType() *jc.AbstractJCExpression {
 func (jp *JavacParser) literal(pre *util.Name, pos int) *jc.AbstractJCExpression {
 
 	var t *jc.AbstractJCExpression
-	t = jc.NewJCError(pos)
+	t = jc.NewJCError(pos, "默认错误")
 	switch jp.token.GetTokenKind() {
 	case TOKEN_KIND_INT_LITERAL:
 		num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix(), 32)
@@ -513,7 +513,7 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 		t = jp.bracketsSuffix(jp.bracketsOpt(primitiveTypeTree.AbstractJCExpression, emptyAnnotations))
 
 	case TOKEN_KIND_UNDERSCORE, TOKEN_KIND_IDENTIFIER,
-		TOKEN_KIND_ASSERT, TOKEN_KIND_ENUM:
+		TOKEN_KIND_ASSERT, TOKEN_KIND_ENUM: //
 
 		//  ->  lambda表达式 如果前面一个token是 -> 表示接下来要解析的是lambda表达式
 		if jp.termExpr() && jp.peekToken(TOKEN_KIND_ARROW) {
@@ -523,7 +523,7 @@ func (jp *JavacParser) term3() *jc.AbstractJCExpression {
 		loop:
 			for {
 				pos := jp.token.Pos()
-				annos := jp.typeAnnotationsOpt() //注解无处不在，这里先不处理注解
+				annos := jp.typeAnnotationsOpt() // 注解无处不在，这里先不处理注解
 				// need to report an error later if LBRACKET is for array
 				// index access rather than array creation level 可以是 @Some [] ，如果是 @Some [1] 就是错误的
 				if len(*annos) > 0 &&
@@ -800,20 +800,22 @@ func (jp *JavacParser) typeDeclaration(mods *jc.JCModifiers) *jc.AbstractJCTree 
 func (jp *JavacParser) illegal(msg string) *jc.AbstractJCExpression {
 
 	jp.reportSyntaxError(jp.token.Pos(), msg, jp.token.GetTokenKind())
-	return jp.syntaxError(jp.token.Pos())
+	return jp.syntaxError(jp.token.Pos(), msg)
 }
 
-func (jp *JavacParser) syntaxError(pos int) *jc.AbstractJCExpression {
+func (jp *JavacParser) syntaxError(pos int, msg string) *jc.AbstractJCExpression {
 
 	jp.F.At(jp.token.Pos())
-	err := jc.NewJCError(pos)
+	err := jc.NewJCError(pos, msg)
 	return err
 }
 
 func (jp *JavacParser) basicType() *jc.JCPrimitiveTypeTree {
 
 	jp.F.At(jp.token.Pos())
-	return jp.F.TypeIdent(typeTag(jp.token.GetTokenKind()))
+	tree := jp.F.TypeIdent(typeTag(jp.token.GetTokenKind()))
+	jp.nextToken()
+	return tree
 }
 
 /**
@@ -844,7 +846,7 @@ func (jp *JavacParser) typeAnnotationsOpt() *[]jc.JCAnnotation {
 /** BracketsSuffixExpr = "." CLASS
  *  BracketsSuffixType =
  *
- * 这个函数处理内部类 例如有2个类：A B B类是A类的内部类
+ *
  *
  * TODO 先不处理
  */
@@ -860,7 +862,7 @@ func (jp *JavacParser) bracketsSuffix(opt *jc.AbstractJCExpression) *jc.Abstract
 	} else if (jp.mode & term_mode_type) != 0 {
 
 	} else if jp.token.GetTokenKind() != TOKEN_KIND_COLCOL {
-		jp.syntaxError(jp.token.Pos())
+		jp.syntaxError(jp.token.Pos(), "期望.class")
 	}
 	return opt
 }

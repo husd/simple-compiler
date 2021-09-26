@@ -16,12 +16,17 @@ func Test_abstractPerson_eat(t *testing.T) {
 	man.eat()
 	man.run()
 
+	p := man.AbstractPerson
+
+	fmt.Println("address of man:", man)
+	fmt.Println("address of p:", p)
+
 	woman := NewWomen()
 	woman.eat()
 	woman.run()
 
-	eatAndRun(man)
-	eatAndRun(woman)
+	eatAndRun(man.AbstractPerson)
+	eatAndRun(woman.AbstractPerson)
 }
 
 const (

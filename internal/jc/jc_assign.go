@@ -27,6 +27,9 @@ func NewJCAssign(l *AbstractJCExpression, r *AbstractJCExpression) *JCAssign {
 	res.getTag = func() JCTreeTag {
 		return TREE_TAG_ASSIGN
 	}
+	res.toString = func() string {
+		return res.getTreeType().Name
+	}
 
 	return res
 }

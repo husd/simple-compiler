@@ -16,11 +16,18 @@ type AbstractJCTree struct {
 	// abstract method
 	getTreeType func() *ast_tree2.TreeType
 	getTag      func() JCTreeTag
+	toString    func() string
 }
 
 func NewJCTree() *AbstractJCTree {
 
-	return &AbstractJCTree{}
+	tree := &AbstractJCTree{}
+
+	tree.toString = func() string {
+		return tree.getTreeType().Name
+	}
+
+	return tree
 }
 
 func (jc *AbstractJCTree) hasTag(tag JCTreeTag) bool {

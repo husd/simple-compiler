@@ -10,9 +10,10 @@ import (
  */
 type JCErroneous struct {
 	*AbstractJCExpression
+	msg string
 }
 
-func NewJCError(pos int) *AbstractJCExpression {
+func NewJCError(pos int, msg string) *AbstractJCExpression {
 
 	jcError := &JCErroneous{}
 	jcError.AbstractJCExpression = NewJCExpression()
@@ -23,5 +24,6 @@ func NewJCError(pos int) *AbstractJCExpression {
 		return TREE_TAG_ERRONEOUS
 	}
 	jcError.Pos = pos
+	jcError.msg = msg
 	return jcError.AbstractJCExpression
 }

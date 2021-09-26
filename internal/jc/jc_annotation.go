@@ -30,6 +30,9 @@ func NewJCAnnotation(tag JCTreeTag, annotationType *AbstractJCTree, args *[]ast_
 	res.getTag = func() JCTreeTag {
 		return res.tag
 	}
+	res.toString = func() string {
+		return "annotation"
+	}
 
 	return res
 }
