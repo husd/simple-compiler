@@ -279,11 +279,10 @@ func (jp *JavacParser) warn(bp int, msg ...interface{}) {
  * 如果下一个token的tokenKind相同，那么就跳过去，否则报错，这个方法就是为了检查下一个token是否符合
  * 要求的，例如表达式要用分号结尾  int a = 10; 没有分号就报错
  */
-func (jp *JavacParser) accept(tk *tokenKind) {
+func (jp *JavacParser) accept(tk tokenKind) {
 
-	//因为不能保证都是同一个对象，所以用tokenKind的索引比较是否是同一个tokenKind
-	if jp.token.GetTokenKind() == tk ||
-		jp.token.GetTokenKind().Index == tk.Index {
+	// 因为不能保证都是同一个对象，所以用tokenKind的索引比较是否是同一个tokenKind
+	if jp.token.GetTokenKind() == tk {
 		jp.nextToken()
 	} else {
 		jp.setErrorEndPos(jp.token.EndPos())
@@ -291,9 +290,9 @@ func (jp *JavacParser) accept(tk *tokenKind) {
 	}
 }
 
-func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk *tokenKind) {
+func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk tokenKind) {
 
-	//TODO 暂时先打印，应该有更好的方式来报告语法错误
+	// TODO 暂时先打印，应该有更好的方式来报告语法错误
 	// 发送一个事件，通知所有监听这个事件的程序来处理语法错误。
 	fmt.Println("---------------- reportSyntaxError，位置：", pos, " msg:", msg, " tokenkind:", tk)
 }
@@ -407,8 +406,8 @@ func (jp *JavacParser) term() *jc.AbstractJCExpression {
 	e := jp.term1()
 	if (jp.mode&term_mode_expr) != 0 &&
 		jp.token.GetTokenKind() == TOKEN_KIND_EQ ||
-		jp.token.GetTokenKind().Index >= TOKEN_KIND_PLUSEQ.Index &&
-			jp.token.GetTokenKind().Index <= TOKEN_KIND_GTGTGTEQ.Index {
+		jp.token.GetTokenKind() >= TOKEN_KIND_PLUSEQ &&
+			jp.token.GetTokenKind() <= TOKEN_KIND_GTGTGTEQ {
 		return jp.termRest(e)
 	} else {
 		return e
@@ -423,7 +422,7 @@ func (jp *JavacParser) term1() *jc.AbstractJCExpression {
 
 	e := jp.term2()
 	if (jp.mode&term_mode_expr) != 0 &&
-		jp.token.GetTokenKind().Index == TOKEN_KIND_QUES.Index {
+		jp.token.GetTokenKind() == TOKEN_KIND_QUES {
 		jp.mode = term_mode_expr
 		return jp.term1Rest(e)
 	} else {
@@ -627,7 +626,7 @@ func (jp *JavacParser) term2Rest(t *jc.AbstractJCExpression, perc int) *jc.Abstr
 	return t
 }
 
-func prec(tk *tokenKind) int {
+func prec(tk tokenKind) int {
 
 	treeTag := opTag(tk)
 	if treeTag != jc.TREE_TAG_NO_TAG {
@@ -637,7 +636,7 @@ func prec(tk *tokenKind) int {
 	}
 }
 
-func opTag(tk *tokenKind) jc.JCTreeTag {
+func opTag(tk tokenKind) jc.JCTreeTag {
 
 	switch tk {
 	case TOKEN_KIND_BARBAR:
@@ -870,7 +869,7 @@ func (jp *JavacParser) bracketsSuffix(opt *jc.AbstractJCExpression) *jc.Abstract
 /**
  * 向前看0个token，是不是指定的token，是就返回true
  */
-func (jp *JavacParser) peekToken(tk *tokenKind) bool {
+func (jp *JavacParser) peekToken(tk tokenKind) bool {
 
 	lookahead := 0
 	return jp.peekTokenLookahead(lookahead, tk)
@@ -879,9 +878,9 @@ func (jp *JavacParser) peekToken(tk *tokenKind) bool {
 /**
  * 向前看指定数量个token，是不是指定的token，是就返回true
  */
-func (jp *JavacParser) peekTokenLookahead(lookahead int, tk *tokenKind) bool {
+func (jp *JavacParser) peekTokenLookahead(lookahead int, tk tokenKind) bool {
 
-	return tk.Accept(jp.S.LookAheadByIndex(lookahead + 1).GetTokenKind())
+	return AcceptTokenKind(tk, jp.S.LookAheadByIndex(lookahead+1).GetTokenKind())
 }
 
 // 暂时不实现lambda表达式 todo lambda
@@ -944,7 +943,7 @@ func (jp *JavacParser) term3Rest(t *jc.AbstractJCExpression, args *[]jc.Abstract
 }
 
 // 返回none就是没有类型
-func typeTag(tk *tokenKind) *code.TypeTag {
+func typeTag(tk tokenKind) *code.TypeTag {
 
 	switch tk {
 	case TOKEN_KIND_BYTE:

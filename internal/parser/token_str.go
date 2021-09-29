@@ -10,7 +10,7 @@ import (
  * @author hushengdong
  */
 type StringToken struct {
-	tk *tokenKind
+	tk tokenKind
 
 	lineNum int // 多少行
 	linePos int // 位置
@@ -23,7 +23,7 @@ type StringToken struct {
 	inx int //符号表里的索引
 }
 
-func newStringToken(tk *tokenKind, lineNum int, linePos int,
+func newStringToken(tk tokenKind, lineNum int, linePos int,
 	val string, pos int, endPos int) *StringToken {
 
 	res := &StringToken{tk, lineNum, linePos,
@@ -31,7 +31,7 @@ func newStringToken(tk *tokenKind, lineNum int, linePos int,
 	return res
 }
 
-func (st *StringToken) GetTokenKind() *tokenKind {
+func (st *StringToken) GetTokenKind() tokenKind {
 
 	return st.tk
 }
@@ -56,8 +56,8 @@ func (dt *StringToken) DebugToString() string {
 	return fmt.Sprintf("stringtoken: %v lineNum: %d pos: %d", dt.GetStringVal(), dt.lineNum, dt.linePos)
 }
 
-func (st *StringToken) CheckTokenKind() {
-	if st.tk.Tag != TOKEN_TAG_STRING {
+func (dt *StringToken) CheckTokenKind() {
+	if GetTokenKindTag(dt.tk) != TOKEN_TAG_STRING {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_STRING))
 	}
 }

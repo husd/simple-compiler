@@ -10,10 +10,10 @@ import (
  * 这些都统归为 NamedToken 表示的是定义变量的属性的，可以看到大部分都是基本类型
  */
 type NamedToken struct {
-	tk      *tokenKind
+	tk      tokenKind
 	lineNum int // 多少行
 	linePos int // 位置
-	n       *util.Name
+	name    *util.Name
 
 	pos    int // 开始位置
 	endPos int //结束位置
@@ -21,7 +21,7 @@ type NamedToken struct {
 	inx int //符号表里的索引
 }
 
-func newNamedToken(tk *tokenKind, lineNum int, linePos int,
+func newNamedToken(tk tokenKind, lineNum int, linePos int,
 	n *util.Name, pos int, endPos int) *NamedToken {
 
 	res := &NamedToken{tk, lineNum, linePos,
@@ -29,19 +29,19 @@ func newNamedToken(tk *tokenKind, lineNum int, linePos int,
 	return res
 }
 
-func (nt *NamedToken) GetTokenKind() *tokenKind {
+func (nt *NamedToken) GetTokenKind() tokenKind {
 
 	return nt.tk
 }
 
 func (nt *NamedToken) GetName() *util.Name {
 
-	return nt.n
+	return nt.name
 }
 
 func (nt *NamedToken) GetStringVal() string {
 
-	return nt.n.NameStr
+	return nt.name.NameStr
 }
 
 func (nt *NamedToken) GetRadix() int {
@@ -56,10 +56,9 @@ func (dt *NamedToken) DebugToString() string {
 
 func (nt *NamedToken) CheckTokenKind() {
 
-	if nt.tk.Tag != TOKEN_TAG_NAMED {
+	if GetTokenKindTag(nt.tk) != TOKEN_TAG_NAMED {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_NAMED))
 	}
-
 }
 
 func (dt *NamedToken) Pos() int {

@@ -23,7 +23,7 @@ type JavaTokenizer struct {
 	context *util.Context
 	reader  *UnicodeReader // reader
 	source  code.JVersion  // jdk版本
-	tk      *tokenKind     // 当前token的类型
+	tk      tokenKind      // 当前token的类型
 	name    *util.Name     // identify name
 
 	tokenFactory *Tokens // token工厂类
@@ -310,7 +310,8 @@ loop:
 		}
 	}
 	endPos = reader.bp
-	switch jt.tk.Tag {
+	tag := GetTokenKindTag(jt.tk)
+	switch tag {
 	case TOKEN_TAG_DEFAULT:
 		return newDefaultToken(jt.tk, reader.lineNum, reader.linePos, pos, endPos)
 	case TOKEN_TAG_STRING:

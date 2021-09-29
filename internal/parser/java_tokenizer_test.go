@@ -57,7 +57,7 @@ func TestJavaTokenizer_readToken_num(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试数字-整数类型", TOKEN_KIND_INT_LITERAL.Index, tt.GetTokenKind().Index)
+		util.AssertEquals(t, "测试数字-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试数字-整数数值", "100", tt.GetStringVal())
 		util.AssertEquals(t, "测试数字-整数radix", 10, tt.GetRadix())
 	}
@@ -73,7 +73,7 @@ func TestJavaTokenizer_readToken_num2(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试2进制-整数类型", TOKEN_KIND_INT_LITERAL.Index, tt.GetTokenKind().Index)
+		util.AssertEquals(t, "测试2进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试2进制-整数数值", "1010", tt.GetStringVal())
 		util.AssertEquals(t, "测试2进制-整数radix", 2, tt.GetRadix())
 	}
@@ -88,7 +88,7 @@ func TestJavaTokenizer_readToken_num8(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试8进制-整数类型", TOKEN_KIND_INT_LITERAL.Index, tt.GetTokenKind().Index)
+		util.AssertEquals(t, "测试8进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试8进制-整数数值", "01072", tt.GetStringVal())
 		util.AssertEquals(t, "测试8进制-整数radix", 8, tt.GetRadix())
 	}
@@ -103,7 +103,7 @@ func TestJavaTokenizer_readToken_num16(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试16进制-整数类型", TOKEN_KIND_INT_LITERAL.Index, tt.GetTokenKind().Index)
+		util.AssertEquals(t, "测试16进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试16进制-整数数值", "fffe", tt.GetStringVal())
 		util.AssertEquals(t, "测试16进制-整数radix", 16, tt.GetRadix())
 	}

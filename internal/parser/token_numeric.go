@@ -10,7 +10,7 @@ import (
  * @author hushengdong
  */
 type NumericToken struct {
-	tk      *tokenKind
+	tk      tokenKind
 	lineNum int // 多少行
 	linePos int // 位置
 
@@ -23,7 +23,7 @@ type NumericToken struct {
 	inx int //符号表里的索引
 }
 
-func newNumericToken(tk *tokenKind, lineNum int, linePos int,
+func newNumericToken(tk tokenKind, lineNum int, linePos int,
 	val string, radix int, pos int, endPos int) *NumericToken {
 
 	res := &NumericToken{tk, lineNum, linePos,
@@ -31,7 +31,7 @@ func newNumericToken(tk *tokenKind, lineNum int, linePos int,
 	return res
 }
 
-func (nt *NumericToken) GetTokenKind() *tokenKind {
+func (nt *NumericToken) GetTokenKind() tokenKind {
 	return nt.tk
 }
 
@@ -56,7 +56,7 @@ func (dt *NumericToken) DebugToString() string {
 }
 
 func (nt *NumericToken) CheckTokenKind() {
-	if nt.tk.Tag != TOKEN_TAG_NUMERIC {
+	if GetTokenKindTag(nt.tk) != TOKEN_TAG_NUMERIC {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_NUMERIC))
 	}
 }

@@ -10,7 +10,7 @@ import (
  * @author hushengdong
  */
 type DefaultToken struct {
-	tk *tokenKind
+	tk tokenKind
 
 	lineNum int // 多少行
 	linePos int // 位置
@@ -21,26 +21,24 @@ type DefaultToken struct {
 	inx int //符号表里的索引
 }
 
-func newDefaultToken(tk *tokenKind, lineNum int, linePos int, pos int, endPos int) *DefaultToken {
+func newDefaultToken(tk tokenKind, lineNum int, linePos int, pos int, endPos int) *DefaultToken {
 
 	res := &DefaultToken{tk, lineNum, linePos, pos, endPos, -1}
 	return res
 }
 
-func (dt *DefaultToken) GetTokenKind() *tokenKind {
+func (dt *DefaultToken) GetTokenKind() tokenKind {
 
 	return dt.tk
 }
 
 func (dt *DefaultToken) GetName() *util.Name {
-
-	n := util.Name{NameStr: dt.tk.Name, Index: 0}
-	return &n
+	panic("token_default 没有Name")
 }
 
 func (dt *DefaultToken) GetStringVal() string {
 
-	return dt.tk.Name
+	return fmt.Sprintf("default:%d", dt.tk)
 }
 
 func (dt *DefaultToken) GetRadix() int {
@@ -50,12 +48,12 @@ func (dt *DefaultToken) GetRadix() int {
 
 func (dt *DefaultToken) DebugToString() string {
 
-	return fmt.Sprintf("关键字token: %v lineNum: %d pos: %d", dt.tk.Name, dt.lineNum, dt.linePos)
+	return fmt.Sprintf("关键字token: %v lineNum: %d pos: %d", dt.tk, dt.lineNum, dt.linePos)
 }
 
 func (dt *DefaultToken) CheckTokenKind() {
 
-	if dt.tk.Tag != TOKEN_TAG_DEFAULT {
+	if GetTokenKindTag(dt.tk) != TOKEN_TAG_DEFAULT {
 		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_DEFAULT))
 	}
 }
