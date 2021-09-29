@@ -29,8 +29,11 @@ func NewTokens(c *util.Context) *Tokens {
 
 	// 初始化所有的关键字
 	keyword := make(map[string]tokenKind)
-	for i := 0; i < len(token_kind_array); i++ {
+	for i := 2; i < len(token_kind_array); i++ {
 		tk := token_kind_array[i]
+		if tk == "" {
+			continue
+		}
 		keyword[tk] = tokenKind(i)
 	}
 
