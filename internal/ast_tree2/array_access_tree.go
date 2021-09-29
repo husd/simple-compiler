@@ -5,7 +5,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ArrayAccessTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 
 	// --

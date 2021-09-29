@@ -19,7 +19,7 @@ type JCFieldAccess struct {
 func NewJCFieldAccess(selected *AbstractJCExpression, name *util.Name, sym *Symbol) *JCFieldAccess {
 
 	res := &JCFieldAccess{selected, name, sym}
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_MEMBER_SELECT
 	}
 	res.getTag = func() JCTreeTag {

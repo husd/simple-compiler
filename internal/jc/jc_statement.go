@@ -22,7 +22,7 @@ type AbstractJCStatement struct {
 	*AbstractJCTree
 }
 
-func (jc *AbstractJCStatement) TreeType() ast_tree2.TreeType {
+func (jc *AbstractJCStatement) GetTreeType() ast_tree2.TreeType {
 
 	panic("implement me")
 }

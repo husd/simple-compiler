@@ -12,7 +12,7 @@ package ast_tree2
  * @author hushengdong
  */
 type TypeParameterTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	TypeParameterTreeV2_()
 
 	// --

@@ -5,7 +5,7 @@ package ast_tree2
  * @author hushengdong
  */
 type LabeledStatementTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	StatementTreeV2_()
 	LabeledStatementTreeV2_()
 

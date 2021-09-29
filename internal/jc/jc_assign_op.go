@@ -10,14 +10,14 @@ type JCAssignOp struct {
 	*AbstractJCExpression
 
 	opCode   JCTreeTag
-	left     *AbstractJCExpression
-	right    *AbstractJCExpression
+	left     ast_tree2.ExpressionTreeV2
+	right    ast_tree2.ExpressionTreeV2
 	operator *Symbol
 }
 
 func NewJCAssignOp(opCode JCTreeTag,
-	left *AbstractJCExpression,
-	right *AbstractJCExpression,
+	left ast_tree2.ExpressionTreeV2,
+	right ast_tree2.ExpressionTreeV2,
 	operator *Symbol) *JCAssignOp {
 
 	res := &JCAssignOp{}
@@ -32,7 +32,7 @@ func NewJCAssignOp(opCode JCTreeTag,
 		return res.opCode
 	}
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return treeTag2TreeKind(res.getTag())
 	}
 

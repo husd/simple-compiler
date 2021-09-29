@@ -20,7 +20,7 @@ func NewJCAssign(l *AbstractJCExpression, r *AbstractJCExpression) *JCAssign {
 	res.left = l
 	res.right = r
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_ASSIGNMENT
 	}
 
@@ -28,7 +28,7 @@ func NewJCAssign(l *AbstractJCExpression, r *AbstractJCExpression) *JCAssign {
 		return TREE_TAG_ASSIGN
 	}
 	res.toString = func() string {
-		return res.getTreeType().Name
+		return ast_tree2.GetTreeTypeName(res.getTreeType())
 	}
 
 	return res

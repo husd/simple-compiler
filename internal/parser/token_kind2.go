@@ -108,7 +108,7 @@ func init() {
 	token_kind_array[TOKEN_KIND_SUB] = "-"
 	token_kind_array[TOKEN_KIND_STAR] = "*"
 	// token_kind_array[TOKEN_KIND_SLASH] = ""
-	token_kind_array[TOKEN_KIND_STAREQ] = "="
+	token_kind_array[TOKEN_KIND_STAREQ] = "*="
 	token_kind_array[TOKEN_KIND_AMP] = "&"
 	token_kind_array[TOKEN_KIND_BAR] = "|"
 	token_kind_array[TOKEN_KIND_CARET] = "^"
@@ -118,7 +118,7 @@ func init() {
 	token_kind_array[TOKEN_KIND_GTGTGT] = ">>>"
 	token_kind_array[TOKEN_KIND_PLUSEQ] = "+="
 	token_kind_array[TOKEN_KIND_SUBEQ] = "-="
-	token_kind_array[TOKEN_KIND_SLASHEQ] = "="
+	token_kind_array[TOKEN_KIND_SLASHEQ] = "/="
 	token_kind_array[TOKEN_KIND_AMPEQ] = "&="
 	token_kind_array[TOKEN_KIND_BAREQ] = "|="
 	token_kind_array[TOKEN_KIND_CARETEQ] = "^="
@@ -136,7 +136,7 @@ func init() {
 	token_kind_array[TOKEN_KIND_DOUBLE] = "double"
 	token_kind_array[TOKEN_KIND_ENUM] = "enum"
 	token_kind_array[TOKEN_KIND_FLOAT] = "float"
-	token_kind_array[TOKEN_KIND_INT] = "float"
+	token_kind_array[TOKEN_KIND_INT] = "int"
 	token_kind_array[TOKEN_KIND_LONG] = "long"
 	token_kind_array[TOKEN_KIND_SHORT] = "short"
 	token_kind_array[TOKEN_KIND_SUPER] = "super"
@@ -253,8 +253,8 @@ const TOKEN_KIND_CHAR tokenKind = 104       // char
 const TOKEN_KIND_DOUBLE tokenKind = 105     // double
 const TOKEN_KIND_ENUM tokenKind = 106       // enum
 const TOKEN_KIND_FLOAT tokenKind = 107      // float
-const TOKEN_KIND_INT tokenKind = 108        // float
-const TOKEN_KIND_LONG tokenKind = 109       // /long
+const TOKEN_KIND_INT tokenKind = 108        // int
+const TOKEN_KIND_LONG tokenKind = 109       // long
 const TOKEN_KIND_SHORT tokenKind = 110      // short
 const TOKEN_KIND_SUPER tokenKind = 111      // super
 const TOKEN_KIND_THIS tokenKind = 112       // this
@@ -277,4 +277,12 @@ const TOKEN_KIND_CHAR_LITERAL tokenKind = 205
 func AcceptTokenKind(expected tokenKind, real tokenKind) bool {
 
 	return expected == real
+}
+
+func GetTokenString(tk tokenKind) string {
+
+	if tk >= 2 && tk <= 117 {
+		return token_kind_array[int(tk)]
+	}
+	return ""
 }

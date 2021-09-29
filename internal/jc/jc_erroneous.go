@@ -17,7 +17,7 @@ func NewJCError(pos int, msg string) *AbstractJCExpression {
 
 	jcError := &JCErroneous{}
 	jcError.AbstractJCExpression = NewJCExpression()
-	jcError.getTreeType = func() *ast_tree2.TreeType {
+	jcError.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_ERRONEOUS
 	}
 	jcError.getTag = func() JCTreeTag {

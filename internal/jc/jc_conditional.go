@@ -26,7 +26,7 @@ func NewJCConditional(condition *AbstractJCExpression,
 	res.truePart = truePart
 	res.falsePart = falsePart
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_CONDITIONAL_EXPRESSION
 	}
 	res.getTag = func() JCTreeTag {

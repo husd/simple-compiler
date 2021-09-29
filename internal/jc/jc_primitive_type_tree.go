@@ -21,7 +21,7 @@ func NewJCPrimitiveTypeTree(tg *code.TypeTag) *JCPrimitiveTypeTree {
 	res.tg = tg
 	res.AbstractJCExpression = NewJCExpression()
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_PRIMITIVE_TYPE
 	}
 	res.getTag = func() JCTreeTag {

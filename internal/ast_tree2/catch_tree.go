@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type CatchTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 
 	GetParameter() VariableTreeV2
 	GetBlock() BlockTreeV2

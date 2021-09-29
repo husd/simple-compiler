@@ -14,7 +14,7 @@ type AbstractJCTree struct {
 	JavaType *lang.JavaType
 
 	// abstract method
-	getTreeType func() *ast_tree2.TreeType
+	getTreeType func() ast_tree2.TreeType
 	getTag      func() JCTreeTag
 	toString    func() string
 }
@@ -24,7 +24,7 @@ func NewJCTree() *AbstractJCTree {
 	tree := &AbstractJCTree{}
 
 	tree.toString = func() string {
-		return tree.getTreeType().Name
+		return ast_tree2.GetTreeTypeName(tree.getTreeType())
 	}
 
 	return tree
@@ -49,7 +49,7 @@ func (jc *AbstractJCTree) pos() DiagnosticPosition {
 func (jc *AbstractJCTree) Cloneable_() {
 }
 
-func (jc *AbstractJCTree) TreeType() *ast_tree2.TreeType {
+func (jc *AbstractJCTree) GetTreeType() ast_tree2.TreeType {
 
 	return jc.getTreeType()
 }

@@ -17,7 +17,7 @@ type AbstractJCExpression struct {
 	*AbstractJCTree
 }
 
-func (jc *AbstractJCExpression) TreeType() *ast_tree2.TreeType {
+func (jc *AbstractJCExpression) GetTreeType() ast_tree2.TreeType {
 
 	return jc.getTreeType()
 }

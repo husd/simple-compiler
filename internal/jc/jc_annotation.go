@@ -24,7 +24,7 @@ func NewJCAnnotation(tag JCTreeTag, annotationType *AbstractJCTree, args *[]ast_
 	res.annotationType = annotationType
 	res.args = args
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_ANNOTATION
 	}
 	res.getTag = func() JCTreeTag {

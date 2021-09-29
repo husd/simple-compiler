@@ -49,7 +49,7 @@ func NewJCLiteral(tg *code.TypeTag, v int) *JCLiteral {
 	res.tg = tg
 	res.val = v
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_INT_LITERAL
 	}
 	res.getTag = func() JCTreeTag {

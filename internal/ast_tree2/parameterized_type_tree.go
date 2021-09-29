@@ -9,7 +9,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ParameterizedTypeTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ParameterizedTypeTreeV2_()
 	// --
 	getType() TreeV2

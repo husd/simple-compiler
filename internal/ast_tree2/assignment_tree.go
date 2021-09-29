@@ -6,7 +6,7 @@ package ast_tree2
  * @author hushengdong
  */
 type AssignmentTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 
 	/**

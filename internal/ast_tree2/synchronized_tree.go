@@ -9,7 +9,7 @@ package ast_tree2
  * @author hushengdong
  */
 type SynchronizedTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	StatementTreeV2_()
 	SynchronizedTreeV2_()
 	// --

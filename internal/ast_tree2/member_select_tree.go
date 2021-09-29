@@ -10,7 +10,7 @@ import "husd.com/v0/util"
  * @author hushengdong
  */
 type MemberSelectTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 	MemberSelectTreeV2_()
 

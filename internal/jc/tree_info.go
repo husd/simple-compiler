@@ -7,7 +7,7 @@ import "husd.com/v0/ast_tree2"
  * @author hushengdong
  */
 
-func treeTag2TreeKind(tag JCTreeTag) *ast_tree2.TreeType {
+func treeTag2TreeKind(tag JCTreeTag) ast_tree2.TreeType {
 
 	switch tag {
 	// Postfix expressions

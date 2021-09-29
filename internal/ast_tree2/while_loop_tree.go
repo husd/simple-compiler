@@ -9,7 +9,7 @@ package ast_tree2
  * @author hushengdong
  */
 type WhileLoopTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 	WhileLoopTreeV2_()
 	// --

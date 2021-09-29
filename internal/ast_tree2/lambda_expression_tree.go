@@ -11,7 +11,7 @@ package ast_tree2
  * @author hushengdong
  */
 type LambdaExpressionTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 	LambdaExpressionTreeV2_()
 

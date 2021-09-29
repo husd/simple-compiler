@@ -8,7 +8,7 @@ package ast_tree2
  * @author hushengdong
  */
 type BlockTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	StatementTreeV2_()
 	// --
 	/**

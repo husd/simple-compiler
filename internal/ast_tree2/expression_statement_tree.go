@@ -10,7 +10,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ExpressionStatementTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	StatementTreeV2_()
 
 	GetExpression() ExpressionTreeV2

@@ -8,7 +8,7 @@ package ast_tree2
  * @author hushengdong
  */
 type ThrowTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	StatementTreeV2_()
 	ThrowTreeV2_()
 	// --

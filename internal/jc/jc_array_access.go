@@ -22,7 +22,7 @@ func NewJCArrayAccess(indexed *AbstractJCExpression, index *AbstractJCExpression
 	res.indexed = indexed
 	res.index = index
 
-	res.getTreeType = func() *ast_tree2.TreeType {
+	res.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_ARRAY_ACCESS
 	}
 	res.getTag = func() JCTreeTag {

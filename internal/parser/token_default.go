@@ -38,7 +38,7 @@ func (dt *DefaultToken) GetName() *util.Name {
 
 func (dt *DefaultToken) GetStringVal() string {
 
-	return fmt.Sprintf("default:%d", dt.tk)
+	return GetTokenString(dt.tk)
 }
 
 func (dt *DefaultToken) GetRadix() int {

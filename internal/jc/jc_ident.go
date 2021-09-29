@@ -17,7 +17,7 @@ type JCIdent struct {
 	symbol *Symbol
 }
 
-func (jc *JCIdent) TreeType() ast_tree2.TreeType {
+func (jc *JCIdent) GetTreeType() ast_tree2.TreeType {
 	panic("implement me")
 }
 
@@ -38,7 +38,7 @@ func NewJCIdent(name *util.Name) *JCIdent {
 	ident := &JCIdent{}
 	ident.name = name
 
-	ident.getTreeType = func() *ast_tree2.TreeType {
+	ident.getTreeType = func() ast_tree2.TreeType {
 		return ast_tree2.TREE_TYPE_IDENTIFIER
 	}
 	ident.getTag = func() JCTreeTag {

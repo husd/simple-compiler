@@ -8,7 +8,7 @@ package ast_tree2
  * @author hushengdong
  */
 type CompoundAssignmentTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 
 	//---

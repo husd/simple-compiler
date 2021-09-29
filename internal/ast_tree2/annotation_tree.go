@@ -5,7 +5,7 @@ package ast_tree2
  * @author hushengdong
  */
 type AnnotationTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	ExpressionTreeV2_()
 	AnnotationTreeV2_()
 	// --

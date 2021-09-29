@@ -12,7 +12,7 @@ package ast_tree2
  * @author hushengdong
  */
 type MethodTreeV2 interface {
-	TreeType() *TreeType
+	GetTreeType() TreeType
 	MethodTreeV2_()
 
 	// --
