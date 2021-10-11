@@ -20,7 +20,7 @@ type NumericToken struct {
 	pos    int // 开始位置
 	endPos int //结束位置
 
-	inx int //符号表里的索引
+	inx int // 符号表里的索引
 }
 
 func newNumericToken(tk tokenKind, lineNum int, linePos int,
@@ -29,6 +29,16 @@ func newNumericToken(tk tokenKind, lineNum int, linePos int,
 	res := &NumericToken{tk, lineNum, linePos,
 		val, radix, pos, endPos, -1}
 	return res
+}
+
+func (dt *NumericToken) GetRowNum() int {
+
+	return dt.lineNum
+}
+
+func (dt *NumericToken) GetColumnNum() int {
+
+	return dt.linePos
 }
 
 func (nt *NumericToken) GetTokenKind() tokenKind {

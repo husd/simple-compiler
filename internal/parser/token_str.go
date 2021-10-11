@@ -31,6 +31,16 @@ func newStringToken(tk tokenKind, lineNum int, linePos int,
 	return res
 }
 
+func (dt *StringToken) GetRowNum() int {
+
+	return dt.lineNum
+}
+
+func (dt *StringToken) GetColumnNum() int {
+
+	return dt.linePos
+}
+
 func (st *StringToken) GetTokenKind() tokenKind {
 
 	return st.tk

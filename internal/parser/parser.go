@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"husd.com/v0/jc"
+	"husd.com/v0/ast"
 )
 
 //Parser
@@ -14,11 +14,11 @@ import (
  */
 type Parser interface {
 	// Parse a compilation unit.
-	ParseJCCompilationUnit() *jc.JCCompilationUnit
+	ParseJCCompilationUnit() *ast.TreeNode
 	//Parse an expression.
-	ParseExpression() *jc.AbstractJCExpression
+	ParseExpression() *ast.TreeNode
 	//Parse a statement.
-	ParseStatement() *jc.AbstractJCStatement
+	ParseStatement() *ast.TreeNode
 	//Parse a type.
-	ParseType() *jc.AbstractJCExpression
+	ParseType() *ast.TreeNode
 }

@@ -8,15 +8,21 @@ type Token interface {
 	 * token的类型
 	 */
 	GetTokenKind() tokenKind
-
+	/**
+	 * token的属性
+	 */
 	GetName() *util.Name
-
+	/**
+	 * 当前token的字面量是什么
+	 */
 	GetStringVal() string
 	/**
 	 * 数字类型的token会有
 	 */
 	GetRadix() int
-
+	/**
+	 * 检查当前token的TOKEN_KIND_TAG是否正确
+	 */
 	CheckTokenKind()
 	/**
 	 * DEBUG使用的
@@ -38,4 +44,12 @@ type Token interface {
 	 * 设置token在符号表的位置
 	 */
 	SetSymbolTableIndex(index int)
+	/**
+	 * 在源代码中的行号
+	 */
+	GetRowNum() int
+	/**
+	 * 在源代码中的列
+	 */
+	GetColumnNum() int
 }

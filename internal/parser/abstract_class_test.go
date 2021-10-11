@@ -27,6 +27,14 @@ func Test_abstractPerson_eat(t *testing.T) {
 
 	eatAndRun(man.AbstractPerson)
 	eatAndRun(woman.AbstractPerson)
+
+	// eatAndRun(man)
+}
+
+func testName(a *AbstractPerson) {
+	// a.Sleep()
+	a.eat()
+	a.run()
 }
 
 const (

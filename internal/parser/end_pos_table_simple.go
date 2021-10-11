@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"husd.com/v0/jc"
+	"husd.com/v0/ast"
 	"husd.com/v0/util"
 )
 
@@ -13,7 +13,7 @@ type SimpleEndPosTable struct {
 	parser      *JavacParser
 	errorEndPos int
 
-	endPosMap map[*jc.AbstractJCTree]int
+	endPosMap map[*ast.TreeNode]int
 }
 
 func NewSimpleEndPosTable(parser *JavacParser) *SimpleEndPosTable {
@@ -22,12 +22,12 @@ func NewSimpleEndPosTable(parser *JavacParser) *SimpleEndPosTable {
 
 	table.parser = parser
 	table.errorEndPos = 0
-	table.endPosMap = make(map[*jc.AbstractJCTree]int)
+	table.endPosMap = make(map[*ast.TreeNode]int)
 
 	return &table
 }
 
-func (table *SimpleEndPosTable) GetEndPos(jcTree *jc.AbstractJCTree) int {
+func (table *SimpleEndPosTable) GetEndPos(jcTree *ast.TreeNode) int {
 
 	if v, ok := table.endPosMap[jcTree]; ok {
 		return v
@@ -35,15 +35,15 @@ func (table *SimpleEndPosTable) GetEndPos(jcTree *jc.AbstractJCTree) int {
 	return util.POSITION_NOPOS
 }
 
-func (table *SimpleEndPosTable) SetEnd(jcTree *jc.AbstractJCTree, endPos int) {
+func (table *SimpleEndPosTable) SetEnd(jcTree *ast.TreeNode, endPos int) {
 
 	table.endPosMap[jcTree] = endPos
 }
 
-func (table *SimpleEndPosTable) ReplaceTree(oldTree *jc.AbstractJCTree, newTree *jc.AbstractJCTree) int {
+func (table *SimpleEndPosTable) ReplaceTree(oldTree *ast.TreeNode, newTree *ast.TreeNode) int {
 
 	oldPos := table.GetEndPos(oldTree)
-	delete(table.endPosMap, oldTree) //从map里移除老的JCTree
+	delete(table.endPosMap, oldTree) // 从map里移除老的JCTree
 	if oldPos != util.POSITION_NOPOS {
 		table.SetEnd(newTree, oldPos)
 	}
@@ -57,7 +57,7 @@ func (table *SimpleEndPosTable) SetErrorPos(pos int) {
 	}
 }
 
-func (table *SimpleEndPosTable) toP(jcTree *jc.AbstractJCTree) {
+func (table *SimpleEndPosTable) toP(jcTree *ast.TreeNode) {
 
 	table.SetEnd(jcTree, table.parser.token.EndPos())
 }
