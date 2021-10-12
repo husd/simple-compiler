@@ -79,29 +79,32 @@ const Tree_node_tag_and TreeNodeTag = 62              // &&
 const Tree_node_tag_bitor TreeNodeTag = 63            // |
 const Tree_node_tag_bitxor TreeNodeTag = 64           // ^
 const Tree_node_tag_bitand TreeNodeTag = 65           // &
-const Tree_node_tag_eq TreeNodeTag = 66               // ==
-const Tree_node_tag_ne TreeNodeTag = 67               // !=
-const Tree_node_tag_lt TreeNodeTag = 68               // <
-const Tree_node_tag_gt TreeNodeTag = 69               // >
-const Tree_node_tag_le TreeNodeTag = 70               // <=
-const Tree_node_tag_ge TreeNodeTag = 71               // >=
-const Tree_node_tag_sl TreeNodeTag = 72               // <<
-const Tree_node_tag_sr TreeNodeTag = 73               // >>
-const Tree_node_tag_usr TreeNodeTag = 74              // >>>
-const Tree_node_tag_plus TreeNodeTag = 75             // +
-const Tree_node_tag_minus TreeNodeTag = 76            // -
-const Tree_node_tag_mul TreeNodeTag = 77              // *
-const Tree_node_tag_div TreeNodeTag = 78              //
-const Tree_node_tag_mod TreeNodeTag = 79              // %
-const Tree_node_tag_bitor_asg TreeNodeTag = 80        // |=
-const Tree_node_tag_bitxor_asg TreeNodeTag = 81       // ^=
-const Tree_node_tag_bitand_asg TreeNodeTag = 82       // &=
-const Tree_node_tag_sl_asg TreeNodeTag = 83           // <<=
-const Tree_node_tag_sr_asg TreeNodeTag = 84           // >>=
-const Tree_node_tag_usr_asg TreeNodeTag = 85          // >>>=
-const Tree_node_tag_plus_asg TreeNodeTag = 86         // +=
-const Tree_node_tag_minus_asg TreeNodeTag = 87        // -=
-const Tree_node_tag_mul_asg TreeNodeTag = 88          // *=
-const Tree_node_tag_div_asg TreeNodeTag = 89          //
-const Tree_node_tag_mod_asg TreeNodeTag = 90          // %=
-const Tree_node_tag_letexpr TreeNodeTag = 91          // ala scheme a synthetic let expression of type letexpr.
+
+// 66 - 71 是比较运算符号
+const Tree_node_tag_eq TreeNodeTag = 66 // ==
+const Tree_node_tag_ne TreeNodeTag = 67 // !=
+const Tree_node_tag_lt TreeNodeTag = 68 // <
+const Tree_node_tag_gt TreeNodeTag = 69 // >
+const Tree_node_tag_le TreeNodeTag = 70 // <=
+const Tree_node_tag_ge TreeNodeTag = 71 // >=
+
+const Tree_node_tag_sl TreeNodeTag = 72         // <<
+const Tree_node_tag_sr TreeNodeTag = 73         // >>
+const Tree_node_tag_usr TreeNodeTag = 74        // >>>
+const Tree_node_tag_plus TreeNodeTag = 75       // +
+const Tree_node_tag_minus TreeNodeTag = 76      // -
+const Tree_node_tag_mul TreeNodeTag = 77        // *
+const Tree_node_tag_div TreeNodeTag = 78        //
+const Tree_node_tag_mod TreeNodeTag = 79        // %
+const Tree_node_tag_bitor_asg TreeNodeTag = 80  // |=
+const Tree_node_tag_bitxor_asg TreeNodeTag = 81 // ^=
+const Tree_node_tag_bitand_asg TreeNodeTag = 82 // &=
+const Tree_node_tag_sl_asg TreeNodeTag = 83     // <<=
+const Tree_node_tag_sr_asg TreeNodeTag = 84     // >>=
+const Tree_node_tag_usr_asg TreeNodeTag = 85    // >>>=
+const Tree_node_tag_plus_asg TreeNodeTag = 86   // +=
+const Tree_node_tag_minus_asg TreeNodeTag = 87  // -=
+const Tree_node_tag_mul_asg TreeNodeTag = 88    // *=
+const Tree_node_tag_div_asg TreeNodeTag = 89    //
+const Tree_node_tag_mod_asg TreeNodeTag = 90    // %=
+const Tree_node_tag_letexpr TreeNodeTag = 91    // ala scheme a synthetic let expression of type letexpr.

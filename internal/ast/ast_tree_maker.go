@@ -90,3 +90,41 @@ func NewIfTreeNode() *TreeNode {
 
 	return res
 }
+
+func NewCompareConditionTreeNode(tag TreeNodeTag) *TreeNode {
+
+	res := &TreeNode{}
+	res.tag = tag // 66 - 71 之间 ，这里暂且不考虑 TODO 函数调用
+	res.childrenCount = 0
+	res.children = make([]*TreeNode, 3, 3)
+	res.name = "if node"
+	res.expr_or_state = node_type_statement
+
+	return res
+}
+
+func NewLiteralTreeNode(val string, radix int) *TreeNode {
+
+	//TODO
+	res := &TreeNode{}
+	res.tag = Tree_node_tag_literal
+	res.childrenCount = 0
+	res.children = make([]*TreeNode, 3, 3)
+	res.name = "字面量"
+	res.expr_or_state = node_type_statement
+
+	return res
+}
+
+func NewIdentifyTreeNode(val string) *TreeNode {
+
+	//TODO
+	res := &TreeNode{}
+	res.tag = Tree_node_tag_ident
+	res.childrenCount = 0
+	res.children = make([]*TreeNode, 3, 3)
+	res.name = "标识符"
+	res.expr_or_state = node_type_statement
+
+	return res
+}

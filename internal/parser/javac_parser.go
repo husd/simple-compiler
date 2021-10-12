@@ -981,8 +981,73 @@ func (jp *JavacParser) parseIf() *ast.TreeNode {
 
 func (jp *JavacParser) parseIfCondition() *ast.TreeNode {
 
+	left := jp.parseExpression1()
+	comparePart := jp.parseCompareExpression()
+	res := ast.NewCompareConditionTreeNode(comparePart)
+	right := jp.parseExpression1()
+	res.Append(left)
+	res.Append(right)
+
 	// TODO
-	return ast.GetEmptyTreeNode()
+	// a == 10 a > 100这样的简单的
+	//switch jp.tk {
+	//case TOKEN_KIND_IDENTIFIER:
+	////标识符有很多种情况，有可能是变量，有可能是 函数调用 有可能是对方的属性访问 有可能是对象的函数调用
+	//// 需要向前看，预测下一个
+	//
+	//case TOKEN_KIND_INT_LITERAL,TOKEN_KIND_LONG_LITERAL,
+	//TOKEN_KIND_FLOAT_LITERAL,TOKEN_KIND_DOUBLE_LITERAL,TOKEN_KIND_STRING_LITERAL,
+	//TOKEN_KIND_CHAR_LITERAL:
+	//	// 类似于 100 == xxx 这样的
+	//	leftPart := ast.NewLiteralTreeNode(jp.token)
+	//	jp.nextToken()
+	//	//期望是比较类型的运算符号
+	//	comparePart := jp.parseCompareExpression()
+	//
+	//default:
+	//	//错误的
+	//	jp.reportSyntaxError(jp.token.Pos(), "错误的if condition语句", jp.tk)
+	//	res = ast.NewErrorTreeNode("错误的if condition语句")
+	//}
+
+	return res
+}
+
+/**
+ * 看看是哪种
+ */
+func (jp *JavacParser) parseCompareExpression() ast.TreeNodeTag {
+
+	//preToken := jp.peekTokenLookahead(1,TOKEN_KIND_EQ)
+	switch jp.tk {
+
+	case TOKEN_KIND_EQ:
+
+	}
+
+	jp.nextToken()
+	return ast.Tree_node_tag_eq
+}
+
+/**
+ * 这个要返回一个最小的表达式单元：
+ * BNF：
+ * identify
+ * int_literal|long_literal
+ *
+ */
+func (jp *JavacParser) parseExpression1() *ast.TreeNode {
+
+	res := ast.NewErrorTreeNode("错误的表达式")
+	switch jp.tk {
+	case TOKEN_KIND_IDENTIFIER:
+		res = ast.NewIdentifyTreeNode(jp.token.GetStringVal())
+	case TOKEN_KIND_INT_LITERAL:
+		res = ast.NewLiteralTreeNode(jp.token.GetStringVal(), jp.token.GetRadix())
+	default:
+		//error
+	}
+	return res
 }
 
 // 返回none就是没有类型
