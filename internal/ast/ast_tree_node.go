@@ -1,5 +1,13 @@
 package ast
 
+import "fmt"
+
+type TreeNodeType int
+
+const node_type_expression TreeNodeType = 0
+const node_type_statement TreeNodeType = 1
+const node_type_unknown TreeNodeType = 1
+
 /**
  * 重新设计的ast的节点数据 抽象语法树统一的设计为二叉树，这样是否能好一点？
  * @author hushengdong
@@ -7,13 +15,55 @@ package ast
 type TreeNode struct {
 
 	// tk int // 这个是tokenKind，表示是什么类型的token
-	tag           TreeNodeTag // ast有有限的几种类型
-	children      int         // 子树的数量
-	treeNode      []*TreeNode // 表示子树的集合 这里用一个切片来表示 长度一般都不超过6个 再考虑这个属性要不要有
-	name          string      // 树的一些基本信息
-	expr_or_state int         // 0:expression 1:statement -1:未知
+	tag           TreeNodeTag  // ast有有限的几种类型
+	childrenCount int          // 子树的数量
+	children      []*TreeNode  // 表示子树的集合 这里用一个切片来表示 长度一般都不超过6个 再考虑这个属性要不要有
+	name          string       // 树的一些基本信息
+	expr_or_state TreeNodeType // 0:expression 1:statement -1:未知
 
 	// 补充一点位置信息，在源代码中的位置
+}
+
+func (this *TreeNode) Append(child *TreeNode) {
+
+	if this == child {
+		fmt.Println("------------树节点增加错误，自己不可以添加自己为子节点------------")
+		return
+	}
+	this.ensureCapacity(this.childrenCount, 1)
+	this.children[this.childrenCount] = child
+	this.childrenCount++
+}
+
+func (this *TreeNode) GetFirstChildren() *TreeNode {
+
+	if this.childrenCount <= 0 {
+		return nil
+	}
+	return this.children[0]
+}
+
+/**
+ * @param spos 当前容量
+ * @param need 需要的容量
+ */
+func (this *TreeNode) ensureCapacity(spos int, need int) {
+
+	currentCap := cap(this.children)
+	if spos+need > currentCap {
+		newCap := calcNewLength(currentCap, spos+need)
+		newArray := make([]*TreeNode, newCap, newCap) // len设置为cap，这样才可以在任意位置写入
+		copy(newArray, this.children)
+		this.children = newArray
+	}
+}
+
+func calcNewLength(len int, max int) int {
+
+	for len < max+1 {
+		len = len * 2
+	}
+	return len
 }
 
 type ITreeType interface {
@@ -249,5 +299,5 @@ func GetTreeTypeName(tt TreeType) string {
 	if tt >= 0 && tt <= 101 {
 		return TT_array[tt]
 	}
-	return "unknown tree type:" + string(tt)
+	return "unknown tree type:" + fmt.Sprint(tt)
 }

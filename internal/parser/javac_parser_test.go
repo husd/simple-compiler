@@ -26,10 +26,7 @@ func TestJavacParser_statement(t *testing.T) {
 
 	var str string
 	c := util.NewContext()
-	str = "{" +
-		"{" +
-		"}" +
-		"}"
+	str = "{ {} {} {} }"
 	p := NewJavacParserWithString(str, c)
 	tree := p.ParseStatement()
 	fmt.Println(tree)
