@@ -1,4 +1,4 @@
-package ast
+package parser
 
 import "fmt"
 
@@ -13,14 +13,12 @@ const node_type_unknown TreeNodeType = 1
  * @author hushengdong
  */
 type TreeNode struct {
-
-	// tk int // 这个是tokenKind，表示是什么类型的token
+	index         int          // 符号表里的索引
 	tag           TreeNodeTag  // ast有有限的几种类型
 	childrenCount int          // 子树的数量
 	children      []*TreeNode  // 表示子树的集合 这里用一个切片来表示 长度一般都不超过6个 再考虑这个属性要不要有
-	name          string       // 树的一些基本信息
+	name          string       // 树的一些基本信息 ，属于备注信息，后续可以去掉
 	expr_or_state TreeNodeType // 0:expression 1:statement -1:未知
-
 	// 补充一点位置信息，在源代码中的位置
 }
 
@@ -56,14 +54,6 @@ func (this *TreeNode) ensureCapacity(spos int, need int) {
 		copy(newArray, this.children)
 		this.children = newArray
 	}
-}
-
-func calcNewLength(len int, max int) int {
-
-	for len < max+1 {
-		len = len * 2
-	}
-	return len
 }
 
 type ITreeType interface {

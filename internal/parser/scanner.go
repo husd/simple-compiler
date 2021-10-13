@@ -3,6 +3,7 @@ package parser
 import (
 	"container/list"
 	"fmt"
+	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -116,6 +117,6 @@ func (scan *Scanner) ensureLookahead(lookahead int) {
 
 func dummyToken() Token {
 
-	token := newDefaultToken(TOKEN_KIND_ERROR, 0, 0, 0, 0)
+	token := newDefaultToken(common.TOKEN_KIND_ERROR, 0, 0, 0, 0)
 	return token
 }

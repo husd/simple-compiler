@@ -1,9 +1,5 @@
 package parser
 
-import (
-	"husd.com/v0/ast"
-)
-
 //Parser
 /**
  * 语法分析接口，用来生成AST
@@ -14,11 +10,11 @@ import (
  */
 type Parser interface {
 	// Parse a compilation unit.
-	ParseJCCompilationUnit() *ast.TreeNode
+	ParseJCCompilationUnit() *TreeNode
 	//Parse an expression.
-	ParseExpression() *ast.TreeNode
+	ParseExpression() *TreeNode
 	//Parse a statement.
-	ParseStatement() *ast.TreeNode
+	ParseStatement() *TreeNode
 	//Parse a type.
-	ParseType() *ast.TreeNode
+	ParseType() *TreeNode
 }

@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -10,7 +11,7 @@ import (
  * @author hushengdong
  */
 type StringToken struct {
-	tk tokenKind
+	tk common.TokenKind
 
 	lineNum int // 多少行
 	linePos int // 位置
@@ -23,7 +24,7 @@ type StringToken struct {
 	inx int //符号表里的索引
 }
 
-func newStringToken(tk tokenKind, lineNum int, linePos int,
+func newStringToken(tk common.TokenKind, lineNum int, linePos int,
 	val string, pos int, endPos int) *StringToken {
 
 	res := &StringToken{tk, lineNum, linePos,
@@ -41,7 +42,7 @@ func (dt *StringToken) GetColumnNum() int {
 	return dt.linePos
 }
 
-func (st *StringToken) GetTokenKind() tokenKind {
+func (st *StringToken) GetTokenKind() common.TokenKind {
 
 	return st.tk
 }
@@ -67,8 +68,8 @@ func (dt *StringToken) DebugToString() string {
 }
 
 func (dt *StringToken) CheckTokenKind() {
-	if GetTokenKindTag(dt.tk) != TOKEN_TAG_STRING {
-		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_STRING))
+	if common.GetTokenKindTag(dt.tk) != common.TOKEN_TAG_STRING {
+		panic(fmt.Sprintf("错误的token kind ，应该是：%d", common.TOKEN_TAG_STRING))
 	}
 }
 

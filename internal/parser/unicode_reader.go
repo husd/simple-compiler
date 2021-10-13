@@ -360,14 +360,6 @@ func (reader *UnicodeReader) ensureCapacity(spos int, need int) {
 	}
 }
 
-func calcNewLength(len int, max int) int {
-
-	for len < max+1 {
-		len = len * 2
-	}
-	return len
-}
-
 func (reader *UnicodeReader) reachEnd() bool {
 
 	return reader.end

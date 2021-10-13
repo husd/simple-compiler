@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -10,7 +11,7 @@ import (
  * @author hushengdong
  */
 type DefaultToken struct {
-	tk tokenKind
+	tk common.TokenKind
 
 	lineNum int // 多少行
 	linePos int // 位置
@@ -21,7 +22,7 @@ type DefaultToken struct {
 	inx int // 符号表里的索引
 }
 
-func newDefaultToken(tk tokenKind, lineNum int, linePos int, pos int, endPos int) *DefaultToken {
+func newDefaultToken(tk common.TokenKind, lineNum int, linePos int, pos int, endPos int) *DefaultToken {
 
 	res := &DefaultToken{tk, lineNum, linePos, pos, endPos, -1}
 	return res
@@ -37,7 +38,7 @@ func (dt *DefaultToken) GetColumnNum() int {
 	return dt.linePos
 }
 
-func (dt *DefaultToken) GetTokenKind() tokenKind {
+func (dt *DefaultToken) GetTokenKind() common.TokenKind {
 
 	return dt.tk
 }
@@ -48,7 +49,7 @@ func (dt *DefaultToken) GetName() *util.Name {
 
 func (dt *DefaultToken) GetStringVal() string {
 
-	return GetTokenString(dt.tk)
+	return common.GetTokenString(dt.tk)
 }
 
 func (dt *DefaultToken) GetRadix() int {
@@ -63,8 +64,8 @@ func (dt *DefaultToken) DebugToString() string {
 
 func (dt *DefaultToken) CheckTokenKind() {
 
-	if GetTokenKindTag(dt.tk) != TOKEN_TAG_DEFAULT {
-		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_DEFAULT))
+	if common.GetTokenKindTag(dt.tk) != common.TOKEN_TAG_DEFAULT {
+		panic(fmt.Sprintf("错误的token kind ，应该是：%d", common.TOKEN_TAG_DEFAULT))
 	}
 }
 

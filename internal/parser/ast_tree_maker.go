@@ -1,6 +1,8 @@
-package ast
+package parser
 
-import "fmt"
+import (
+	"fmt"
+)
 
 /**
  * 树的工厂类
@@ -32,6 +34,7 @@ func GetEmptyTreeNodeArray() *([]TreeNode) {
 func initEmpty() {
 
 	res := &TreeNode{}
+	res.index = -1
 	res.tag = Tree_node_tag_skip
 	res.childrenCount = 0
 	res.name = "empty"
@@ -44,6 +47,7 @@ func initEmpty() {
 func NewErrorTreeNode(msg string) *TreeNode {
 
 	res := &TreeNode{}
+	res.index = -1
 	res.tag = Tree_node_tag_erroneous
 	res.childrenCount = 0
 	res.name = "error:" + msg
@@ -55,6 +59,7 @@ func NewErrorTreeNode(msg string) *TreeNode {
 func NewDummyTreeNode() *TreeNode {
 
 	res := &TreeNode{}
+	res.index = -1
 	res.tag = Tree_node_tag_erroneous
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 2, 2)
@@ -64,9 +69,10 @@ func NewDummyTreeNode() *TreeNode {
 	return res
 }
 
-func NewBlockTreeNode() *TreeNode {
+func NewBlockTreeNode(token Token) *TreeNode {
 
 	res := &TreeNode{}
+	res.index = token.GetSymbolTableIndex()
 	res.tag = Tree_node_tag_block
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 5, 5)
@@ -79,9 +85,10 @@ func NewBlockTreeNode() *TreeNode {
 /**
  * if 有3个节点 condition truePart falsePart
  */
-func NewIfTreeNode() *TreeNode {
+func NewIfTreeNode(token Token) *TreeNode {
 
 	res := &TreeNode{}
+	res.index = token.GetSymbolTableIndex()
 	res.tag = Tree_node_tag_if
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 3, 3)
@@ -91,22 +98,24 @@ func NewIfTreeNode() *TreeNode {
 	return res
 }
 
-func NewCompareConditionTreeNode(tag TreeNodeTag) *TreeNode {
+func NewCompareConditionTreeNode(token Token, tag TreeNodeTag) *TreeNode {
 
 	res := &TreeNode{}
+	res.index = token.GetSymbolTableIndex()
 	res.tag = tag // 66 - 71 之间 ，这里暂且不考虑 TODO 函数调用
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 3, 3)
-	res.name = "if node"
+	res.name = "if node - condition"
 	res.expr_or_state = node_type_statement
 
 	return res
 }
 
-func NewLiteralTreeNode(val string, radix int) *TreeNode {
+func NewLiteralTreeNode(token Token) *TreeNode {
 
-	//TODO
+	// TODO
 	res := &TreeNode{}
+	res.index = token.GetSymbolTableIndex()
 	res.tag = Tree_node_tag_literal
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 3, 3)
@@ -116,10 +125,11 @@ func NewLiteralTreeNode(val string, radix int) *TreeNode {
 	return res
 }
 
-func NewIdentifyTreeNode(val string) *TreeNode {
+func NewIdentifyTreeNode(token Token) *TreeNode {
 
-	//TODO
+	// TODO
 	res := &TreeNode{}
+	res.index = token.GetSymbolTableIndex()
 	res.tag = Tree_node_tag_ident
 	res.childrenCount = 0
 	res.children = make([]*TreeNode, 3, 3)

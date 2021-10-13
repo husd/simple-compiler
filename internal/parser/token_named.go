@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -10,7 +11,7 @@ import (
  * 这些都统归为 NamedToken 表示的是定义变量的属性的，可以看到大部分都是基本类型
  */
 type NamedToken struct {
-	tk      tokenKind
+	tk      common.TokenKind
 	lineNum int // 多少行
 	linePos int // 位置
 	name    *util.Name
@@ -21,7 +22,7 @@ type NamedToken struct {
 	inx int // 符号表里的索引
 }
 
-func newNamedToken(tk tokenKind, lineNum int, linePos int,
+func newNamedToken(tk common.TokenKind, lineNum int, linePos int,
 	n *util.Name, pos int, endPos int) *NamedToken {
 
 	res := &NamedToken{tk, lineNum, linePos,
@@ -39,7 +40,7 @@ func (dt *NamedToken) GetColumnNum() int {
 	return dt.linePos
 }
 
-func (nt *NamedToken) GetTokenKind() tokenKind {
+func (nt *NamedToken) GetTokenKind() common.TokenKind {
 
 	return nt.tk
 }
@@ -66,8 +67,8 @@ func (dt *NamedToken) DebugToString() string {
 
 func (nt *NamedToken) CheckTokenKind() {
 
-	if GetTokenKindTag(nt.tk) != TOKEN_TAG_NAMED {
-		panic(fmt.Sprintf("错误的token kind ，应该是：%d", TOKEN_TAG_NAMED))
+	if common.GetTokenKindTag(nt.tk) != common.TOKEN_TAG_NAMED {
+		panic(fmt.Sprintf("错误的token kind ，应该是：%d", common.TOKEN_TAG_NAMED))
 	}
 }
 

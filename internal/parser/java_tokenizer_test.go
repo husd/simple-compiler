@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/common"
 	"husd.com/v0/util"
 	"testing"
 )
@@ -18,7 +19,7 @@ func TestJavaTokenizer_readToken_blank(t *testing.T) {
 	s := "      "
 	tokenizer := NewJavaTokenizerWithString(s, c)
 	tk := tokenizer.readToken()
-	util.AssertEquals(t, "测试空格", TOKEN_KIND_EOF, tk.GetTokenKind())
+	util.AssertEquals(t, "测试空格", common.TOKEN_KIND_EOF, tk.GetTokenKind())
 }
 
 //测试注释
@@ -41,7 +42,7 @@ func TestJavaTokenizer_readToken(t *testing.T) {
 	for inx, s := range str {
 		tokenizer := NewJavaTokenizerWithString(s, c)
 		tk := tokenizer.readToken()
-		util.AssertEquals(t, fmt.Sprintf("测试注释 index:%d", inx), TOKEN_KIND_EOF, tk.GetTokenKind())
+		util.AssertEquals(t, fmt.Sprintf("测试注释 index:%d", inx), common.TOKEN_KIND_EOF, tk.GetTokenKind())
 	}
 }
 
@@ -57,7 +58,7 @@ func TestJavaTokenizer_readToken_num(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试数字-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
+		util.AssertEquals(t, "测试数字-整数类型", common.TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试数字-整数数值", "100", tt.GetStringVal())
 		util.AssertEquals(t, "测试数字-整数radix", 10, tt.GetRadix())
 	}
@@ -73,7 +74,7 @@ func TestJavaTokenizer_readToken_num2(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试2进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
+		util.AssertEquals(t, "测试2进制-整数类型", common.TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试2进制-整数数值", "1010", tt.GetStringVal())
 		util.AssertEquals(t, "测试2进制-整数radix", 2, tt.GetRadix())
 	}
@@ -88,7 +89,7 @@ func TestJavaTokenizer_readToken_num8(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试8进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
+		util.AssertEquals(t, "测试8进制-整数类型", common.TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试8进制-整数数值", "01072", tt.GetStringVal())
 		util.AssertEquals(t, "测试8进制-整数radix", 8, tt.GetRadix())
 	}
@@ -103,7 +104,7 @@ func TestJavaTokenizer_readToken_num16(t *testing.T) {
 	for _, str := range strArr {
 		tokenizer := NewJavaTokenizerWithString(str, c)
 		tt = tokenizer.readToken()
-		util.AssertEquals(t, "测试16进制-整数类型", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
+		util.AssertEquals(t, "测试16进制-整数类型", common.TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 		util.AssertEquals(t, "测试16进制-整数数值", "fffe", tt.GetStringVal())
 		util.AssertEquals(t, "测试16进制-整数radix", 16, tt.GetRadix())
 	}
@@ -119,23 +120,23 @@ func TestJavaTokenizer_readToken2(t *testing.T) {
 
 	tt = tokenizer.readToken()
 	//tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字1 type", TOKEN_KIND_INT, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字1 type", common.TOKEN_KIND_INT, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字1", "int", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字2 type", TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字2 type", common.TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字2", "a", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字3 type", TOKEN_KIND_EQ, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字3 type", common.TOKEN_KIND_EQ, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字3", "=", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字4 type", TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字4 type", common.TOKEN_KIND_INT_LITERAL, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字4", "10", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字5 type", TOKEN_KIND_SEMI, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字5 type", common.TOKEN_KIND_SEMI, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字5", ";", tt.GetStringVal())
 }
 
@@ -149,23 +150,23 @@ func TestJavaTokenizer_readToken3(t *testing.T) {
 
 	tt = tokenizer.readToken()
 	//tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字1 type", TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字1 type", common.TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字1", "String", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字2 type", TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字2 type", common.TOKEN_KIND_IDENTIFIER, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字2", "a", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字3 type", TOKEN_KIND_EQ, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字3 type", common.TOKEN_KIND_EQ, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字3", "=", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字4 type", TOKEN_KIND_STRING_LITERAL, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字4 type", common.TOKEN_KIND_STRING_LITERAL, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字4", "abc", tt.GetStringVal())
 
 	tt = tokenizer.readToken()
-	util.AssertEquals(t, "测试数字5 type", TOKEN_KIND_SEMI, tt.GetTokenKind())
+	util.AssertEquals(t, "测试数字5 type", common.TOKEN_KIND_SEMI, tt.GetTokenKind())
 	util.AssertEquals(t, "测试数字5", ";", tt.GetStringVal())
 }
 
@@ -284,7 +285,7 @@ var TREE_TYPE_OTHER = &TreeType{"other", 100}
 	var tt Token
 
 	tt = tokenizer.readToken()
-	for tt.GetTokenKind() != TOKEN_KIND_EOF {
+	for tt.GetTokenKind() != common.TOKEN_KIND_EOF {
 		fmt.Println(tt.GetStringVal())
 		tt = tokenizer.readToken()
 	}

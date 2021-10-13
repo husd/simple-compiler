@@ -1,13 +1,16 @@
 package parser
 
-import "husd.com/v0/util"
+import (
+	"husd.com/v0/common"
+	"husd.com/v0/util"
+)
 
 // Token 词法分析器解析出来的最小单元
 type Token interface {
 	/**
 	 * token的类型
 	 */
-	GetTokenKind() tokenKind
+	GetTokenKind() common.TokenKind
 	/**
 	 * token的属性
 	 */
