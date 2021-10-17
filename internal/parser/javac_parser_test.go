@@ -46,7 +46,7 @@ func TestJavacParser_if_else(t *testing.T) {
 
 	var str string
 	c := util.NewContext()
-	str = "if ( a == 10) { a = 100; } else { a = 11; } "
+	str = "if ( a == 10) {} else if ( a == 20) {} else {} "
 	p := NewJavacParserWithString(str, c)
 	tree := p.ParseStatement()
 	fmt.Println(tree)

@@ -295,7 +295,7 @@ func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk common.TokenKin
 	// TODO 暂时先打印，应该有更好的方式来报告语法错误
 	// 发送一个事件，通知所有监听这个事件的程序来处理语法错误。
 	fmt.Println("---------------- reportSyntaxError，位置：", pos, " msg:", msg, " TokenKind:", tk)
-	panic(fmt.Sprintf("------------ 语法错误 位置 %d msg : %s tokenKind:%v ", pos, msg, tk))
+	panic(fmt.Sprintf("------------ 语法错误 位置 %d msg : %s tokenKind:%v [%v]", pos, msg, tk, common.GetTokenString(tk)))
 }
 
 func (jp *JavacParser) setErrorEndPos(pos int) {
@@ -645,7 +645,7 @@ func prec(tk common.TokenKind) int {
 	return -1
 }
 
-func opTag(tk common.TokenKind) TreeNodeTag {
+func toOpTag(tk common.TokenKind) TreeNodeTag {
 
 	switch tk {
 	case common.TOKEN_KIND_BARBAR:
@@ -1037,17 +1037,27 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 	res := GetEmptyTreeNode()
 	switch jp.tk {
 	case common.TOKEN_KIND_IDENTIFIER:
-		res = NewIdentifyTreeNode(jp.token)
+		left := NewIdentifyTreeNode(jp.token)
+		jp.nextToken()
+		opC := jp.isOpCompare()
+		if !opC {
+			jp.reportSyntaxError(jp.token.Pos(), "期望是 == != 等", jp.tk)
+		}
+		res = NewCompareConditionTreeNode(jp.token, toOpTag(jp.tk))
+		jp.nextToken()
+		right := jp.parseExpression1()
+		res.Append(left)
+		res.Append(right)
 	case common.TOKEN_KIND_INT_LITERAL, common.TOKEN_KIND_LONG_LITERAL, common.TOKEN_KIND_FLOAT_LITERAL,
 		common.TOKEN_KIND_DOUBLE_LITERAL, common.TOKEN_KIND_CHAR_LITERAL, common.TOKEN_KIND_STRING_LITERAL,
 		common.TOKEN_KIND_TRUE, common.TOKEN_KIND_FALSE, common.TOKEN_KIND_NULL:
 		// 这里都是字面量类型 需要注意，包含了 true false null 这3个，不要漏了
 		res = NewLiteralTreeNode(jp.token)
+		jp.nextToken()
 	default:
 		// error
 		jp.reportSyntaxError(jp.token.Pos(), "错误的表达式", jp.tk)
 	}
-	jp.nextToken()
 	return res
 }
 
