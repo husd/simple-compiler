@@ -158,11 +158,14 @@ func (jp *JavacParser) ParseStatement() *TreeNode {
 	case common.TOKEN_KIND_IF: // if 语句
 		jp.nextToken()
 		res = jp.parseIf()
+	case common.TOKEN_KIND_IDENTIFIER: //这里要解析 expression;
+		res = jp.parseExpression1()
 	default:
 		// 其它情况都是错误的
 		jp.reportSyntaxError(pos, "无效的token ", jp.tk)
 	}
 	// 空语句
+	//jp.accept(common.TOKEN_KIND_SEMI)
 	return res
 }
 
@@ -261,11 +264,38 @@ func (jp *JavacParser) acceptMaybe(tk common.TokenKind) bool {
 	}
 }
 
+// 是否是运算符号
+func (jp *JavacParser) isOpCompare() bool {
+
+	switch jp.tk {
+	case common.TOKEN_KIND_EQEQ, common.TOKEN_KIND_BANGEQ,
+		common.TOKEN_KIND_LTEQ, common.TOKEN_KIND_GTEQ,
+		common.TOKEN_KIND_LT, common.TOKEN_KIND_GT:
+		return true
+	default:
+		return false
+	}
+}
+
+// 是否是运算符号
+func (jp *JavacParser) isOp() bool {
+
+	switch jp.tk {
+	case common.TOKEN_KIND_EQEQ, common.TOKEN_KIND_BANGEQ,
+		common.TOKEN_KIND_LTEQ, common.TOKEN_KIND_GTEQ,
+		common.TOKEN_KIND_LT, common.TOKEN_KIND_GT:
+		return true
+	default:
+		return false
+	}
+}
+
 func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk common.TokenKind) {
 
 	// TODO 暂时先打印，应该有更好的方式来报告语法错误
 	// 发送一个事件，通知所有监听这个事件的程序来处理语法错误。
 	fmt.Println("---------------- reportSyntaxError，位置：", pos, " msg:", msg, " TokenKind:", tk)
+	panic(fmt.Sprintf("------------ 语法错误 位置 %d msg : %s tokenKind:%v ", pos, msg, tk))
 }
 
 func (jp *JavacParser) setErrorEndPos(pos int) {
@@ -933,83 +963,35 @@ func (jp *JavacParser) parseBlock(father *TreeNode) {
 
 /**
  * 转换if语句 if ( condition ) { truePart } else { falsePart }
+ * IF ParExpression Statement [ELSE Statement]
  */
 func (jp *JavacParser) parseIf() *TreeNode {
 
 	jp.accept(common.TOKEN_KIND_LPAREN)
 	res := NewIfTreeNode(jp.token)
-	condition := jp.parseIfCondition()
+	condition := jp.parseExpression1()
 	res.Append(condition)
 	jp.accept(common.TOKEN_KIND_RPAREN)
-	leftBrace := jp.acceptMaybe(common.TOKEN_KIND_LBRACE)
+	truePart := jp.parseIfElseStatement()
+	res.Append(truePart)
 
-	if leftBrace {
-		// 有左括号，终止条件就是右括号
-		truePart := NewBlockTreeNode(jp.token)
-		jp.parseBlock(truePart)
-		res.Append(truePart)
-	} else {
-		if jp.tk == common.TOKEN_KIND_EOF {
-			jp.reportSyntaxError(jp.token.Pos(), "if语句没有truePart", jp.token.GetTokenKind())
-		}
-		// 没有左括号，最多只读一行代码作为truePart
-		truePart := jp.ParseStatement()
-		res.Append(truePart)
-		jp.nextToken()
-	}
-
-	// 看看是否有else
+	// 看看是否有else   else 是可选的
+	// if (true) {} else {}
+	// if (true) {}
+	// if (true) {} else if (a == 1) {} else {}
 	hasElse := jp.acceptMaybe(common.TOKEN_KIND_ELSE)
 	if hasElse {
-		leftBrace = jp.acceptMaybe(common.TOKEN_KIND_LBRACE)
-		// 如果有左括号，就必须有右括号
-		if leftBrace {
-			falsePart := NewBlockTreeNode(jp.token)
-			jp.parseBlock(falsePart)
-			res.Append(falsePart)
+		falsePart := NewBlockTreeNode(jp.token)
+		hasIf := jp.acceptMaybe(common.TOKEN_KIND_IF)
+		if hasIf {
+			falsePart.Append(jp.parseIf())
 		} else {
-			// 没有左括号，就只读一行代码
-			temp := jp.ParseStatement()
-			res.Append(temp)
+			falsePart.Append(jp.parseIfElseStatement())
 		}
 	} else {
 		falsePart := GetEmptyTreeNode()
 		res.Append(falsePart)
 	}
-	return res
-}
-
-func (jp *JavacParser) parseIfCondition() *TreeNode {
-
-	left := jp.parseExpression1()
-	comparePart := jp.parseCompareExpression()
-	res := NewCompareConditionTreeNode(jp.token, comparePart)
-	right := jp.parseExpression1()
-	res.Append(left)
-	res.Append(right)
-
-	// TODO
-	// a == 10 a > 100这样的简单的
-	//switch jp.tk {
-	//case TOKEN_KIND_IDENTIFIER:
-	////标识符有很多种情况，有可能是变量，有可能是 函数调用 有可能是对方的属性访问 有可能是对象的函数调用
-	//// 需要向前看，预测下一个
-	//
-	//case TOKEN_KIND_INT_LITERAL,TOKEN_KIND_LONG_LITERAL,
-	//TOKEN_KIND_FLOAT_LITERAL,TOKEN_KIND_DOUBLE_LITERAL,TOKEN_KIND_STRING_LITERAL,
-	//TOKEN_KIND_CHAR_LITERAL:
-	//	// 类似于 100 == xxx 这样的
-	//	leftPart := ast.NewLiteralTreeNode(jp.token)
-	//	jp.nextToken()
-	//	//期望是比较类型的运算符号
-	//	comparePart := jp.parseCompareExpression()
-	//
-	//default:
-	//	//错误的
-	//	jp.reportSyntaxError(jp.token.Pos(), "错误的if condition语句", jp.tk)
-	//	res = ast.NewErrorTreeNode("错误的if condition语句")
-	//}
-
 	return res
 }
 
@@ -1019,27 +1001,40 @@ func (jp *JavacParser) parseIfCondition() *TreeNode {
  */
 func (jp *JavacParser) parseCompareExpression() TreeNodeTag {
 
-	// preToken := jp.peekTokenLookahead(1,TOKEN_KIND_EQ)
+	res := Tree_node_tag_erroneous
 	switch jp.tk {
-
-	case common.TOKEN_KIND_EQ:
-
+	case common.TOKEN_KIND_EQEQ:
+		res = Tree_node_tag_eq
+	case common.TOKEN_KIND_BANGEQ:
+		res = Tree_node_tag_ne
+	case common.TOKEN_KIND_LTEQ:
+		res = Tree_node_tag_le
+	case common.TOKEN_KIND_GTEQ:
+		res = Tree_node_tag_ge
+	case common.TOKEN_KIND_LT:
+		res = Tree_node_tag_lt
+	case common.TOKEN_KIND_GT:
+		res = Tree_node_tag_gt
+	default:
+		//error
+		jp.reportSyntaxError(jp.token.Pos(), "错误的比较符号", jp.tk)
 	}
-
 	jp.nextToken()
-	return Tree_node_tag_eq
+	return res
 }
 
 /**
  * 这个要返回一个最小的表达式单元：
  * BNF：
- * identify
+ * COM = EXP1 OP EXP2
+ * OP = "==" | "!=" | ">" | "<" | ">=" | "<="
  * int_literal|long_literal
  *
  */
 func (jp *JavacParser) parseExpression1() *TreeNode {
 
-	res := NewErrorTreeNode("错误的表达式")
+	// a == 10 | 10 == a
+	res := GetEmptyTreeNode()
 	switch jp.tk {
 	case common.TOKEN_KIND_IDENTIFIER:
 		res = NewIdentifyTreeNode(jp.token)
@@ -1050,8 +1045,27 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 		res = NewLiteralTreeNode(jp.token)
 	default:
 		// error
+		jp.reportSyntaxError(jp.token.Pos(), "错误的表达式", jp.tk)
 	}
+	jp.nextToken()
 	return res
+}
+
+/**
+ * 这个方法和 parseBlock的区别在于，这个方法可以没有 {
+ */
+func (jp *JavacParser) parseIfElseStatement() *TreeNode {
+
+	hasLeftBrace := jp.acceptMaybe(common.TOKEN_KIND_LBRACE)
+	// 如果有左括号 { ，就必须有右括号 }
+	if hasLeftBrace {
+		stat := NewBlockTreeNode(jp.token)
+		jp.parseBlock(stat)
+		return stat
+	} else {
+		// 没有左括号，就只读一行代码
+		return jp.parseExpression1()
+	}
 }
 
 // 返回none就是没有类型

@@ -7,6 +7,11 @@ package parser
  * JCCompilationUnit
  * AbstractJCExpression 表达式 类似： a = a + 1;
  * AbstractJCStatement 声明 类似： String str = "123";
+ *
+ * statement ::== ; | expression; | if (expression) statement
+ * ...带分号的 expression 就是 statement. 简言之，
+ * expression 告诉解释器（编译器），这是可求值的，而 statement 则说请求值。
+ *
  */
 type Parser interface {
 	// Parse a compilation unit.

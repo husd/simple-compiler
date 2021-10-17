@@ -15,7 +15,7 @@ type lexer interface {
 	 */
 	Token() Token
 	/**
-	 * 向前看几个token
+	 * 向前看几个token 预读后面的token
 	 */
 	LookAheadByIndex(lookahead int) Token
 	/**

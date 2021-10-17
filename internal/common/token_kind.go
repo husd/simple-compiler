@@ -218,20 +218,23 @@ const TOKEN_KIND_AMPAMP TokenKind = 62       // &&
 const TOKEN_KIND_BARBAR TokenKind = 63       // ||
 const TOKEN_KIND_PLUSPLUS TokenKind = 64     // ++
 const TOKEN_KIND_SUBSUB TokenKind = 65       // --
-const TOKEN_KIND_PLUS TokenKind = 66         // +
-const TOKEN_KIND_SUB TokenKind = 67          // -
-const TOKEN_KIND_STAR TokenKind = 68         // *
-const TOKEN_KIND_SLASH TokenKind = 69        // /
-const TOKEN_KIND_STAREQ TokenKind = 70       // =
-const TOKEN_KIND_AMP TokenKind = 71          // &
-const TOKEN_KIND_BAR TokenKind = 72          // |
-const TOKEN_KIND_CARET TokenKind = 73        // ^
-const TOKEN_KIND_PERCENT TokenKind = 74      // %
-const TOKEN_KIND_LTLT TokenKind = 75         // <<
-const TOKEN_KIND_GTGT TokenKind = 76         // >>
-const TOKEN_KIND_GTGTGT TokenKind = 77       // >>>
-const TOKEN_KIND_PLUSEQ TokenKind = 78       // +=
-const TOKEN_KIND_SUBEQ TokenKind = 79        // -=
+
+//运算符号
+const TOKEN_KIND_PLUS TokenKind = 66    // +
+const TOKEN_KIND_SUB TokenKind = 67     // -
+const TOKEN_KIND_STAR TokenKind = 68    // *
+const TOKEN_KIND_SLASH TokenKind = 69   // /
+const TOKEN_KIND_STAREQ TokenKind = 70  // =
+const TOKEN_KIND_AMP TokenKind = 71     // &
+const TOKEN_KIND_BAR TokenKind = 72     // |
+const TOKEN_KIND_CARET TokenKind = 73   // ^
+const TOKEN_KIND_PERCENT TokenKind = 74 // %
+
+const TOKEN_KIND_LTLT TokenKind = 75   // <<
+const TOKEN_KIND_GTGT TokenKind = 76   // >>
+const TOKEN_KIND_GTGTGT TokenKind = 77 // >>>
+const TOKEN_KIND_PLUSEQ TokenKind = 78 // +=
+const TOKEN_KIND_SUBEQ TokenKind = 79  // -=
 
 const TOKEN_KIND_SLASHEQ TokenKind = 80    // /=
 const TOKEN_KIND_AMPEQ TokenKind = 81      // &=
