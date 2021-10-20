@@ -1,6 +1,9 @@
 package parser
 
-import "fmt"
+import (
+	"fmt"
+	"husd.com/v0/code"
+)
 
 type TreeNodeType int
 
@@ -19,7 +22,11 @@ type TreeNode struct {
 	children      []*TreeNode  // 表示子树的集合 这里用一个切片来表示 长度一般都不超过6个 再考虑这个属性要不要有
 	name          string       // 树的一些基本信息 ，属于备注信息，后续可以去掉
 	expr_or_state TreeNodeType // 0:expression 1:statement -1:未知
-	// 补充一点位置信息，在源代码中的位置
+
+	typeTag *code.TypeTag // 常量表达式才有的属性
+	val     interface{}   // 常量表达式才有的属性 实际的值 需要配合typeTag的类型，确定是 int 还是 char false true等
+
+	pos int // token里的pos
 }
 
 func (this *TreeNode) Append(child *TreeNode) {

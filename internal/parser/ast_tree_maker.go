@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+	"husd.com/v0/code"
 )
 
 /**
@@ -44,7 +45,7 @@ func initEmpty() {
 }
 
 // error node
-func NewErrorTreeNode(msg string) *TreeNode {
+func NewErrorTreeNode(pos int, msg string) *TreeNode {
 
 	res := &TreeNode{}
 	res.index = -1
@@ -52,6 +53,7 @@ func NewErrorTreeNode(msg string) *TreeNode {
 	res.childrenCount = 0
 	res.name = "error:" + msg
 	res.expr_or_state = node_type_unknown
+	res.pos = pos
 
 	return res
 }
@@ -111,9 +113,8 @@ func NewCompareConditionTreeNode(token Token, tag TreeNodeTag) *TreeNode {
 	return res
 }
 
-func NewLiteralTreeNode(token Token) *TreeNode {
+func NewLiteralTreeNode(token Token, typeTag *code.TypeTag, val interface{}) *TreeNode {
 
-	// TODO
 	res := &TreeNode{}
 	res.index = token.GetSymbolTableIndex()
 	res.tag = Tree_node_tag_literal
@@ -121,6 +122,9 @@ func NewLiteralTreeNode(token Token) *TreeNode {
 	res.children = make([]*TreeNode, 3, 3)
 	res.name = "字面量"
 	res.expr_or_state = node_type_statement
+
+	res.typeTag = typeTag
+	res.val = val
 
 	return res
 }

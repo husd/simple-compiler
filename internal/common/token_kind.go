@@ -233,17 +233,19 @@ const TOKEN_KIND_PERCENT TokenKind = 74 // %
 const TOKEN_KIND_LTLT TokenKind = 75   // <<
 const TOKEN_KIND_GTGT TokenKind = 76   // >>
 const TOKEN_KIND_GTGTGT TokenKind = 77 // >>>
-const TOKEN_KIND_PLUSEQ TokenKind = 78 // +=
-const TOKEN_KIND_SUBEQ TokenKind = 79  // -=
 
-const TOKEN_KIND_SLASHEQ TokenKind = 80    // /=
-const TOKEN_KIND_AMPEQ TokenKind = 81      // &=
-const TOKEN_KIND_BAREQ TokenKind = 82      // |=
-const TOKEN_KIND_CARETEQ TokenKind = 83    // ^=
-const TOKEN_KIND_PERCENTEQ TokenKind = 84  // %=
-const TOKEN_KIND_LTLTEQ TokenKind = 85     // <<=
-const TOKEN_KIND_GTGTEQ TokenKind = 86     // >>=
-const TOKEN_KIND_GTGTGTEQ TokenKind = 87   // >>>=
+// AssignmentOperator 78 到 87 都是赋值表达式符号
+const TOKEN_KIND_PLUSEQ TokenKind = 78    // +=
+const TOKEN_KIND_SUBEQ TokenKind = 79     // -=
+const TOKEN_KIND_SLASHEQ TokenKind = 80   // /=
+const TOKEN_KIND_AMPEQ TokenKind = 81     // &=
+const TOKEN_KIND_BAREQ TokenKind = 82     // |=
+const TOKEN_KIND_CARETEQ TokenKind = 83   // ^=
+const TOKEN_KIND_PERCENTEQ TokenKind = 84 // %=
+const TOKEN_KIND_LTLTEQ TokenKind = 85    // <<=
+const TOKEN_KIND_GTGTEQ TokenKind = 86    // >>=
+const TOKEN_KIND_GTGTGTEQ TokenKind = 87  // >>>=
+
 const TOKEN_KIND_MONKEYS_AT TokenKind = 88 // @
 const TOKEN_KIND_CUSTOM TokenKind = 89     // ,
 

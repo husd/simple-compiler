@@ -98,7 +98,7 @@ const term_mode_expr parseMode = 0x1
 const term_mode_type parseMode = 0x2
 const term_mode_noparams parseMode = 0x4
 const term_mode_typearg parseMode = 0x8
-const term_mode_diamond parseMode = 0x10
+const term_mode_diamond parseMode = 0x10 // 这个就是 2 + 8 = 10
 
 func (jp *JavacParser) ParseExpression() *TreeNode {
 
@@ -116,8 +116,8 @@ func (jp *JavacParser) termWithMode(newMode parseMode) *TreeNode {
 	jp.mode = newMode
 	var t *TreeNode // 这么做仅仅为了表达以下t的类型
 	t = jp.term()
-	jp.lastMode = jp.mode // jp.lastMode =  newMode 是最终生效的mode
-	jp.mode = preMode     //  jp.mode =
+	jp.lastMode = jp.mode // 这个很容易理解 上一次的mode
+	jp.mode = preMode     // 恢复之前的模式，临时离开preMode，在newMode下转换，在转换结束之后，再恢复到preMode
 	return t
 }
 
@@ -159,7 +159,7 @@ func (jp *JavacParser) ParseStatement() *TreeNode {
 		jp.nextToken()
 		res = jp.parseIf()
 	case common.TOKEN_KIND_IDENTIFIER: //这里要解析 expression;
-		res = jp.parseExpression1()
+		res = jp.ParseExpression()
 	default:
 		// 其它情况都是错误的
 		jp.reportSyntaxError(pos, "无效的token ", jp.tk)
@@ -187,18 +187,35 @@ func (jp *JavacParser) ParseType() *TreeNode {
  */
 func (jp *JavacParser) literal(pre *util.Name, pos int) *TreeNode {
 
-	// var t *jc.AbstractJCExpression
-	// t = jc.NewJCError(pos, "默认错误")
-	// switch jp.tk {
-	// case TOKEN_KIND_INT_LITERAL:
-	// 	num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix(), 32)
-	// 	if err != nil {
-	// 		jp.error(jp.token.Pos(), err.Error())
-	// 	}
-	// 	literal := jp.F.At(pos).Literal(code.TYPE_TAG_INT, int(num))
-	// 	return literal.AbstractJCExpression
-	// }
-	return GetEmptyTreeNode()
+	var res *TreeNode
+	switch jp.tk {
+	case common.TOKEN_KIND_INT_LITERAL:
+		num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix())
+		if err != nil {
+			jp.error(jp.token.Pos(), "int 类型数字太大溢出了")
+		}
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_INT, num)
+	case common.TOKEN_KIND_LONG_LITERAL:
+		num, err := util.String2long(jp.token.GetStringVal(), jp.token.GetRadix())
+		if err != nil {
+			jp.error(jp.token.Pos(), "long 类型数字太大溢出了")
+		}
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, num)
+	case common.TOKEN_KIND_TRUE:
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 1)
+	case common.TOKEN_KIND_FALSE:
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 0)
+	case common.TOKEN_KIND_NULL:
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_NONE, nil)
+	case common.TOKEN_KIND_STRING_LITERAL:
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CLASS, jp.token.GetStringVal())
+	case common.TOKEN_KIND_CHAR_LITERAL:
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CHAR, jp.token.GetStringVal()[0])
+	default:
+		res = NewErrorTreeNode(jp.token.Pos(), "不支持的常量类型")
+	}
+	jp.nextToken()
+	return res
 }
 
 /** ModifiersOpt = { Modifier }
@@ -423,7 +440,7 @@ func (jp *JavacParser) term1() *TreeNode {
 
 	e := jp.term2()
 	if (jp.mode&term_mode_expr) != 0 &&
-		jp.tk == common.TOKEN_KIND_QUES {
+		jp.tk == common.TOKEN_KIND_QUES { // ？号表达式
 		jp.mode = term_mode_expr
 		return jp.term1Rest(e)
 	} else {
@@ -437,12 +454,11 @@ func (jp *JavacParser) term1() *TreeNode {
  */
 func (jp *JavacParser) term2() *TreeNode {
 
-	const OR_PREC int = 4
 	e := jp.term3()
 	if (jp.mode&term_mode_expr) != 0 &&
-		prec(jp.tk) >= OR_PREC {
+		prec(jp.tk) >= orPrec {
 		jp.mode = term_mode_expr
-		return jp.term2Rest(e, OR_PREC)
+		return jp.term2Rest(e, orPrec)
 	} else {
 		return e
 	}
@@ -626,7 +642,8 @@ func (jp *JavacParser) term1Rest(t *TreeNode) *TreeNode {
 	}
 }
 
-func (jp *JavacParser) term2Rest(t *TreeNode, perc int) *TreeNode {
+// precedences 的意思是优先级
+func (jp *JavacParser) term2Rest(t *TreeNode, precedences int) *TreeNode {
 
 	// TODO
 	return t
@@ -812,7 +829,7 @@ func (jp *JavacParser) illegal(msg string) *TreeNode {
 
 func (jp *JavacParser) syntaxError(pos int, msg string) *TreeNode {
 
-	return NewErrorTreeNode(msg)
+	return NewErrorTreeNode(pos, msg)
 }
 
 func (jp *JavacParser) basicType() *TreeNode {
@@ -967,11 +984,9 @@ func (jp *JavacParser) parseBlock(father *TreeNode) {
  */
 func (jp *JavacParser) parseIf() *TreeNode {
 
-	jp.accept(common.TOKEN_KIND_LPAREN)
 	res := NewIfTreeNode(jp.token)
-	condition := jp.parseExpression1()
+	condition := jp.parExpression()
 	res.Append(condition)
-	jp.accept(common.TOKEN_KIND_RPAREN)
 	truePart := jp.parseIfElseStatement()
 	res.Append(truePart)
 
@@ -988,10 +1003,8 @@ func (jp *JavacParser) parseIf() *TreeNode {
 		} else {
 			falsePart.Append(jp.parseIfElseStatement())
 		}
-	} else {
-		falsePart := GetEmptyTreeNode()
-		res.Append(falsePart)
 	}
+	// else 是可选的
 	return res
 }
 
@@ -1051,8 +1064,8 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 	case common.TOKEN_KIND_INT_LITERAL, common.TOKEN_KIND_LONG_LITERAL, common.TOKEN_KIND_FLOAT_LITERAL,
 		common.TOKEN_KIND_DOUBLE_LITERAL, common.TOKEN_KIND_CHAR_LITERAL, common.TOKEN_KIND_STRING_LITERAL,
 		common.TOKEN_KIND_TRUE, common.TOKEN_KIND_FALSE, common.TOKEN_KIND_NULL:
-		// 这里都是字面量类型 需要注意，包含了 true false null 这3个，不要漏了
-		res = NewLiteralTreeNode(jp.token)
+		// 这里都是字面量类型 需要注意，包含了 true false null 这3个，不要漏了 暂时先这么写 为了不报错 TODO
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, 100)
 		jp.nextToken()
 	default:
 		// error
@@ -1074,8 +1087,18 @@ func (jp *JavacParser) parseIfElseStatement() *TreeNode {
 		return stat
 	} else {
 		// 没有左括号，就只读一行代码
-		return jp.parseExpression1()
+		return jp.ParseExpression()
 	}
+}
+
+/** ParExpression = "(" Expression ")"
+ */
+func (jp *JavacParser) parExpression() *TreeNode {
+
+	jp.accept(common.TOKEN_KIND_LPAREN)
+	res := jp.ParseExpression()
+	jp.accept(common.TOKEN_KIND_RPAREN)
+	return res
 }
 
 // 返回none就是没有类型
