@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -10,11 +9,11 @@ import (
  * @author hushengdong
  */
 type Tokens struct {
-	tokenName []*util.Name          // The names of all Tokens.
-	key       [114]common.TokenKind // Keyword array. Maps name indices to Token.
-	maxKey    int                   // key的最大索引
+	tokenName []*util.Name   // The names of all Tokens.
+	key       [114]TokenKind // Keyword array. Maps name indices to Token.
+	maxKey    int            // key的最大索引
 
-	keyword map[string]common.TokenKind
+	keyword map[string]TokenKind
 }
 
 func InstanceTokens(c *util.Context) *Tokens {
@@ -31,13 +30,13 @@ func NewTokens(c *util.Context) *Tokens {
 	tks := &Tokens{}
 
 	// 初始化所有的关键字
-	keyword := make(map[string]common.TokenKind)
-	for i := 2; i < len(common.Token_kind_array); i++ {
-		tk := common.Token_kind_array[i]
+	keyword := make(map[string]TokenKind)
+	for i := 2; i < len(Token_kind_array); i++ {
+		tk := Token_kind_array[i]
 		if tk == "" {
 			continue
 		}
-		keyword[tk] = common.TokenKind(i)
+		keyword[tk] = TokenKind(i)
 	}
 
 	tks.keyword = keyword
@@ -46,11 +45,11 @@ func NewTokens(c *util.Context) *Tokens {
 }
 
 //这个是根据Name，返回是关键字 还是标识符 还是什么其它的
-func (ts *Tokens) lookupTokenKind(n *util.Name) common.TokenKind {
+func (ts *Tokens) lookupTokenKind(n *util.Name) TokenKind {
 
 	// 是关键字，就返回，否则就是一个标识符
 	if tk, ok := ts.keyword[n.NameStr]; ok {
 		return tk
 	}
-	return common.TOKEN_KIND_IDENTIFIER
+	return IDENTIFIER
 }

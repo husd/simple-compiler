@@ -8,15 +8,15 @@ package util
 type Names struct {
 
 	// operators and punctuation
-	asterisk    *Name
-	comma       *Name
-	Empty       *Name
-	hyphen      *Name
-	one         *Name
-	period      *Name
-	semicolon   *Name
-	slash       *Name
-	slashequals *Name
+	asterisk    *Name // 星号
+	comma       *Name // 逗号
+	Empty       *Name // 空
+	Hyphen      *Name // 连字符;连字号
+	one         *Name // 1
+	period      *Name // .
+	semicolon   *Name // 分号
+	slash       *Name // 斜线;斜杠;
+	slashequals *Name // /=
 
 	// keywords
 	_class   *Name
@@ -163,7 +163,7 @@ func NewNames(c *Context) *Names {
 	ns.asterisk = ns.fromString("*")
 	ns.comma = ns.fromString(",")
 	ns.Empty = ns.fromString("")
-	ns.hyphen = ns.fromString("-")
+	ns.Hyphen = ns.fromString("-")
 	ns.one = ns.fromString("1")
 	ns.period = ns.fromString(".")
 	ns.semicolon = ns.fromString(";")

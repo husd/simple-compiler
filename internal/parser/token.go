@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"husd.com/v0/common"
 	"husd.com/v0/util"
 )
 
@@ -10,7 +9,7 @@ type Token interface {
 	/**
 	 * token的类型
 	 */
-	GetTokenKind() common.TokenKind
+	GetTokenKind() TokenKind
 	/**
 	 * token的属性
 	 */
@@ -24,7 +23,7 @@ type Token interface {
 	 */
 	GetRadix() int
 	/**
-	 * 检查当前token的TOKEN_KIND_TAG是否正确
+	 * 检查当前token的TAG是否正确
 	 */
 	CheckTokenKind()
 	/**

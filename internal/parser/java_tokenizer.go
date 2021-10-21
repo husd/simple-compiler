@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"husd.com/v0/code"
-	"husd.com/v0/common"
 	"husd.com/v0/compiler"
 	"husd.com/v0/util"
 )
@@ -22,10 +21,10 @@ import (
 
 type JavaTokenizer struct {
 	context *util.Context
-	reader  *UnicodeReader   // reader
-	source  code.JVersion    // jdk版本
-	tk      common.TokenKind // 当前token的类型
-	name    *util.Name       // identify name
+	reader  *UnicodeReader // reader
+	source  code.JVersion  // jdk版本
+	tk      TokenKind      // 当前token的类型
+	name    *util.Name     // identify name
 
 	tokenFactory *Tokens // token工厂类
 
@@ -40,7 +39,7 @@ func NewJavaTokenizer(path string, c *util.Context) *JavaTokenizer {
 	javaTokenizer := JavaTokenizer{}
 	javaTokenizer.reader = NewUnicodeReaderFromFile(path)
 	javaTokenizer.source = v
-	javaTokenizer.tk = common.TOKEN_KIND_DEF
+	javaTokenizer.tk = DEF
 	javaTokenizer.context = c
 	javaTokenizer.tokenFactory = InstanceTokens(c)
 
@@ -55,7 +54,7 @@ func NewJavaTokenizerWithString(str string, c *util.Context) *JavaTokenizer {
 	b := []byte(str)
 	javaTokenizer.reader = NewUnicodeReader(&b)
 	javaTokenizer.source = v
-	javaTokenizer.tk = common.TOKEN_KIND_ERROR
+	javaTokenizer.tk = ERROR
 	javaTokenizer.context = c
 	javaTokenizer.tokenFactory = InstanceTokens(c)
 
@@ -154,45 +153,45 @@ loop:
 				if reader.ch == '.' {
 					reader.ScanRune()
 					reader.putChar('.')
-					jt.tk = common.TOKEN_KIND_ELLIPSIS
+					jt.tk = ELLIPSIS
 				} else {
 					jt.lexError(savedPos, "无效的点 . ")
 				}
 			} else {
-				jt.tk = common.TOKEN_KIND_DOT
+				jt.tk = DOT
 			}
 			break loop
 		case ',':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_COMMA
+			jt.tk = COMMA
 			break loop
 		case ';':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_SEMI
+			jt.tk = SEMI
 			break loop
 		case '(':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_LPAREN
+			jt.tk = LPAREN
 			break loop
 		case ')':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_RPAREN
+			jt.tk = RPAREN
 			break loop
 		case '{':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_LBRACE
+			jt.tk = LBRACE
 			break loop
 		case '}':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_RBRACE
+			jt.tk = RBRACE
 			break loop
 		case '[':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_LBRACKET
+			jt.tk = LBRACKET
 			break loop
 		case ']':
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_RBRACKET
+			jt.tk = RBRACKET
 			break loop
 		case '/': // 这里涉及到了注释的解析
 			reader.ScanRune()
@@ -239,10 +238,10 @@ loop:
 				}
 			} else if reader.ch == '=' {
 				// 对于Java语法来说，就是遇到了 /= 这种符号
-				jt.tk = common.TOKEN_KIND_SLASHEQ
+				jt.tk = SLASHEQ
 				reader.ScanRune()
 			} else {
-				jt.tk = common.TOKEN_KIND_SLASH // 单纯就是 /
+				jt.tk = SLASH // 单纯就是 /
 			}
 			break loop
 		case '\'': //遇到了单引号
@@ -257,7 +256,7 @@ loop:
 				jt.scanLitChar(pos)
 				if reader.ch == '\'' { // 找到了 ''
 					reader.ScanRune()
-					jt.tk = common.TOKEN_KIND_CHAR_LITERAL
+					jt.tk = CHARLITERAL
 				} else {
 					jt.lexError(pos, "单引号没有关闭")
 				}
@@ -272,7 +271,7 @@ loop:
 				jt.scanLitChar(pos)
 			}
 			if reader.ch == '"' {
-				jt.tk = common.TOKEN_KIND_STRING_LITERAL
+				jt.tk = STRINGLITERAL
 				reader.ScanRune()
 			} else {
 				jt.lexError(pos, "字符串没有关闭 只有一个双引号")
@@ -291,7 +290,7 @@ loop:
 					isJavaIdentifyPart = true
 				}
 				if reader.reachEnd() {
-					jt.tk = common.TOKEN_KIND_EOF
+					jt.tk = EOF
 					pos = reader.size
 					if isJavaIdentifyPart {
 						jt.scanIdentify()
@@ -300,7 +299,7 @@ loop:
 					jt.scanIdentify()
 				} else if reader.ch == Layout_char_eoi ||
 					reader.reachEnd() { //JTS 3.5 主要说的EOI的问题
-					jt.tk = common.TOKEN_KIND_EOF
+					jt.tk = EOF
 					pos = reader.size
 				} else {
 					jt.lexError(pos, "无效的字符:", reader.ch)
@@ -311,15 +310,15 @@ loop:
 		}
 	}
 	endPos = reader.bp
-	tag := common.GetTokenKindTag(jt.tk)
+	tag := GetTokenKindTag(jt.tk)
 	switch tag {
-	case common.TOKEN_TAG_DEFAULT:
+	case TOKEN_TAG_DEFAULT:
 		return newDefaultToken(jt.tk, reader.lineNum, reader.linePos, pos, endPos)
-	case common.TOKEN_TAG_STRING:
+	case TOKEN_TAG_STRING:
 		return newStringToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, pos, endPos)
-	case common.TOKEN_TAG_NUMERIC:
+	case TOKEN_TAG_NUMERIC:
 		return newNumericToken(jt.tk, reader.lineNum, reader.linePos, reader.name().NameStr, jt.radix, pos, endPos)
-	case common.TOKEN_TAG_NAMED:
+	case TOKEN_TAG_NAMED:
 		return newNamedToken(jt.tk, reader.lineNum, reader.linePos, jt.name, pos, endPos)
 	default:
 		panic(fmt.Sprintf("错误的tokenKind pos:%v endPos:%v", pos, endPos))
@@ -447,9 +446,9 @@ func (jt *JavaTokenizer) scanNumber(pos int, radix int) {
 	} else {
 		if reader.ch == 'l' || reader.ch == 'L' {
 			reader.ScanRune()
-			jt.tk = common.TOKEN_KIND_LONG_LITERAL
+			jt.tk = LONGLITERAL
 		} else {
-			jt.tk = common.TOKEN_KIND_INT_LITERAL
+			jt.tk = INTLITERAL
 		}
 	}
 }
@@ -477,7 +476,7 @@ func (jt *JavaTokenizer) lexError(bp int, msg ...interface{}) {
 	}
 
 	fmt.Println("---------------- error/warn -------------词法解析错误，位置：", bp, " msg:", msg, " 前后词语:", string(jt.reader.buf[start:end]))
-	jt.tk = common.TOKEN_KIND_ERROR
+	jt.tk = ERROR
 	jt.errPos = bp
 }
 
@@ -525,12 +524,12 @@ func (jt *JavaTokenizer) scanHexExponentAndSuffix(pos int) {
 	}
 	if reader.ch == 'f' || reader.ch == 'F' {
 		reader.putRune(true)
-		jt.tk = common.TOKEN_KIND_FLOAT_LITERAL
+		jt.tk = FLOATLITERAL
 		jt.radix = 16
 	} else {
 		if reader.ch == 'd' || reader.ch == 'D' {
 			reader.putRune(true)
-			jt.tk = common.TOKEN_KIND_DOUBLE_LITERAL
+			jt.tk = DOUBLELITERAL
 			jt.radix = 16
 		}
 	}
@@ -621,7 +620,7 @@ func (jt *JavaTokenizer) scanOperator() {
 		//看看操作符号前面是什么
 		newName := reader.name()
 		tempTk := jt.tokenFactory.lookupTokenKind(newName)
-		if tempTk == common.TOKEN_KIND_IDENTIFIER { // ?
+		if tempTk == IDENTIFIER { // ?
 			reader.spos--
 			break
 		}
@@ -642,12 +641,12 @@ func (jt *JavaTokenizer) scanFractionAndSuffix(pos int) {
 	reader := jt.reader
 	if reader.ch == 'f' || reader.ch == 'F' {
 		reader.putRune(true)
-		jt.tk = common.TOKEN_KIND_FLOAT_LITERAL
+		jt.tk = FLOATLITERAL
 	} else {
 		if reader.ch == 'd' || reader.ch == 'D' {
 			reader.putRune(true)
 		}
-		jt.tk = common.TOKEN_KIND_DOUBLE_LITERAL
+		jt.tk = DOUBLELITERAL
 	}
 }
 

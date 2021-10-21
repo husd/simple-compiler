@@ -3,7 +3,6 @@ package parser
 import (
 	"fmt"
 	"husd.com/v0/code"
-	"husd.com/v0/common"
 	"husd.com/v0/compiler"
 	"husd.com/v0/util"
 )
@@ -14,13 +13,13 @@ import (
  */
 
 type JavacParser struct {
-	c         *util.Context    //
-	S         lexer            // 词法分析器
-	source    code.JVersion    // 当前JDK的版本
-	token     Token            // 当前读到的token
-	tk        common.TokenKind // 当前读到的token的TOKEN_KIND
-	rowNum    int              // 多少行
-	columnNum int              // 列
+	c         *util.Context //
+	S         lexer         // 词法分析器
+	source    code.JVersion // 当前JDK的版本
+	token     Token         // 当前读到的token
+	tk        TokenKind     // 当前读到的token的TOKEN_KIND
+	rowNum    int           // 多少行
+	columnNum int           // 列
 
 	endPosTable *SimpleEndPosTable
 
@@ -147,25 +146,25 @@ func (jp *JavacParser) ParseStatement() *TreeNode {
 	// 先从一个简单的空语句开始转换，然后慢慢开始加case语句
 	pos := jp.token.Pos()
 	switch jp.tk {
-	case common.TOKEN_KIND_SEMI: // ; 空语句
+	case SEMI: // ; 空语句
 		jp.nextToken()
-	case common.TOKEN_KIND_EOF: // EOF也是空语句
-	case common.TOKEN_KIND_LBRACE: // {
+	case EOF: // EOF也是空语句
+	case LBRACE: // {
 		jp.nextToken()
 		blockTree := NewBlockTreeNode(jp.token)
 		jp.parseBlock(blockTree)
 		res = blockTree
-	case common.TOKEN_KIND_IF: // if 语句
+	case IF: // if 语句
 		jp.nextToken()
 		res = jp.parseIf()
-	case common.TOKEN_KIND_IDENTIFIER: //这里要解析 expression;
+	case IDENTIFIER: // 这里要解析 expression;
 		res = jp.ParseExpression()
 	default:
 		// 其它情况都是错误的
 		jp.reportSyntaxError(pos, "无效的token ", jp.tk)
 	}
 	// 空语句
-	//jp.accept(common.TOKEN_KIND_SEMI)
+	// jp.accept(common.SEMI)
 	return res
 }
 
@@ -189,27 +188,27 @@ func (jp *JavacParser) literal(pre *util.Name, pos int) *TreeNode {
 
 	var res *TreeNode
 	switch jp.tk {
-	case common.TOKEN_KIND_INT_LITERAL:
+	case INTLITERAL:
 		num, err := util.String2int(jp.token.GetStringVal(), jp.token.GetRadix())
 		if err != nil {
 			jp.error(jp.token.Pos(), "int 类型数字太大溢出了")
 		}
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_INT, num)
-	case common.TOKEN_KIND_LONG_LITERAL:
+	case LONGLITERAL:
 		num, err := util.String2long(jp.token.GetStringVal(), jp.token.GetRadix())
 		if err != nil {
 			jp.error(jp.token.Pos(), "long 类型数字太大溢出了")
 		}
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, num)
-	case common.TOKEN_KIND_TRUE:
+	case TRUE:
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 1)
-	case common.TOKEN_KIND_FALSE:
+	case FALSE:
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 0)
-	case common.TOKEN_KIND_NULL:
+	case NULL:
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_NONE, nil)
-	case common.TOKEN_KIND_STRING_LITERAL:
+	case STRINGLITERAL:
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CLASS, jp.token.GetStringVal())
-	case common.TOKEN_KIND_CHAR_LITERAL:
+	case CHARLITERAL:
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CHAR, jp.token.GetStringVal()[0])
 	default:
 		res = NewErrorTreeNode(jp.token.Pos(), "不支持的常量类型")
@@ -254,7 +253,7 @@ func (jp *JavacParser) warn(bp int, msg ...interface{}) {
  * 如果下一个token的tokenKind相同，那么就跳过去，否则报错，这个方法就是为了检查下一个token是否符合
  * 要求的，例如表达式要用分号结尾  int a = 10; 没有分号就报错
  */
-func (jp *JavacParser) accept(tk common.TokenKind) {
+func (jp *JavacParser) accept(tk TokenKind) {
 
 	if jp.tk == tk {
 		jp.nextToken()
@@ -271,7 +270,7 @@ func (jp *JavacParser) accept(tk common.TokenKind) {
  * if ( condition ) statement
  * 这个时候 {} 就是可选的
  */
-func (jp *JavacParser) acceptMaybe(tk common.TokenKind) bool {
+func (jp *JavacParser) acceptMaybe(tk TokenKind) bool {
 
 	if jp.tk == tk {
 		jp.nextToken()
@@ -285,9 +284,9 @@ func (jp *JavacParser) acceptMaybe(tk common.TokenKind) bool {
 func (jp *JavacParser) isOpCompare() bool {
 
 	switch jp.tk {
-	case common.TOKEN_KIND_EQEQ, common.TOKEN_KIND_BANGEQ,
-		common.TOKEN_KIND_LTEQ, common.TOKEN_KIND_GTEQ,
-		common.TOKEN_KIND_LT, common.TOKEN_KIND_GT:
+	case EQEQ, BANGEQ,
+		LTEQ, GTEQ,
+		LT, GT:
 		return true
 	default:
 		return false
@@ -298,21 +297,21 @@ func (jp *JavacParser) isOpCompare() bool {
 func (jp *JavacParser) isOp() bool {
 
 	switch jp.tk {
-	case common.TOKEN_KIND_EQEQ, common.TOKEN_KIND_BANGEQ,
-		common.TOKEN_KIND_LTEQ, common.TOKEN_KIND_GTEQ,
-		common.TOKEN_KIND_LT, common.TOKEN_KIND_GT:
+	case EQEQ, BANGEQ,
+		LTEQ, GTEQ,
+		LT, GT:
 		return true
 	default:
 		return false
 	}
 }
 
-func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk common.TokenKind) {
+func (jp *JavacParser) reportSyntaxError(pos int, msg string, tk TokenKind) {
 
 	// TODO 暂时先打印，应该有更好的方式来报告语法错误
 	// 发送一个事件，通知所有监听这个事件的程序来处理语法错误。
 	fmt.Println("---------------- reportSyntaxError，位置：", pos, " msg:", msg, " TokenKind:", tk)
-	panic(fmt.Sprintf("------------ 语法错误 位置 %d msg : %s tokenKind:%v [%v]", pos, msg, tk, common.GetTokenString(tk)))
+	panic(fmt.Sprintf("------------ 语法错误 位置 %d msg : %s tokenKind:%v [%v]", pos, msg, tk, GetTokenString(tk)))
 }
 
 func (jp *JavacParser) setErrorEndPos(pos int) {
@@ -332,7 +331,7 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *TreeNode {
 	// tk := jp.token
 	// expression := jp.toExpression(jp.F.At(tk.Pos()).Identify(jp.ident()))
 	// // 解析这个逗号
-	// for jp.tk == TOKEN_KIND_DOT {
+	// for jp.tk == DOT {
 	// 	pos := jp.token.Pos()
 	// 	jp.nextToken() // 查看点之后是什么
 	// 	//var annotations []ast_tree.JCAnnotation
@@ -352,11 +351,11 @@ func (jp *JavacParser) qualident(allowAnnotations bool) *TreeNode {
 func (jp *JavacParser) ident() *util.Name {
 
 	tk := jp.token
-	if jp.tk == common.TOKEN_KIND_IDENTIFIER {
+	if jp.tk == IDENTIFIER {
 		name := tk.GetName()
 		jp.nextToken()
 		return name
-	} else if jp.tk == common.TOKEN_KIND_ASSERT {
+	} else if jp.tk == ASSERT {
 		if allowAssert {
 			jp.error(tk.Pos(), "错误的assert位置")
 			jp.nextToken()
@@ -367,7 +366,7 @@ func (jp *JavacParser) ident() *util.Name {
 			jp.nextToken()
 			return name
 		}
-	} else if jp.tk == common.TOKEN_KIND_ENUM {
+	} else if jp.tk == ENUM {
 		if allowEnums {
 			jp.error(jp.token.Pos(), "enum as identifier")
 			jp.nextToken()
@@ -378,7 +377,7 @@ func (jp *JavacParser) ident() *util.Name {
 			jp.nextToken()
 			return _name
 		}
-	} else if jp.tk == common.TOKEN_KIND_THIS {
+	} else if jp.tk == THIS {
 		if allowThisIdent {
 			_name := jp.token.GetName()
 			jp.nextToken()
@@ -388,13 +387,13 @@ func (jp *JavacParser) ident() *util.Name {
 			jp.nextToken()
 			return jp.names.Error
 		}
-	} else if jp.tk == common.TOKEN_KIND_UNDERSCORE {
+	} else if jp.tk == UNDERSCORE {
 		jp.warn(jp.token.Pos(), "underscore.as.identifier")
 		_name := jp.token.GetName()
 		jp.nextToken()
 		return _name
 	} else {
-		jp.accept(common.TOKEN_KIND_IDENTIFIER)
+		jp.accept(IDENTIFIER)
 		return jp.names.Error
 	}
 }
@@ -423,9 +422,9 @@ func (jp *JavacParser) term() *TreeNode {
 
 	e := jp.term1()
 	if (jp.mode&term_mode_expr) != 0 &&
-		jp.tk == common.TOKEN_KIND_EQ ||
-		jp.tk >= common.TOKEN_KIND_PLUSEQ &&
-			jp.tk <= common.TOKEN_KIND_GTGTGTEQ {
+		jp.tk == EQ ||
+		jp.tk >= PLUSEQ &&
+			jp.tk <= GTGTGTEQ {
 		return jp.termRest(e)
 	} else {
 		return e
@@ -440,7 +439,7 @@ func (jp *JavacParser) term1() *TreeNode {
 
 	e := jp.term2()
 	if (jp.mode&term_mode_expr) != 0 &&
-		jp.tk == common.TOKEN_KIND_QUES { // ？号表达式
+		jp.tk == QUES { // ？号表达式
 		jp.mode = term_mode_expr
 		return jp.term1Rest(e)
 	} else {
@@ -510,9 +509,46 @@ func (jp *JavacParser) term3() *TreeNode {
 	// List<JCExpression> typeArgs = typeArgumentsOpt(EXPR);
 	switch jp.tk {
 
-	case common.TOKEN_KIND_INT_LITERAL, common.TOKEN_KIND_LONG_LITERAL, common.TOKEN_KIND_FLOAT_LITERAL,
-		common.TOKEN_KIND_DOUBLE_LITERAL, common.TOKEN_KIND_CHAR_LITERAL, common.TOKEN_KIND_STRING_LITERAL,
-		common.TOKEN_KIND_TRUE, common.TOKEN_KIND_FALSE, common.TOKEN_KIND_NULL: // 最简单的 boolean a = false;
+	case QUES: // ?
+		// todo ? 表达式
+	case PLUSPLUS, SUBSUB, BANG,
+		TILDE, PLUS, SUB: // ++ -- ! ~ + -
+		if typeArgs == nil && (jp.mode&term_mode_expr) != 0 { // 说明当前是 表达式模式
+			preTk := jp.tk
+			jp.nextToken()
+			jp.mode = term_mode_expr
+			if preTk == SUB &&
+				(jp.tk == INTLITERAL || jp.tk == LONGLITERAL) &&
+				jp.token.GetRadix() == 10 { // int 或者 long 类型的 例如： -10 -100L 这种是一个负数的常量，词法分析
+				// 没有识别出来，在这里做的识别
+				jp.mode = term_mode_expr
+				t = jp.literal(jp.names.Hyphen, jp.token.Pos())
+			} else {
+				t = jp.term3()                          // 这里还是递归
+				res := NewUnaryTreeNode(unOpTag(jp.tk)) // 一元操作符号 针对一个元素进行操作
+				res.Append(t)
+				return res
+			}
+		} else {
+			return jp.illegal("无效的 ++ -- ! ~ + - 等表达式")
+		}
+	case LPAREN: // (
+		if typeArgs == nil && (jp.mode&term_mode_expr) != 0 { // 说明当前是 表达式模式
+			var pres parenthesesResult
+			pres = jp.analyzeParens() // 分析下括号的作用
+			switch pres {
+			case CAST:
+			case IMPLICIT_LAMBDA:
+			case EXPLICIT_LAMBDA:
+			default:
+
+			}
+		}
+	case THIS: // this
+
+	case INTLITERAL, LONGLITERAL, FLOATLITERAL,
+		DOUBLELITERAL, CHARLITERAL, STRINGLITERAL,
+		TRUE, FALSE, NULL: // 最简单的 boolean a = false;
 
 		if (jp.mode & term_mode_expr) != 0 {
 			jp.mode = term_mode_expr
@@ -521,18 +557,18 @@ func (jp *JavacParser) term3() *TreeNode {
 			return jp.illegal("无效的表达式")
 		}
 
-	case common.TOKEN_KIND_BYTE, common.TOKEN_KIND_SHORT, common.TOKEN_KIND_CHAR, common.TOKEN_KIND_INT,
-		common.TOKEN_KIND_LONG, common.TOKEN_KIND_FLOAT, common.TOKEN_KIND_DOUBLE, common.TOKEN_KIND_BOOLEAN: // 最简单的 boolean a = false;
+	case BYTE, SHORT, CHAR, INT,
+		LONG, FLOAT, DOUBLE, BOOLEAN: // 最简单的 boolean a = false;
 
 		// emptyAnnotations := ast.GetEmptyTreeNode()
 		// primitiveTypeTree := jp.basicType()
 		// t = jp.bracketsSuffix(jp.bracketsOpt(primitiveTypeTree.AbstractJCExpression, emptyAnnotations))
 		t = GetEmptyTreeNode()
-	case common.TOKEN_KIND_UNDERSCORE, common.TOKEN_KIND_IDENTIFIER,
-		common.TOKEN_KIND_ASSERT, common.TOKEN_KIND_ENUM: //
+	case UNDERSCORE, IDENTIFIER,
+		ASSERT, ENUM: //
 
 		//  ->  lambda表达式 如果前面一个token是 -> 表示接下来要解析的是lambda表达式
-		if jp.termExpr() && jp.peekToken(common.TOKEN_KIND_ARROW) {
+		if jp.termExpr() && jp.peekToken(ARROW) {
 			return jp.lambdaExpressionOrStatement(false, false, pos)
 		} else {
 			// t = jp.toP(jp.F.At(pos).Identify(jp.ident()))
@@ -544,14 +580,14 @@ func (jp *JavacParser) term3() *TreeNode {
 				// need to report an error later if LBRACKET is for array
 				// index access rather than array creation level 可以是 @Some [] ，如果是 @Some [1] 就是错误的
 				if len(*annos) > 0 &&
-					jp.tk != common.TOKEN_KIND_LBRACKET &&
-					jp.tk != common.TOKEN_KIND_ELLIPSIS {
+					jp.tk != LBRACKET &&
+					jp.tk != ELLIPSIS {
 					return jp.illegal("无效的对数组的注解")
 				}
 				switch jp.tk {
-				case common.TOKEN_KIND_LBRACKET: // [
+				case LBRACKET: // [
 					jp.nextToken()
-					if jp.tk == common.TOKEN_KIND_RBRACKET {
+					if jp.tk == RBRACKET {
 						// 读到了 []
 						fmt.Println("读到了 [] ignore ..................")
 					} else {
@@ -567,10 +603,10 @@ func (jp *JavacParser) term3() *TreeNode {
 							t = GetEmptyTreeNode()
 						}
 					}
-				case common.TOKEN_KIND_LPAREN: // (
-				case common.TOKEN_KIND_DOT: // .
-				case common.TOKEN_KIND_ELLIPSIS: // ... 多个参数
-				case common.TOKEN_KIND_LT: // <
+				case LPAREN: // (
+				case DOT: // .
+				case ELLIPSIS: // ... 多个参数
+				case LT: // <
 				default:
 					break loop
 				}
@@ -584,6 +620,26 @@ func (jp *JavacParser) term3() *TreeNode {
 	return jp.term3Rest(t, typeArgs)
 }
 
+func unOpTag(tk TokenKind) TreeNodeTag {
+
+	switch tk {
+	case PLUS:
+		return Tree_node_tag_pos
+	case SUB:
+		return Tree_node_tag_neg
+	case BANG:
+		return Tree_node_tag_not
+	case TILDE:
+		return Tree_node_tag_compl
+	case PLUSPLUS:
+		return Tree_node_tag_preinc
+	case SUBSUB:
+		return Tree_node_tag_predec
+	default:
+		return Tree_node_tag_no_tag
+	}
+}
+
 func (jp *JavacParser) termExpr() bool {
 
 	return (jp.mode & term_mode_expr) != 0
@@ -595,24 +651,24 @@ func (jp *JavacParser) termExpr() bool {
 func (jp *JavacParser) termRest(t *TreeNode) *TreeNode {
 
 	switch jp.tk {
-	case common.TOKEN_KIND_EQ: // = 表示是赋值语句
+	case EQ: // = 表示是赋值语句
 		// pos := jp.token.Pos()
 		jp.nextToken()
 		jp.mode = term_mode_expr
 		t1 := jp.term() // 这里就是递归了 结果值也可以是一个表达式，例如 int a = sum(10);
 		// return jp.toP(jp.F.At(pos).Assign(t, t1).AbstractJCExpression)
 		return t1
-	case common.TOKEN_KIND_PLUSEQ, // ++ -- 这样的，例如 a++
-		common.TOKEN_KIND_SUBEQ,
-		common.TOKEN_KIND_STAREQ,
-		common.TOKEN_KIND_SLASHEQ,
-		common.TOKEN_KIND_PERCENTEQ,
-		common.TOKEN_KIND_AMPEQ,
-		common.TOKEN_KIND_BAREQ,
-		common.TOKEN_KIND_CARETEQ,
-		common.TOKEN_KIND_LTLTEQ,
-		common.TOKEN_KIND_GTGTEQ,
-		common.TOKEN_KIND_GTGTGTEQ:
+	case PLUSEQ, // ++ -- 这样的，例如 a++
+		SUBEQ,
+		STAREQ,
+		SLASHEQ,
+		PERCENTEQ,
+		AMPEQ,
+		BAREQ,
+		CARETEQ,
+		LTLTEQ,
+		GTGTEQ,
+		GTGTGTEQ:
 		// pos := jp.token.Pos()
 		// tk := jp.tk
 		jp.nextToken()
@@ -629,11 +685,11 @@ func (jp *JavacParser) termRest(t *TreeNode) *TreeNode {
  */
 func (jp *JavacParser) term1Rest(t *TreeNode) *TreeNode {
 
-	if jp.tk == common.TOKEN_KIND_QUES {
+	if jp.tk == QUES {
 		// pos := jp.token.Pos()
 		jp.nextToken()
 		// t1 := jp.term()
-		jp.accept(common.TOKEN_KIND_COLON) // 期望下一个字符是冒号 (:)
+		jp.accept(COLON) // 期望下一个字符是冒号 (:)
 		t2 := jp.term1()
 		// return jp.F.At(pos).Conditional(t, t1, t2).AbstractJCExpression
 		return t2
@@ -649,7 +705,7 @@ func (jp *JavacParser) term2Rest(t *TreeNode, precedences int) *TreeNode {
 	return t
 }
 
-func prec(tk common.TokenKind) int {
+func prec(tk TokenKind) int {
 
 	// treeTag := opTag(tk)
 	// if treeTag != jc.TREE_TAG_NO_TAG {
@@ -662,70 +718,70 @@ func prec(tk common.TokenKind) int {
 	return -1
 }
 
-func toOpTag(tk common.TokenKind) TreeNodeTag {
+func toOpTag(tk TokenKind) TreeNodeTag {
 
 	switch tk {
-	case common.TOKEN_KIND_BARBAR:
+	case BARBAR:
 		return Tree_node_tag_or
-	case common.TOKEN_KIND_AMPAMP:
+	case AMPAMP:
 		return Tree_node_tag_and
-	case common.TOKEN_KIND_BAR:
+	case BAR:
 		return Tree_node_tag_bitor
-	case common.TOKEN_KIND_BAREQ:
+	case BAREQ:
 		return Tree_node_tag_bitor_asg
-	case common.TOKEN_KIND_CARET:
+	case CARET:
 		return Tree_node_tag_bitxor
-	case common.TOKEN_KIND_CARETEQ:
+	case CARETEQ:
 		return Tree_node_tag_bitxor_asg
-	case common.TOKEN_KIND_AMP:
+	case AMP:
 		return Tree_node_tag_bitand
-	case common.TOKEN_KIND_AMPEQ:
+	case AMPEQ:
 		return Tree_node_tag_bitand_asg
-	case common.TOKEN_KIND_EQEQ:
+	case EQEQ:
 		return Tree_node_tag_eq
-	case common.TOKEN_KIND_BANGEQ:
+	case BANGEQ:
 		return Tree_node_tag_ne
-	case common.TOKEN_KIND_LT:
+	case LT:
 		return Tree_node_tag_lt
-	case common.TOKEN_KIND_GT:
+	case GT:
 		return Tree_node_tag_gt
-	case common.TOKEN_KIND_LTEQ:
+	case LTEQ:
 		return Tree_node_tag_le
-	case common.TOKEN_KIND_GTEQ:
+	case GTEQ:
 		return Tree_node_tag_ge
-	case common.TOKEN_KIND_LTLT:
+	case LTLT:
 		return Tree_node_tag_sl
-	case common.TOKEN_KIND_LTLTEQ:
+	case LTLTEQ:
 		return Tree_node_tag_sl_asg
-	case common.TOKEN_KIND_GTGT:
+	case GTGT:
 		return Tree_node_tag_sr
-	case common.TOKEN_KIND_GTGTEQ:
+	case GTGTEQ:
 		return Tree_node_tag_sr_asg
-	case common.TOKEN_KIND_GTGTGT:
+	case GTGTGT:
 		return Tree_node_tag_usr
-	case common.TOKEN_KIND_GTGTGTEQ:
+	case GTGTGTEQ:
 		return Tree_node_tag_usr_asg
-	case common.TOKEN_KIND_PLUS:
+	case PLUS:
 		return Tree_node_tag_plus
-	case common.TOKEN_KIND_PLUSEQ:
+	case PLUSEQ:
 		return Tree_node_tag_plus_asg
-	case common.TOKEN_KIND_SUB:
+	case SUB:
 		return Tree_node_tag_minus
-	case common.TOKEN_KIND_SUBEQ:
+	case SUBEQ:
 		return Tree_node_tag_minus_asg
-	case common.TOKEN_KIND_STAR:
+	case STAR:
 		return Tree_node_tag_mul
-	case common.TOKEN_KIND_STAREQ:
+	case STAREQ:
 		return Tree_node_tag_mul_asg
-	case common.TOKEN_KIND_SLASH:
+	case SLASH:
 		return Tree_node_tag_div
-	case common.TOKEN_KIND_SLASHEQ:
+	case SLASHEQ:
 		return Tree_node_tag_div_asg
-	case common.TOKEN_KIND_PERCENT:
+	case PERCENT:
 		return Tree_node_tag_mod
-	case common.TOKEN_KIND_PERCENTEQ:
+	case PERCENTEQ:
 		return Tree_node_tag_mod_asg
-	case common.TOKEN_KIND_INSTANCEOF:
+	case INSTANCEOF:
 		return Tree_node_tag_typetest
 	default:
 		return Tree_node_tag_no_tag
@@ -739,36 +795,36 @@ func (jp *JavacParser) skip(stopAtImport bool, stopAtMemberDecl bool,
 	for {
 		switch jp.tk {
 		case
-			common.TOKEN_KIND_SEMI:
+			SEMI:
 			jp.nextToken()
 			return
-		case common.TOKEN_KIND_PUBLIC, common.TOKEN_KIND_FINAL, common.TOKEN_KIND_ABSTRACT,
-			common.TOKEN_KIND_MONKEYS_AT, common.TOKEN_KIND_EOF, common.TOKEN_KIND_CLASS,
-			common.TOKEN_KIND_INTERFACE, common.TOKEN_KIND_ENUM:
+		case PUBLIC, FINAL, ABSTRACT,
+			MONKEYS_AT, EOF, CLASS,
+			INTERFACE, ENUM:
 			return
-		case common.TOKEN_KIND_IMPORT:
+		case IMPORT:
 			if stopAtImport {
 				return
 			}
 			break
-		case common.TOKEN_KIND_LBRACE, common.TOKEN_KIND_RBRACE, common.TOKEN_KIND_PRIVATE,
-			common.TOKEN_KIND_PROTECTED, common.TOKEN_KIND_STATIC, common.TOKEN_KIND_TRANSIENT,
-			common.TOKEN_KIND_NATIVE, common.TOKEN_KIND_VOLATILE, common.TOKEN_KIND_SYNCHRONIZED,
-			common.TOKEN_KIND_STRICTFP, common.TOKEN_KIND_LT, common.TOKEN_KIND_BYTE, common.TOKEN_KIND_SHORT,
-			common.TOKEN_KIND_CHAR, common.TOKEN_KIND_INT, common.TOKEN_KIND_LONG, common.TOKEN_KIND_FLOAT,
-			common.TOKEN_KIND_DOUBLE, common.TOKEN_KIND_BOOLEAN, common.TOKEN_KIND_VOID:
+		case LBRACE, RBRACE, PRIVATE,
+			PROTECTED, STATIC, TRANSIENT,
+			NATIVE, VOLATILE, SYNCHRONIZED,
+			STRICTFP, LT, BYTE, SHORT,
+			CHAR, INT, LONG, FLOAT,
+			DOUBLE, BOOLEAN, VOID:
 			if stopAtMemberDecl {
 				return
 			}
 			break
-		case common.TOKEN_KIND_UNDERSCORE, common.TOKEN_KIND_IDENTIFIER:
+		case UNDERSCORE, IDENTIFIER:
 			if stopAtIdentifier {
 				return
 			}
 			break
-		case common.TOKEN_KIND_CASE, common.TOKEN_KIND_DEF, common.TOKEN_KIND_IF, common.TOKEN_KIND_FOR, common.TOKEN_KIND_WHILE,
-			common.TOKEN_KIND_DO, common.TOKEN_KIND_TRY, common.TOKEN_KIND_SWITCH, common.TOKEN_KIND_RETURN, common.TOKEN_KIND_THROW, common.TOKEN_KIND_BREAK,
-			common.TOKEN_KIND_CONTINUE, common.TOKEN_KIND_ELSE, common.TOKEN_KIND_FINALLY, common.TOKEN_KIND_CATCH:
+		case CASE, DEF, IF, FOR, WHILE,
+			DO, TRY, SWITCH, RETURN, THROW, BREAK,
+			CONTINUE, ELSE, FINALLY, CATCH:
 			if stopAtStatement {
 				return
 			}
@@ -788,15 +844,15 @@ func (jp *JavacParser) importDeclaration() *TreeNode {
 	jp.nextToken()
 	importStatic := false
 	// 这里先允许 import static com.husd; 这样的语法
-	if jp.tk == common.TOKEN_KIND_STATIC {
+	if jp.tk == STATIC {
 		importStatic = true
 		jp.nextToken()
 	}
 	var pid *TreeNode = GetEmptyTreeNode()
 	for {
 		pos1 := jp.token.Pos()
-		jp.accept(common.TOKEN_KIND_DOT)
-		if jp.tk == common.TOKEN_KIND_STAR {
+		jp.accept(DOT)
+		if jp.tk == STAR {
 			pid = GetEmptyTreeNode()
 			pos1++
 			jp.nextToken()
@@ -805,11 +861,11 @@ func (jp *JavacParser) importDeclaration() *TreeNode {
 			pid = GetEmptyTreeNode()
 			pos1++
 		}
-		if jp.tk != common.TOKEN_KIND_DOT {
+		if jp.tk != DOT {
 			break
 		}
 	}
-	jp.accept(common.TOKEN_KIND_SEMI)
+	jp.accept(SEMI)
 	if compiler.DEBUG {
 		fmt.Println("import static", importStatic, " pid:", pid, pos)
 	}
@@ -876,15 +932,15 @@ func (jp *JavacParser) typeAnnotationsOpt() *[]TreeNode {
 func (jp *JavacParser) bracketsSuffix(opt *TreeNode) *TreeNode {
 
 	if (jp.mode&term_mode_expr) != 0 &&
-		jp.tk == common.TOKEN_KIND_DOT {
+		jp.tk == DOT {
 		jp.mode = term_mode_expr
 		// newPos := jp.token.Pos()
 		jp.nextToken()
-		jp.accept(common.TOKEN_KIND_CLASS)
+		jp.accept(CLASS)
 		// TODO
 	} else if (jp.mode & term_mode_type) != 0 {
 
-	} else if jp.tk != common.TOKEN_KIND_COLCOL {
+	} else if jp.tk != COLCOL {
 		jp.syntaxError(jp.token.Pos(), "期望.class")
 	}
 	return opt
@@ -893,7 +949,7 @@ func (jp *JavacParser) bracketsSuffix(opt *TreeNode) *TreeNode {
 /**
  * 向前看0个token，是不是指定的token，是就返回true
  */
-func (jp *JavacParser) peekToken(tk common.TokenKind) bool {
+func (jp *JavacParser) peekToken(tk TokenKind) bool {
 
 	lookahead := 0
 	return jp.peekTokenLookahead(lookahead, tk)
@@ -902,9 +958,23 @@ func (jp *JavacParser) peekToken(tk common.TokenKind) bool {
 /**
  * 向前看指定数量个token，是不是指定的token，是就返回true
  */
-func (jp *JavacParser) peekTokenLookahead(lookahead int, tk common.TokenKind) bool {
+func (jp *JavacParser) peekTokenLookahead(lookahead int, tk TokenKind) bool {
 
-	return common.AcceptTokenKind(tk, jp.S.LookAheadByIndex(lookahead+1).GetTokenKind())
+	return AcceptTokenKind(tk, jp.S.LookAheadByIndex(lookahead+1).GetTokenKind())
+}
+
+/**
+ * 传一个返回bool类型的filter函数，来接纳多个token
+ */
+func (jp *JavacParser) peekTokenLookaheadByFilter(lookahead int, f func(TokenKind) bool) bool {
+
+	return f(jp.S.LookAheadByIndex(lookahead + 1).GetTokenKind())
+}
+
+// 宽泛的标识符号
+func acceptLaxIdentifier(t TokenKind) bool {
+	return t == IDENTIFIER || t == UNDERSCORE ||
+		t == ASSERT || t == ENUM
 }
 
 // 暂时不实现lambda表达式 todo lambda
@@ -913,7 +983,7 @@ func (jp *JavacParser) lambdaExpressionOrStatement(hasParens bool, explicitParam
 	panic("implement me lambda")
 }
 
-//记录 pos 到 endPosTable
+// 记录 pos 到 endPosTable
 func (jp *JavacParser) toP(expr *TreeNode) *TreeNode {
 
 	// jp.endPosTable.toP(expr.AbstractJCTree)
@@ -931,7 +1001,10 @@ func (jp *JavacParser) to(expr *TreeNode) *TreeNode {
  */
 func (jp *JavacParser) typeArgumentsOpt(pm parseMode) *[]TreeNode {
 
-	if jp.tk == common.TOKEN_KIND_LT {
+	if true {
+		return nil
+	}
+	if jp.tk == LT {
 		jp.checkGenerics()
 		if (jp.mode&pm) == 0 ||
 			(jp.mode&term_mode_noparams) != 0 {
@@ -971,11 +1044,11 @@ func (jp *JavacParser) term3Rest(t *TreeNode, args *[]TreeNode) *TreeNode {
 func (jp *JavacParser) parseBlock(father *TreeNode) {
 
 	res := GetEmptyTreeNode()
-	for jp.tk != common.TOKEN_KIND_RBRACE {
+	for jp.tk != RBRACE {
 		res = jp.ParseStatement()
 		father.Append(res)
 	}
-	jp.accept(common.TOKEN_KIND_RBRACE) // 读取到 }
+	jp.accept(RBRACE) // 读取到 }
 }
 
 /**
@@ -994,10 +1067,10 @@ func (jp *JavacParser) parseIf() *TreeNode {
 	// if (true) {} else {}
 	// if (true) {}
 	// if (true) {} else if (a == 1) {} else {}
-	hasElse := jp.acceptMaybe(common.TOKEN_KIND_ELSE)
+	hasElse := jp.acceptMaybe(ELSE)
 	if hasElse {
 		falsePart := NewBlockTreeNode(jp.token)
-		hasIf := jp.acceptMaybe(common.TOKEN_KIND_IF)
+		hasIf := jp.acceptMaybe(IF)
 		if hasIf {
 			falsePart.Append(jp.parseIf())
 		} else {
@@ -1016,20 +1089,20 @@ func (jp *JavacParser) parseCompareExpression() TreeNodeTag {
 
 	res := Tree_node_tag_erroneous
 	switch jp.tk {
-	case common.TOKEN_KIND_EQEQ:
+	case EQEQ:
 		res = Tree_node_tag_eq
-	case common.TOKEN_KIND_BANGEQ:
+	case BANGEQ:
 		res = Tree_node_tag_ne
-	case common.TOKEN_KIND_LTEQ:
+	case LTEQ:
 		res = Tree_node_tag_le
-	case common.TOKEN_KIND_GTEQ:
+	case GTEQ:
 		res = Tree_node_tag_ge
-	case common.TOKEN_KIND_LT:
+	case LT:
 		res = Tree_node_tag_lt
-	case common.TOKEN_KIND_GT:
+	case GT:
 		res = Tree_node_tag_gt
 	default:
-		//error
+		// error
 		jp.reportSyntaxError(jp.token.Pos(), "错误的比较符号", jp.tk)
 	}
 	jp.nextToken()
@@ -1049,7 +1122,7 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 	// a == 10 | 10 == a
 	res := GetEmptyTreeNode()
 	switch jp.tk {
-	case common.TOKEN_KIND_IDENTIFIER:
+	case IDENTIFIER:
 		left := NewIdentifyTreeNode(jp.token)
 		jp.nextToken()
 		opC := jp.isOpCompare()
@@ -1061,9 +1134,9 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 		right := jp.parseExpression1()
 		res.Append(left)
 		res.Append(right)
-	case common.TOKEN_KIND_INT_LITERAL, common.TOKEN_KIND_LONG_LITERAL, common.TOKEN_KIND_FLOAT_LITERAL,
-		common.TOKEN_KIND_DOUBLE_LITERAL, common.TOKEN_KIND_CHAR_LITERAL, common.TOKEN_KIND_STRING_LITERAL,
-		common.TOKEN_KIND_TRUE, common.TOKEN_KIND_FALSE, common.TOKEN_KIND_NULL:
+	case INTLITERAL, LONGLITERAL, FLOATLITERAL,
+		DOUBLELITERAL, CHARLITERAL, STRINGLITERAL,
+		TRUE, FALSE, NULL:
 		// 这里都是字面量类型 需要注意，包含了 true false null 这3个，不要漏了 暂时先这么写 为了不报错 TODO
 		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, 100)
 		jp.nextToken()
@@ -1079,7 +1152,7 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
  */
 func (jp *JavacParser) parseIfElseStatement() *TreeNode {
 
-	hasLeftBrace := jp.acceptMaybe(common.TOKEN_KIND_LBRACE)
+	hasLeftBrace := jp.acceptMaybe(LBRACE)
 	// 如果有左括号 { ，就必须有右括号 }
 	if hasLeftBrace {
 		stat := NewBlockTreeNode(jp.token)
@@ -1095,31 +1168,119 @@ func (jp *JavacParser) parseIfElseStatement() *TreeNode {
  */
 func (jp *JavacParser) parExpression() *TreeNode {
 
-	jp.accept(common.TOKEN_KIND_LPAREN)
+	jp.accept(LPAREN)
 	res := jp.ParseExpression()
-	jp.accept(common.TOKEN_KIND_RPAREN)
+	jp.accept(RPAREN)
 	return res
 }
 
+/**
+ * If we see an identifier followed by a '&lt;' it could be an unbound
+ * method reference or a binary expression. To disambiguate, look for a
+ * matching '&gt;' and see if the subsequent terminal is either '.' or '::'.
+ *
+ * 主要讨论 () 的作用，目前括号主要有4个用途，正好是 parenthesesResult
+ * 对应的值
+ */
+func (jp *JavacParser) analyzeParens() parenthesesResult {
+
+	depth := 0
+	typeCast := false
+	for lookahead := 0; ; lookahead++ { // 预测分析法，看看之后的token是什么类型，来决定
+		currentTk := jp.S.LookAheadByIndex(lookahead).GetTokenKind()
+		switch currentTk {
+		case COMMA: // , 括号后面跟着逗号是什么语法？
+			typeCast = true
+		case EXTENDS, DOT,
+			SUPER, AMP: // extends . super & 忽略
+			break
+		case QUES:
+			if jp.peekTokenLookahead(lookahead, EXTENDS) ||
+				jp.peekTokenLookahead(lookahead, SUPER) {
+				typeCast = true
+			}
+		case BYTE, SHORT, INT,
+			LONG, FLOAT,
+			DOUBLE, BOOLEAN, CHAR: // 这几个基本类型的关键字
+			// ( int a = 10 ) 这种类型
+			if jp.peekTokenLookahead(lookahead, RPAREN) {
+				// Type, ')' -> cast 类型转换
+				return CAST
+			} else if jp.peekTokenLookaheadByFilter(lookahead, acceptLaxIdentifier) { // 这里把函数的指针传过去
+				// Type, Identifier/'_'/'assert'/'enum' -> explicit lambda
+				return EXPLICIT_LAMBDA
+			}
+		case LPAREN: // ((
+			if lookahead != 0 {
+				// '(' in a non-starting position -> parens
+				return PARENS
+			} else if jp.peekTokenLookahead(lookahead, RPAREN) {
+				// () -> explicit lambda 明确的lambda表达式
+				return EXPLICIT_LAMBDA
+			}
+		case RPAREN: // )
+			// if we have seen something that looks like a type,
+			// then it's a cast expression  这样的：(int)100L 两个括号的中间，有一个类型，那么就是强制类型转换
+			if typeCast {
+				return CAST
+			}
+			// otherwise, disambiguate cast vs. parenthesized expression
+			// based on subsequent token.
+			switch jp.S.LookAheadByIndex(lookahead + 1).GetTokenKind() {
+			case BANG, TILDE,
+				LPAREN, THIS, SUPER,
+				INTLITERAL, LONGLITERAL, FLOATLITERAL,
+				DOUBLELITERAL, CHARLITERAL, STRINGLITERAL,
+				TRUE, FALSE, NULL,
+				NEW, IDENTIFIER, ASSERT, ENUM, UNDERSCORE,
+				BYTE, SHORT, CHAR, INT,
+				LONG, FLOAT, DOUBLE, BOOLEAN, VOID:
+				return CAST
+			default:
+				return PARENS
+			}
+		case UNDERSCORE, ASSERT,
+			ENUM, IDENTIFIER:
+		case FINAL, ELLIPSIS:
+			return EXPLICIT_LAMBDA
+		case MONKEYS_AT:
+			// 先不管注解
+		case LBRACKET:
+		case LT:
+			depth++
+		case GTGTGT:
+			depth--
+		case GTGT:
+			depth--
+		case GT:
+		default:
+			return PARENS
+		}
+	}
+	// goto outer
+	// todo delete later
+	return CAST
+}
+
 // 返回none就是没有类型
-func typeTag(tk common.TokenKind) *code.TypeTag {
+func typeTag(tk TokenKind) *code.TypeTag {
 
 	switch tk {
-	case common.TOKEN_KIND_BYTE:
+	case BYTE:
 		return code.TYPE_TAG_BYTE
-	case common.TOKEN_KIND_CHAR:
+	case CHAR:
 		return code.TYPE_TAG_CHAR
-	case common.TOKEN_KIND_SHORT:
+	case SHORT:
 		return code.TYPE_TAG_SHORT
-	case common.TOKEN_KIND_INT:
+	case INT:
 		return code.TYPE_TAG_INT
-	case common.TOKEN_KIND_LONG:
+	case LONG:
 		return code.TYPE_TAG_LONG
-	case common.TOKEN_KIND_FLOAT:
+	case FLOAT:
 		return code.TYPE_TAG_FLOAT
-	case common.TOKEN_KIND_DOUBLE:
+	case DOUBLE:
 		return code.TYPE_TAG_DOUBLE
-	case common.TOKEN_KIND_BOOLEAN:
+	case BOOLEAN:
 		return code.TYPE_TAG_BOOLEAN
 	default:
 		return code.TYPE_TAG_NONE
