@@ -963,6 +963,12 @@ func (jp *JavacParser) peekTokenLookahead(lookahead int, tk TokenKind) bool {
 	return AcceptTokenKind(tk, jp.S.LookAheadByIndex(lookahead+1).GetTokenKind())
 }
 
+func (jp *JavacParser) peekTokenLookahead2(lookahead int, tk1 TokenKind, tk2 TokenKind) bool {
+
+	return AcceptTokenKind(tk1, jp.S.LookAheadByIndex(lookahead+1).GetTokenKind()) &&
+		AcceptTokenKind(tk2, jp.S.LookAheadByIndex(lookahead+2).GetTokenKind())
+}
+
 /**
  * 传一个返回bool类型的filter函数，来接纳多个token
  */
@@ -1181,6 +1187,9 @@ func (jp *JavacParser) parExpression() *TreeNode {
  *
  * 主要讨论 () 的作用，目前括号主要有4个用途，正好是 parenthesesResult
  * 对应的值
+ * 1、类型转换 int a = (short)1;
+ * 2、lamdba表达式 MathOperation division = (int a, int b) -> a / b;
+ * 3、括号表明优先级的，例如： a = (b + 10) * 100
  */
 func (jp *JavacParser) analyzeParens() parenthesesResult {
 
@@ -1189,7 +1198,7 @@ func (jp *JavacParser) analyzeParens() parenthesesResult {
 	for lookahead := 0; ; lookahead++ { // 预测分析法，看看之后的token是什么类型，来决定
 		currentTk := jp.S.LookAheadByIndex(lookahead).GetTokenKind()
 		switch currentTk {
-		case COMMA: // , 括号后面跟着逗号是什么语法？
+		case COMMA: // , 括号后面跟着逗号是什么语法？ MathOperation subtraction = (a, b) -> a - b;
 			typeCast = true
 		case EXTENDS, DOT,
 			SUPER, AMP: // extends . super & 忽略
@@ -1241,10 +1250,41 @@ func (jp *JavacParser) analyzeParens() parenthesesResult {
 			}
 		case UNDERSCORE, ASSERT,
 			ENUM, IDENTIFIER:
+			if jp.peekTokenLookaheadByFilter(lookahead, acceptLaxIdentifier) {
+				// Identifier, Identifier/'_'/'assert'/'enum' -> explicit lambda
+				return EXPLICIT_LAMBDA
+			} else if jp.peekTokenLookahead2(lookahead, RPAREN, ARROW) {
+				// Identifier, ')' '->' -> implicit lambda
+				return IMPLICIT_LAMBDA
+			}
+			// 确认不是类型转换了
+			typeCast = false
 		case FINAL, ELLIPSIS:
+			//those can only appear in explicit lambdas
 			return EXPLICIT_LAMBDA
 		case MONKEYS_AT:
 			// 先不管注解
+			typeCast = true
+			lookahead = lookahead + 1 // 跳过@符号 进入注解解析
+			for jp.peekTokenLookahead(lookahead, DOT) {
+				lookahead = lookahead + 2
+			}
+			if jp.peekTokenLookahead(lookahead, LPAREN) {
+				lookahead++
+				//skip annotation values
+				var nesting int = 0
+				for ; ; lookahead++ {
+					tk2 := jp.S.LookAheadByIndex(lookahead).GetTokenKind()
+					switch tk2 {
+					case EOF:
+						return PARENS
+					case LPAREN:
+						nesting++
+					case RPAREN:
+
+					}
+				}
+			}
 		case LBRACKET:
 		case LT:
 			depth++
