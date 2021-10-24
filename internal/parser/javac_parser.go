@@ -28,6 +28,16 @@ type JavacParser struct {
 
 	allowGenerics bool // 是否允许泛型
 
+	/**
+	*如果解析器注意到额外的注释，那么它会立即
+	*发出错误（如果此变量为false）或放置额外的
+	*变量类型AnnotationSpushedBack中的注释（如果此变量
+	*是真的）。
+	 */
+	permitTypeAnnotationsPushBack bool
+	/** Type annotations that have already been read but have not yet been used. **/
+	typeAnnotationsPushedBack *[]*TreeNode
+
 	mode     parseMode // 当前正在进行转换的模式
 	lastMode parseMode // 上一个模式 lastMode = 2 then mode = 1  from 1 to 2
 }
@@ -43,6 +53,7 @@ func NewJavacParser(path string, context *util.Context) *JavacParser {
 	parser.symbolTable = InstanceSymbolTable(context)
 	parser.source = code.JDK8
 	parser.allowGenerics = code.AllowGenerics(parser.source)
+	parser.permitTypeAnnotationsPushBack = false
 
 	return &parser
 }
@@ -56,6 +67,7 @@ func NewJavacParserWithString(str string, context *util.Context) *JavacParser {
 	parser.endPosTable = NewSimpleEndPosTable(&parser)
 	parser.names = util.InstanceNames(context)
 	parser.symbolTable = InstanceSymbolTable(context)
+	parser.permitTypeAnnotationsPushBack = false
 
 	return &parser
 }
@@ -107,6 +119,7 @@ func (jp *JavacParser) ParseExpression() *TreeNode {
 	//
 	// term有条件得意思 泛指Java里的表达式条件
 	return jp.termWithMode(term_mode_expr)
+	//return jp.term01()
 }
 
 func (jp *JavacParser) termWithMode(newMode parseMode) *TreeNode {
@@ -193,23 +206,23 @@ func (jp *JavacParser) literal(pre *util.Name, pos int) *TreeNode {
 		if err != nil {
 			jp.error(jp.token.Pos(), "int 类型数字太大溢出了")
 		}
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_INT, num)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_INT, num, tt_int_literal)
 	case LONGLITERAL:
 		num, err := util.String2long(jp.token.GetStringVal(), jp.token.GetRadix())
 		if err != nil {
 			jp.error(jp.token.Pos(), "long 类型数字太大溢出了")
 		}
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, num)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, num, tt_long_literal)
 	case TRUE:
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 1)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 1, tt_boolean_literal)
 	case FALSE:
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 0)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_BOOLEAN, 0, tt_boolean_literal)
 	case NULL:
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_NONE, nil)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_NONE, nil, tt_null_literal)
 	case STRINGLITERAL:
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CLASS, jp.token.GetStringVal())
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CLASS, jp.token.GetStringVal(), tt_string_literal)
 	case CHARLITERAL:
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CHAR, jp.token.GetStringVal()[0])
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_CHAR, jp.token.GetStringVal()[0], tt_char_literal)
 	default:
 		res = NewErrorTreeNode(jp.token.Pos(), "不支持的常量类型")
 	}
@@ -502,17 +515,14 @@ func (jp *JavacParser) term3() *TreeNode {
 
 	pos := jp.token.Pos()
 	var t *TreeNode
-	typeArgs := jp.typeArgumentsOpt(term_mode_expr)
-
 	// 处理这样的范型表达式的，这里先忽略范型
 	// TypeArguments  = "<" TypeArgument {"," TypeArgument} ">"
 	// List<JCExpression> typeArgs = typeArgumentsOpt(EXPR);
+	typeArgs := jp.typeArgumentsOpt(term_mode_expr)
 	switch jp.tk {
-
 	case QUES: // ?
 		// todo ? 表达式
-	case PLUSPLUS, SUBSUB, BANG,
-		TILDE, PLUS, SUB: // ++ -- ! ~ + -
+	case PLUSPLUS, SUBSUB, BANG, TILDE, PLUS, SUB: // ++ -- ! ~ + -
 		if typeArgs == nil && (jp.mode&term_mode_expr) != 0 { // 说明当前是 表达式模式
 			preTk := jp.tk
 			jp.nextToken()
@@ -541,11 +551,10 @@ func (jp *JavacParser) term3() *TreeNode {
 			case IMPLICIT_LAMBDA:
 			case EXPLICIT_LAMBDA:
 			default:
-
 			}
 		}
 	case THIS: // this
-
+	case SUPER: // super
 	case INTLITERAL, LONGLITERAL, FLOATLITERAL,
 		DOUBLELITERAL, CHARLITERAL, STRINGLITERAL,
 		TRUE, FALSE, NULL: // 最简单的 boolean a = false;
@@ -556,32 +565,20 @@ func (jp *JavacParser) term3() *TreeNode {
 		} else {
 			return jp.illegal("无效的表达式")
 		}
-
-	case BYTE, SHORT, CHAR, INT,
-		LONG, FLOAT, DOUBLE, BOOLEAN: // 最简单的 boolean a = false;
-
-		// emptyAnnotations := ast.GetEmptyTreeNode()
-		// primitiveTypeTree := jp.basicType()
-		// t = jp.bracketsSuffix(jp.bracketsOpt(primitiveTypeTree.AbstractJCExpression, emptyAnnotations))
-		t = GetEmptyTreeNode()
-	case UNDERSCORE, IDENTIFIER,
-		ASSERT, ENUM: //
-
+	case NEW:
+	case MONKEYS_AT:
+	case UNDERSCORE, IDENTIFIER, ASSERT, ENUM: //
 		//  ->  lambda表达式 如果前面一个token是 -> 表示接下来要解析的是lambda表达式
 		if jp.termExpr() && jp.peekToken(ARROW) {
 			return jp.lambdaExpressionOrStatement(false, false, pos)
 		} else {
-			// t = jp.toP(jp.F.At(pos).Identify(jp.ident()))
-			t = GetEmptyTreeNode()
+			t = NewIdentifyTreeNode(jp.token, jp.ident(), nil)
 		loop:
 			for {
-				// pos := jp.token.Pos()
-				annos := jp.typeAnnotationsOpt() // 注解无处不在，这里先不处理注解
+				annos := jp.typeAnnotationsOpt() // 注解无处不在，这里先不处理注解 这里是类型注解
 				// need to report an error later if LBRACKET is for array
 				// index access rather than array creation level 可以是 @Some [] ，如果是 @Some [1] 就是错误的
-				if len(*annos) > 0 &&
-					jp.tk != LBRACKET &&
-					jp.tk != ELLIPSIS {
+				if len(*annos) > 0 && jp.tk != LBRACKET && jp.tk != ELLIPSIS {
 					return jp.illegal("无效的对数组的注解")
 				}
 				switch jp.tk {
@@ -613,31 +610,21 @@ func (jp *JavacParser) term3() *TreeNode {
 				goto loop
 			}
 		}
+	case BYTE, SHORT, CHAR, INT, LONG, FLOAT, DOUBLE, BOOLEAN:
+		if typeArgs != nil {
+			jp.illegal("")
+		}
+		// 分开写是为了表明代码的意图
+		t = jp.basicType()    // 这是一个常量类型，最常见的
+		t = jp.bracketsOpt(t) // 可能是数组 所以需要处理方括号，例如： int[] a = {} 这里我们先不处理数组
+		// 这里先不处理 ，忽略 TODO
+		//t = jp.bracketsSuffix(t)
+	case VOID:
 	default:
-		jp.illegal("")
+		jp.illegal("无效的token... term3()")
 	}
 	fmt.Println("delete after .... pos is:", pos)
 	return jp.term3Rest(t, typeArgs)
-}
-
-func unOpTag(tk TokenKind) TreeNodeTag {
-
-	switch tk {
-	case PLUS:
-		return Tree_node_tag_pos
-	case SUB:
-		return Tree_node_tag_neg
-	case BANG:
-		return Tree_node_tag_not
-	case TILDE:
-		return Tree_node_tag_compl
-	case PLUSPLUS:
-		return Tree_node_tag_preinc
-	case SUBSUB:
-		return Tree_node_tag_predec
-	default:
-		return Tree_node_tag_no_tag
-	}
 }
 
 func (jp *JavacParser) termExpr() bool {
@@ -699,13 +686,13 @@ func (jp *JavacParser) term1Rest(t *TreeNode) *TreeNode {
 }
 
 // precedences 的意思是优先级
-func (jp *JavacParser) term2Rest(t *TreeNode, precedences int) *TreeNode {
+func (jp *JavacParser) term2Rest(t *TreeNode, precedences PrecOp) *TreeNode {
 
 	// TODO
 	return t
 }
 
-func prec(tk TokenKind) int {
+func prec(tk TokenKind) PrecOp {
 
 	// treeTag := opTag(tk)
 	// if treeTag != jc.TREE_TAG_NO_TAG {
@@ -716,76 +703,6 @@ func prec(tk TokenKind) int {
 
 	// todo
 	return -1
-}
-
-func toOpTag(tk TokenKind) TreeNodeTag {
-
-	switch tk {
-	case BARBAR:
-		return Tree_node_tag_or
-	case AMPAMP:
-		return Tree_node_tag_and
-	case BAR:
-		return Tree_node_tag_bitor
-	case BAREQ:
-		return Tree_node_tag_bitor_asg
-	case CARET:
-		return Tree_node_tag_bitxor
-	case CARETEQ:
-		return Tree_node_tag_bitxor_asg
-	case AMP:
-		return Tree_node_tag_bitand
-	case AMPEQ:
-		return Tree_node_tag_bitand_asg
-	case EQEQ:
-		return Tree_node_tag_eq
-	case BANGEQ:
-		return Tree_node_tag_ne
-	case LT:
-		return Tree_node_tag_lt
-	case GT:
-		return Tree_node_tag_gt
-	case LTEQ:
-		return Tree_node_tag_le
-	case GTEQ:
-		return Tree_node_tag_ge
-	case LTLT:
-		return Tree_node_tag_sl
-	case LTLTEQ:
-		return Tree_node_tag_sl_asg
-	case GTGT:
-		return Tree_node_tag_sr
-	case GTGTEQ:
-		return Tree_node_tag_sr_asg
-	case GTGTGT:
-		return Tree_node_tag_usr
-	case GTGTGTEQ:
-		return Tree_node_tag_usr_asg
-	case PLUS:
-		return Tree_node_tag_plus
-	case PLUSEQ:
-		return Tree_node_tag_plus_asg
-	case SUB:
-		return Tree_node_tag_minus
-	case SUBEQ:
-		return Tree_node_tag_minus_asg
-	case STAR:
-		return Tree_node_tag_mul
-	case STAREQ:
-		return Tree_node_tag_mul_asg
-	case SLASH:
-		return Tree_node_tag_div
-	case SLASHEQ:
-		return Tree_node_tag_div_asg
-	case PERCENT:
-		return Tree_node_tag_mod
-	case PERCENTEQ:
-		return Tree_node_tag_mod_asg
-	case INSTANCEOF:
-		return Tree_node_tag_typetest
-	default:
-		return Tree_node_tag_no_tag
-	}
 }
 
 /** Skip forward until a suitable stop token is found.
@@ -888,13 +805,17 @@ func (jp *JavacParser) syntaxError(pos int, msg string) *TreeNode {
 	return NewErrorTreeNode(pos, msg)
 }
 
+/** BasicType = byte | short | char | int | long | float | double | boolean
+ * 注意，包装类，不是语法解析器的事情，自动拆箱和装箱也不是
+ */
 func (jp *JavacParser) basicType() *TreeNode {
 
-	// jp.F.At(jp.token.Pos())
-	// tree := jp.F.TypeIdent(typeTag(jp.tk))
-	// jp.nextToken()
-	// return tree
-	return GetEmptyTreeNode()
+	var tt *code.TypeTag
+	tt = typeTag(jp.tk)
+	inx := jp.token.GetSymbolTableIndex()
+	res := NewPrimitiveTypeTree(inx, tt)
+	jp.nextToken()
+	return res
 }
 
 /**
@@ -915,17 +836,24 @@ func (jp *JavacParser) basicType() *TreeNode {
 // }
 
 /**
+ * 类型注解，这里先忽略。
+ *
  * 要解析出来注解 ，这里我们暂时不支持注解，先忽略，返回空 TODO annotation
+ * 这里要区分下普通注解和类型注解
+ * 在 Java 8 之前的版本中，只能允许在声明式前使用 Annotation。
+ * 而在 Java 8 版本中，Annotation 可以被用在任何使用 Type 的地方，例如：初始化对象时 (new)，
+ * 对象类型转化时，使用 implements 表达式时，或者使用 throws 表达式时。
+ * 类型注解，是为了增加编译器对于一些运行期的代码检查，例如：
+ * /** @NonNull * / Object my = new Object(); 注意这里的 @NonNull是注释的，可以兼容JDK8之前的代码
+ * 这里我们就先忽略这种注解了，词法分析阶段，也没有解析这种类型的注解。
  */
-func (jp *JavacParser) typeAnnotationsOpt() *[]TreeNode {
+func (jp *JavacParser) typeAnnotationsOpt() *[]*TreeNode {
 
 	return GetEmptyTreeNodeArray()
 }
 
 /** BracketsSuffixExpr = "." CLASS
  *  BracketsSuffixType =
- *
- *
  *
  * TODO 先不处理
  */
@@ -939,7 +867,9 @@ func (jp *JavacParser) bracketsSuffix(opt *TreeNode) *TreeNode {
 		jp.accept(CLASS)
 		// TODO
 	} else if (jp.mode & term_mode_type) != 0 {
-
+		if jp.tk != COLCOL {
+			jp.mode = term_mode_type
+		}
 	} else if jp.tk != COLCOL {
 		jp.syntaxError(jp.token.Pos(), "期望.class")
 	}
@@ -1005,7 +935,7 @@ func (jp *JavacParser) to(expr *TreeNode) *TreeNode {
 /**
  * 泛型 先不支持 TODO 泛型
  */
-func (jp *JavacParser) typeArgumentsOpt(pm parseMode) *[]TreeNode {
+func (jp *JavacParser) typeArgumentsOpt(pm parseMode) *[]*TreeNode {
 
 	if true {
 		return nil
@@ -1026,7 +956,7 @@ func (jp *JavacParser) typeArgumentsOpt(pm parseMode) *[]TreeNode {
  * TypeArguments  = "<" TypeArgument {"," TypeArgument} ">"
  * 目前先不支持
  */
-func typeArguments(b bool) *[]TreeNode {
+func typeArguments(b bool) *[]*TreeNode {
 
 	return GetEmptyTreeNodeArray()
 }
@@ -1039,7 +969,7 @@ func (jp *JavacParser) checkGenerics() {
 	}
 }
 
-func (jp *JavacParser) term3Rest(t *TreeNode, args *[]TreeNode) *TreeNode {
+func (jp *JavacParser) term3Rest(t *TreeNode, args *[]*TreeNode) *TreeNode {
 
 	// TODO
 	return t
@@ -1093,20 +1023,20 @@ func (jp *JavacParser) parseIf() *TreeNode {
  */
 func (jp *JavacParser) parseCompareExpression() TreeNodeTag {
 
-	res := Tree_node_tag_erroneous
+	res := erroneous
 	switch jp.tk {
 	case EQEQ:
-		res = Tree_node_tag_eq
+		res = eq
 	case BANGEQ:
-		res = Tree_node_tag_ne
+		res = ne
 	case LTEQ:
-		res = Tree_node_tag_le
+		res = le
 	case GTEQ:
-		res = Tree_node_tag_ge
+		res = ge
 	case LT:
-		res = Tree_node_tag_lt
+		res = lt
 	case GT:
-		res = Tree_node_tag_gt
+		res = gt
 	default:
 		// error
 		jp.reportSyntaxError(jp.token.Pos(), "错误的比较符号", jp.tk)
@@ -1144,7 +1074,7 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 		DOUBLELITERAL, CHARLITERAL, STRINGLITERAL,
 		TRUE, FALSE, NULL:
 		// 这里都是字面量类型 需要注意，包含了 true false null 这3个，不要漏了 暂时先这么写 为了不报错 TODO
-		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, 100)
+		res = NewLiteralTreeNode(jp.token, code.TYPE_TAG_LONG, 100, tt_long_literal)
 		jp.nextToken()
 	default:
 		// error
@@ -1300,6 +1230,48 @@ func (jp *JavacParser) analyzeParens() parenthesesResult {
 	// goto outer
 	// todo delete later
 	return CAST
+}
+
+/**
+ * 处理数组类型  TODO
+ */
+func (jp *JavacParser) bracketsOpt(tree *TreeNode) *TreeNode {
+
+	empty := &([]*TreeNode{})
+	return jp.bracketsOptAnnotation(tree, empty)
+}
+
+func (jp *JavacParser) bracketsOptAnnotation(tree *TreeNode, annotationArray *[]*TreeNode) *TreeNode {
+
+	var t *TreeNode = tree
+	var nextLevelAnnotations *[]*TreeNode
+	nextLevelAnnotations = jp.typeAnnotationsOpt()
+	if jp.tk == LBRACKET { // [
+		pos := jp.token.Pos()
+		jp.nextToken()
+		t = jp.bracketsOptCont(t, pos, nextLevelAnnotations)
+	} else if len(*nextLevelAnnotations) > 0 {
+		if jp.permitTypeAnnotationsPushBack {
+			jp.typeAnnotationsPushedBack = nextLevelAnnotations
+		} else {
+			jp.illegal("无效的 nextLevelAnnotations")
+		}
+	}
+	if len(*annotationArray) > 0 {
+		//t = toP(F.at(token.pos).AnnotatedType(annotations, t));
+	}
+	return t
+}
+
+func (jp *JavacParser) bracketsOptCont(t *TreeNode, p int, annotations *[]*TreeNode) *TreeNode {
+
+	jp.accept(RBRACKET) // 先解析 ] 此时就是 []这样的状态
+	t = jp.bracketsOpt(t)
+	t = NewTypeArrayTreeNode(t)
+	if len(*annotations) > 0 {
+		// 这里类型注解永远是空，先不支持，所以不用考虑这段代码 TODO
+	}
+	return t
 }
 
 // 返回none就是没有类型

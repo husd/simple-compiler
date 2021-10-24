@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"husd.com/v0/code"
+	"husd.com/v0/util"
 )
 
 type TreeNodeType int
@@ -26,7 +27,11 @@ type TreeNode struct {
 	typeTag *code.TypeTag // 常量表达式才有的属性
 	val     interface{}   // 常量表达式才有的属性 实际的值 需要配合typeTag的类型，确定是 int 还是 char false true等
 
-	pos int // token里的pos
+	pos      int      // token里的pos
+	treeType TreeType //树的类型
+
+	symbol *Symbol // 符号
+	n      *util.Name
 }
 
 func (this *TreeNode) Append(child *TreeNode) {
@@ -73,112 +78,112 @@ type ITreeType interface {
 	TreeType_()
 }
 
-var TT_array [102]string = [102]string{}
+var tt_array [102]string = [102]string{}
 
 func init() {
 
-	TT_array[TT_NIL] = "nil"
-	TT_array[TT_ANNOTATED_TYPE] = "annotated_type"
-	TT_array[TT_ANNOTATION] = "annotation"
-	TT_array[TT_TYPE_ANNOTATION] = "type_annotation"
-	TT_array[TT_ARRAY_ACCESS] = "array_access"
-	TT_array[TT_ARRAY_TYPE] = "array_type"
-	TT_array[TT_ASSERT] = "assert"
-	TT_array[TT_ASSIGNMENT] = "assignment"
-	TT_array[TT_BLOCK] = "block"
-	TT_array[TT_BREAK] = "break"
-	TT_array[TT_CASE] = "case"
-	TT_array[TT_CATCH] = "catch"
-	TT_array[TT_CLASS] = "class"
-	TT_array[TT_COMPILATION_UNIT] = "compilation_unit"
-	TT_array[TT_CONDITIONAL_EXPRESSION] = "conditional_expression"
-	TT_array[TT_CONTINUE] = "continue"
-	TT_array[TT_DO_WHILE_LOOP] = "do_while_loop"
-	TT_array[TT_ENHANCED_FOR_LOOP] = "enhanced_for_loop"
-	TT_array[TT_EXPRESSION_STATEMENT] = "expression_statement"
-	TT_array[TT_MEMBER_SELECT] = "member_select"
-	TT_array[TT_MEMBER_REFERENCE] = "member_reference"
-	TT_array[TT_FOR_LOOP] = "for_loop"
-	TT_array[TT_IDENTIFIER] = "identifier"
-	TT_array[TT_IF] = "if"
-	TT_array[TT_IMPORT] = "import"
-	TT_array[TT_INSTANCE_OF] = "instance_of"
-	TT_array[TT_LABELED_STATEMENT] = "labeled_statement"
-	TT_array[TT_METHOD] = "method"
-	TT_array[TT_METHOD_INVOCATION] = "method_invocation"
-	TT_array[TT_MODIFIERS] = "modifiers"
-	TT_array[TT_NEW_ARRAY] = "new_array"
-	TT_array[TT_NEW_CLASS] = "new_class"
-	TT_array[TT_LAMBDA_EXPRESSION] = "lambda_expression"
-	TT_array[TT_PARENTHESIZED] = "parenthesized"
-	TT_array[TT_PRIMITIVE_TYPE] = "primitive_type"
-	TT_array[TT_RETURN] = "return"
-	TT_array[TT_EMPTY_STATEMENT] = "empty_statement"
-	TT_array[TT_SWITCH] = "switch"
-	TT_array[TT_SYNCHRONIZED] = "synchronized"
-	TT_array[TT_THROW] = "throw"
-	TT_array[TT_TRY] = "try"
-	TT_array[TT_PARAMETERIZED_TYPE] = "parameterized_type"
-	TT_array[TT_UNION_TYPE] = "union_type"
-	TT_array[TT_INTERSECTION_TYPE] = "intersection_type"
-	TT_array[TT_TYPE_CAST] = "type_cast"
-	TT_array[TT_TYPE_PARAMETER] = "type_parameter"
-	TT_array[TT_VARIABLE] = "variable"
-	TT_array[TT_WHILE_LOOP] = "while_loop"
-	TT_array[TT_POSTFIX_INCREMENT] = "postfix_increment"
-	TT_array[TT_POSTFIX_DECREMENT] = "postfix_decrement"
-	TT_array[TT_PREFIX_INCREMENT] = "prefix_increment"
-	TT_array[TT_PREFIX_DECREMENT] = "prefix_decrement"
-	TT_array[TT_UNARY_PLUS] = "unary_plus"
-	TT_array[TT_UNARY_MINUS] = "unary_minus"
-	TT_array[TT_BITWISE_COMPLEMENT] = "bitwise_complement"
-	TT_array[TT_LOGICAL_COMPLEMENT] = "logical_complement"
-	TT_array[TT_MULTIPLY] = "multiply"
-	TT_array[TT_DIVIDE] = "divide"
-	TT_array[TT_REMAINDER] = "remainder"
-	TT_array[TT_PLUS] = "plus"
-	TT_array[TT_MINUS] = "minus"
-	TT_array[TT_LEFT_SHIFT] = "left_shift"
-	TT_array[TT_RIGHT_SHIFT] = "right_shift"
-	TT_array[TT_UNSIGNED_RIGHT_SHIFT] = "unsigned_right_shift"
-	TT_array[TT_LESS_THAN] = "less_than"
-	TT_array[TT_GREATER_THAN] = "greater_than"
-	TT_array[TT_LESS_THAN_EQUAL] = "less_than_equal"
-	TT_array[TT_GREATER_THAN_EQUAL] = "greater_than_equal"
-	TT_array[TT_EQUAL_TO] = "equal_to"
-	TT_array[TT_NOT_EQUAL_TO] = "not_equal_to"
-	TT_array[TT_AND] = "and"
-	TT_array[TT_XOR] = "xor"
-	TT_array[TT_OR] = "or"
-	TT_array[TT_CONDITIONAL_AND] = "conditional_and"
-	TT_array[TT_CONDITIONAL_OR] = "conditional_or"
-	TT_array[TT_MULTIPLY_ASSIGNMENT] = "multiply_assignment"
-	TT_array[TT_DIVIDE_ASSIGNMENT] = "divide_assignment"
-	TT_array[TT_REMAINDER_ASSIGNMENT] = "remainder_assignment"
-	TT_array[TT_PLUS_ASSIGNMENT] = "plus_assignment"
-	TT_array[TT_MINUS_ASSIGNMENT] = "minus_assignment"
-	TT_array[TT_LEFT_SHIFT_ASSIGNMENT] = "left_shift_assignment"
-	TT_array[TT_RIGHT_SHIFT_ASSIGNMENT] = "right_shift_assignment"
-	TT_array[TT_UNSIGNED_RIGHT_SHIFT_ASSIGNMENT] = "unsigned_right_shift_assignment"
-	TT_array[TT_AND_ASSIGNMENT] = "and_assignment"
-	TT_array[TT_XOR_ASSIGNMENT] = "xor_assignment"
-	TT_array[TT_OR_ASSIGNMENT] = "or_assignment"
-	TT_array[TT_INT_LITERAL] = "int_literal"
-	TT_array[TT_LONG_LITERAL] = "long_literal"
-	TT_array[TT_FLOAT_LITERAL] = "float_literal"
-	TT_array[TT_DOUBLE_LITERAL] = "double_literal"
-	TT_array[TT_BOOLEAN_LITERAL] = "boolean_literal"
-	TT_array[TT_CHAR_LITERAL] = "char_literal"
-	TT_array[TT_STRING_LITERAL] = "string_literal"
-	TT_array[TT_NULL_LITERAL] = "null_literal"
-	TT_array[TT_UNBOUNDED_WILDCARD] = "unbounded_wildcard"
-	TT_array[TT_EXTENDS_WILDCARD] = "extends_wildcard"
-	TT_array[TT_SUPER_WILDCARD] = "super_wildcard"
-	TT_array[TT_ERRONEOUS] = "erroneous"
-	TT_array[TT_INTERFACE] = "interface"
-	TT_array[TT_ENUM] = "enum"
-	TT_array[TT_ANNOTATION_TYPE] = "annotation_type"
-	TT_array[TT_OTHER] = "other"
+	tt_array[tt_nil] = "nil"
+	tt_array[tt_annotated_type] = "annotated_type"
+	tt_array[tt_annotation] = "annotation"
+	tt_array[tt_type_annotation] = "type_annotation"
+	tt_array[tt_array_access] = "array_access"
+	tt_array[tt_array_type] = "array_type"
+	tt_array[tt_assert] = "assert"
+	tt_array[tt_assignment] = "assignment"
+	tt_array[tt_block] = "block"
+	tt_array[tt_break] = "break"
+	tt_array[tt_case] = "case"
+	tt_array[tt_catch] = "catch"
+	tt_array[tt_class] = "class"
+	tt_array[tt_compilation_unit] = "compilation_unit"
+	tt_array[tt_conditional_expression] = "conditional_expression"
+	tt_array[tt_continue] = "continue"
+	tt_array[tt_do_while_loop] = "do_while_loop"
+	tt_array[tt_enhanced_for_loop] = "enhanced_for_loop"
+	tt_array[tt_expression_statement] = "expression_statement"
+	tt_array[tt_member_select] = "member_select"
+	tt_array[tt_member_reference] = "member_reference"
+	tt_array[tt_for_loop] = "for_loop"
+	tt_array[tt_identifier] = "identifier"
+	tt_array[tt_if] = "if"
+	tt_array[tt_import] = "import"
+	tt_array[tt_instance_of] = "instance_of"
+	tt_array[tt_labeled_statement] = "labeled_statement"
+	tt_array[tt_method] = "method"
+	tt_array[tt_method_invocation] = "method_invocation"
+	tt_array[tt_modifiers] = "modifiers"
+	tt_array[tt_new_array] = "new_array"
+	tt_array[tt_new_class] = "new_class"
+	tt_array[tt_lambda_expression] = "lambda_expression"
+	tt_array[tt_parenthesized] = "parenthesized"
+	tt_array[tt_primitive_type] = "primitive_type"
+	tt_array[tt_return] = "return"
+	tt_array[tt_empty_statement] = "empty_statement"
+	tt_array[tt_switch] = "switch"
+	tt_array[tt_synchronized] = "synchronized"
+	tt_array[tt_throw] = "throw"
+	tt_array[tt_try] = "try"
+	tt_array[tt_parameterized_type] = "parameterized_type"
+	tt_array[tt_union_type] = "union_type"
+	tt_array[tt_intersection_type] = "intersection_type"
+	tt_array[tt_type_cast] = "type_cast"
+	tt_array[tt_type_parameter] = "type_parameter"
+	tt_array[tt_variable] = "variable"
+	tt_array[tt_while_loop] = "while_loop"
+	tt_array[tt_postfix_increment] = "postfix_increment"
+	tt_array[tt_postfix_decrement] = "postfix_decrement"
+	tt_array[tt_prefix_increment] = "prefix_increment"
+	tt_array[tt_prefix_decrement] = "prefix_decrement"
+	tt_array[tt_unary_plus] = "unary_plus"
+	tt_array[tt_unary_minus] = "unary_minus"
+	tt_array[tt_bitwise_complement] = "bitwise_complement"
+	tt_array[tt_logical_complement] = "logical_complement"
+	tt_array[tt_multiply] = "multiply"
+	tt_array[tt_divide] = "divide"
+	tt_array[tt_remainder] = "remainder"
+	tt_array[tt_plus] = "plus"
+	tt_array[tt_minus] = "minus"
+	tt_array[tt_left_shift] = "left_shift"
+	tt_array[tt_right_shift] = "right_shift"
+	tt_array[tt_unsigned_right_shift] = "unsigned_right_shift"
+	tt_array[tt_less_than] = "less_than"
+	tt_array[tt_greater_than] = "greater_than"
+	tt_array[tt_less_than_equal] = "less_than_equal"
+	tt_array[tt_greater_than_equal] = "greater_than_equal"
+	tt_array[tt_equal_to] = "equal_to"
+	tt_array[tt_not_equal_to] = "not_equal_to"
+	tt_array[tt_and] = "and"
+	tt_array[tt_xor] = "xor"
+	tt_array[tt_or] = "or"
+	tt_array[tt_conditional_and] = "conditional_and"
+	tt_array[tt_conditional_or] = "conditional_or"
+	tt_array[tt_multiply_assignment] = "multiply_assignment"
+	tt_array[tt_divide_assignment] = "divide_assignment"
+	tt_array[tt_remainder_assignment] = "remainder_assignment"
+	tt_array[tt_plus_assignment] = "plus_assignment"
+	tt_array[tt_minus_assignment] = "minus_assignment"
+	tt_array[tt_left_shift_assignment] = "left_shift_assignment"
+	tt_array[tt_right_shift_assignment] = "right_shift_assignment"
+	tt_array[tt_unsigned_right_shift_assignment] = "unsigned_right_shift_assignment"
+	tt_array[tt_and_assignment] = "and_assignment"
+	tt_array[tt_xor_assignment] = "xor_assignment"
+	tt_array[tt_or_assignment] = "or_assignment"
+	tt_array[tt_int_literal] = "int_literal"
+	tt_array[tt_long_literal] = "long_literal"
+	tt_array[tt_float_literal] = "float_literal"
+	tt_array[tt_double_literal] = "double_literal"
+	tt_array[tt_boolean_literal] = "boolean_literal"
+	tt_array[tt_char_literal] = "char_literal"
+	tt_array[tt_string_literal] = "string_literal"
+	tt_array[tt_null_literal] = "null_literal"
+	tt_array[tt_unbounded_wildcard] = "unbounded_wildcard"
+	tt_array[tt_extends_wildcard] = "extends_wildcard"
+	tt_array[tt_super_wildcard] = "super_wildcard"
+	tt_array[tt_erroneous] = "erroneous"
+	tt_array[tt_interface] = "interface"
+	tt_array[tt_enum] = "enum"
+	tt_array[tt_annotation_type] = "annotation_type"
+	tt_array[tt_other] = "other"
 }
 
 /**
@@ -187,114 +192,114 @@ func init() {
 type TreeType int
 
 const (
-	TT_NIL                             TreeType = 0   // nil
-	TT_ANNOTATED_TYPE                  TreeType = 1   // annotated_type
-	TT_ANNOTATION                      TreeType = 2   // annotation
-	TT_TYPE_ANNOTATION                 TreeType = 3   // type_annotation
-	TT_ARRAY_ACCESS                    TreeType = 4   // array_access
-	TT_ARRAY_TYPE                      TreeType = 5   // array_type
-	TT_ASSERT                          TreeType = 6   // assert
-	TT_ASSIGNMENT                      TreeType = 7   // assignment
-	TT_BLOCK                           TreeType = 8   // block
-	TT_BREAK                           TreeType = 9   // break
-	TT_CASE                            TreeType = 10  // case
-	TT_CATCH                           TreeType = 11  // catch
-	TT_CLASS                           TreeType = 12  // class
-	TT_COMPILATION_UNIT                TreeType = 13  // compilation_unit
-	TT_CONDITIONAL_EXPRESSION          TreeType = 14  // conditional_expression
-	TT_CONTINUE                        TreeType = 15  // continue
-	TT_DO_WHILE_LOOP                   TreeType = 16  // do_while_loop
-	TT_ENHANCED_FOR_LOOP               TreeType = 17  // enhanced_for_loop
-	TT_EXPRESSION_STATEMENT            TreeType = 18  // expression_statement
-	TT_MEMBER_SELECT                   TreeType = 19  // member_select
-	TT_MEMBER_REFERENCE                TreeType = 20  // member_reference
-	TT_FOR_LOOP                        TreeType = 21  // for_loop
-	TT_IDENTIFIER                      TreeType = 22  // identifier
-	TT_IF                              TreeType = 23  // if
-	TT_IMPORT                          TreeType = 24  // import
-	TT_INSTANCE_OF                     TreeType = 25  // instance_of
-	TT_LABELED_STATEMENT               TreeType = 26  // labeled_statement
-	TT_METHOD                          TreeType = 27  // method
-	TT_METHOD_INVOCATION               TreeType = 28  // method_invocation
-	TT_MODIFIERS                       TreeType = 29  // modifiers
-	TT_NEW_ARRAY                       TreeType = 30  // new_array
-	TT_NEW_CLASS                       TreeType = 31  // new_class
-	TT_LAMBDA_EXPRESSION               TreeType = 32  // lambda_expression
-	TT_PARENTHESIZED                   TreeType = 33  // parenthesized
-	TT_PRIMITIVE_TYPE                  TreeType = 34  // primitive_type
-	TT_RETURN                          TreeType = 35  // return
-	TT_EMPTY_STATEMENT                 TreeType = 36  // empty_statement
-	TT_SWITCH                          TreeType = 37  // switch
-	TT_SYNCHRONIZED                    TreeType = 38  // synchronized
-	TT_THROW                           TreeType = 39  // throw
-	TT_TRY                             TreeType = 40  // try
-	TT_PARAMETERIZED_TYPE              TreeType = 41  // parameterized_type
-	TT_UNION_TYPE                      TreeType = 42  // union_type
-	TT_INTERSECTION_TYPE               TreeType = 43  // intersection_type
-	TT_TYPE_CAST                       TreeType = 44  // type_cast
-	TT_TYPE_PARAMETER                  TreeType = 45  // type_parameter
-	TT_VARIABLE                        TreeType = 46  // variable
-	TT_WHILE_LOOP                      TreeType = 47  // while_loop
-	TT_POSTFIX_INCREMENT               TreeType = 48  // postfix_increment
-	TT_POSTFIX_DECREMENT               TreeType = 49  // postfix_decrement
-	TT_PREFIX_INCREMENT                TreeType = 50  // prefix_increment
-	TT_PREFIX_DECREMENT                TreeType = 51  // prefix_decrement
-	TT_UNARY_PLUS                      TreeType = 52  // unary_plus
-	TT_UNARY_MINUS                     TreeType = 53  // unary_minus
-	TT_BITWISE_COMPLEMENT              TreeType = 54  // bitwise_complement
-	TT_LOGICAL_COMPLEMENT              TreeType = 55  // logical_complement
-	TT_MULTIPLY                        TreeType = 56  // multiply
-	TT_DIVIDE                          TreeType = 57  // divide
-	TT_REMAINDER                       TreeType = 58  // remainder
-	TT_PLUS                            TreeType = 59  // plus
-	TT_MINUS                           TreeType = 60  // minus
-	TT_LEFT_SHIFT                      TreeType = 61  // left_shift
-	TT_RIGHT_SHIFT                     TreeType = 62  // right_shift
-	TT_UNSIGNED_RIGHT_SHIFT            TreeType = 63  // unsigned_right_shift
-	TT_LESS_THAN                       TreeType = 64  // less_than
-	TT_GREATER_THAN                    TreeType = 65  // greater_than
-	TT_LESS_THAN_EQUAL                 TreeType = 66  // less_than_equal
-	TT_GREATER_THAN_EQUAL              TreeType = 67  // greater_than_equal
-	TT_EQUAL_TO                        TreeType = 68  // equal_to
-	TT_NOT_EQUAL_TO                    TreeType = 69  // not_equal_to
-	TT_AND                             TreeType = 70  // and
-	TT_XOR                             TreeType = 71  // xor
-	TT_OR                              TreeType = 72  // or
-	TT_CONDITIONAL_AND                 TreeType = 73  // conditional_and
-	TT_CONDITIONAL_OR                  TreeType = 74  // conditional_or
-	TT_MULTIPLY_ASSIGNMENT             TreeType = 75  // multiply_assignment
-	TT_DIVIDE_ASSIGNMENT               TreeType = 76  // divide_assignment
-	TT_REMAINDER_ASSIGNMENT            TreeType = 77  // remainder_assignment
-	TT_PLUS_ASSIGNMENT                 TreeType = 78  // plus_assignment
-	TT_MINUS_ASSIGNMENT                TreeType = 79  // minus_assignment
-	TT_LEFT_SHIFT_ASSIGNMENT           TreeType = 80  // left_shift_assignment
-	TT_RIGHT_SHIFT_ASSIGNMENT          TreeType = 81  // right_shift_assignment
-	TT_UNSIGNED_RIGHT_SHIFT_ASSIGNMENT TreeType = 82  // unsigned_right_shift_assignment
-	TT_AND_ASSIGNMENT                  TreeType = 83  // and_assignment
-	TT_XOR_ASSIGNMENT                  TreeType = 84  // xor_assignment
-	TT_OR_ASSIGNMENT                   TreeType = 85  // or_assignment
-	TT_INT_LITERAL                     TreeType = 86  // int_literal
-	TT_LONG_LITERAL                    TreeType = 87  // long_literal
-	TT_FLOAT_LITERAL                   TreeType = 88  // float_literal
-	TT_DOUBLE_LITERAL                  TreeType = 89  // double_literal
-	TT_BOOLEAN_LITERAL                 TreeType = 90  // boolean_literal
-	TT_CHAR_LITERAL                    TreeType = 91  // char_literal
-	TT_STRING_LITERAL                  TreeType = 92  // string_literal
-	TT_NULL_LITERAL                    TreeType = 93  // null_literal
-	TT_UNBOUNDED_WILDCARD              TreeType = 94  // unbounded_wildcard
-	TT_EXTENDS_WILDCARD                TreeType = 95  // extends_wildcard
-	TT_SUPER_WILDCARD                  TreeType = 96  // super_wildcard
-	TT_ERRONEOUS                       TreeType = 97  // erroneous
-	TT_INTERFACE                       TreeType = 98  // interface
-	TT_ENUM                            TreeType = 99  // enum
-	TT_ANNOTATION_TYPE                 TreeType = 100 // annotation_type
-	TT_OTHER                           TreeType = 101 // other
+	tt_nil                             TreeType = 0   // nil
+	tt_annotated_type                  TreeType = 1   // annotated_type
+	tt_annotation                      TreeType = 2   // annotation
+	tt_type_annotation                 TreeType = 3   // type_annotation
+	tt_array_access                    TreeType = 4   // array_access
+	tt_array_type                      TreeType = 5   // array_type
+	tt_assert                          TreeType = 6   // assert
+	tt_assignment                      TreeType = 7   // assignment
+	tt_block                           TreeType = 8   // block
+	tt_break                           TreeType = 9   // break
+	tt_case                            TreeType = 10  // case
+	tt_catch                           TreeType = 11  // catch
+	tt_class                           TreeType = 12  // class
+	tt_compilation_unit                TreeType = 13  // compilation_unit
+	tt_conditional_expression          TreeType = 14  // conditional_expression
+	tt_continue                        TreeType = 15  // continue
+	tt_do_while_loop                   TreeType = 16  // do_while_loop
+	tt_enhanced_for_loop               TreeType = 17  // enhanced_for_loop
+	tt_expression_statement            TreeType = 18  // expression_statement
+	tt_member_select                   TreeType = 19  // member_select
+	tt_member_reference                TreeType = 20  // member_reference
+	tt_for_loop                        TreeType = 21  // for_loop
+	tt_identifier                      TreeType = 22  // identifier
+	tt_if                              TreeType = 23  // if
+	tt_import                          TreeType = 24  // import
+	tt_instance_of                     TreeType = 25  // instance_of
+	tt_labeled_statement               TreeType = 26  // labeled_statement
+	tt_method                          TreeType = 27  // method
+	tt_method_invocation               TreeType = 28  // method_invocation
+	tt_modifiers                       TreeType = 29  // modifiers
+	tt_new_array                       TreeType = 30  // new_array
+	tt_new_class                       TreeType = 31  // new_class
+	tt_lambda_expression               TreeType = 32  // lambda_expression
+	tt_parenthesized                   TreeType = 33  // parenthesized
+	tt_primitive_type                  TreeType = 34  // primitive_type
+	tt_return                          TreeType = 35  // return
+	tt_empty_statement                 TreeType = 36  // empty_statement
+	tt_switch                          TreeType = 37  // switch
+	tt_synchronized                    TreeType = 38  // synchronized
+	tt_throw                           TreeType = 39  // throw
+	tt_try                             TreeType = 40  // try
+	tt_parameterized_type              TreeType = 41  // parameterized_type
+	tt_union_type                      TreeType = 42  // union_type
+	tt_intersection_type               TreeType = 43  // intersection_type
+	tt_type_cast                       TreeType = 44  // type_cast
+	tt_type_parameter                  TreeType = 45  // type_parameter
+	tt_variable                        TreeType = 46  // variable
+	tt_while_loop                      TreeType = 47  // while_loop
+	tt_postfix_increment               TreeType = 48  // postfix_increment
+	tt_postfix_decrement               TreeType = 49  // postfix_decrement
+	tt_prefix_increment                TreeType = 50  // prefix_increment
+	tt_prefix_decrement                TreeType = 51  // prefix_decrement
+	tt_unary_plus                      TreeType = 52  // unary_plus
+	tt_unary_minus                     TreeType = 53  // unary_minus
+	tt_bitwise_complement              TreeType = 54  // bitwise_complement
+	tt_logical_complement              TreeType = 55  // logical_complement
+	tt_multiply                        TreeType = 56  // multiply
+	tt_divide                          TreeType = 57  // divide
+	tt_remainder                       TreeType = 58  // remainder
+	tt_plus                            TreeType = 59  // plus
+	tt_minus                           TreeType = 60  // minus
+	tt_left_shift                      TreeType = 61  // left_shift
+	tt_right_shift                     TreeType = 62  // right_shift
+	tt_unsigned_right_shift            TreeType = 63  // unsigned_right_shift
+	tt_less_than                       TreeType = 64  // less_than
+	tt_greater_than                    TreeType = 65  // greater_than
+	tt_less_than_equal                 TreeType = 66  // less_than_equal
+	tt_greater_than_equal              TreeType = 67  // greater_than_equal
+	tt_equal_to                        TreeType = 68  // equal_to
+	tt_not_equal_to                    TreeType = 69  // not_equal_to
+	tt_and                             TreeType = 70  // and
+	tt_xor                             TreeType = 71  // xor
+	tt_or                              TreeType = 72  // or
+	tt_conditional_and                 TreeType = 73  // conditional_and
+	tt_conditional_or                  TreeType = 74  // conditional_or
+	tt_multiply_assignment             TreeType = 75  // multiply_assignment
+	tt_divide_assignment               TreeType = 76  // divide_assignment
+	tt_remainder_assignment            TreeType = 77  // remainder_assignment
+	tt_plus_assignment                 TreeType = 78  // plus_assignment
+	tt_minus_assignment                TreeType = 79  // minus_assignment
+	tt_left_shift_assignment           TreeType = 80  // left_shift_assignment
+	tt_right_shift_assignment          TreeType = 81  // right_shift_assignment
+	tt_unsigned_right_shift_assignment TreeType = 82  // unsigned_right_shift_assignment
+	tt_and_assignment                  TreeType = 83  // and_assignment
+	tt_xor_assignment                  TreeType = 84  // xor_assignment
+	tt_or_assignment                   TreeType = 85  // or_assignment
+	tt_int_literal                     TreeType = 86  // int_literal
+	tt_long_literal                    TreeType = 87  // long_literal
+	tt_float_literal                   TreeType = 88  // float_literal
+	tt_double_literal                  TreeType = 89  // double_literal
+	tt_boolean_literal                 TreeType = 90  // boolean_literal
+	tt_char_literal                    TreeType = 91  // char_literal
+	tt_string_literal                  TreeType = 92  // string_literal
+	tt_null_literal                    TreeType = 93  // null_literal
+	tt_unbounded_wildcard              TreeType = 94  // unbounded_wildcard
+	tt_extends_wildcard                TreeType = 95  // extends_wildcard
+	tt_super_wildcard                  TreeType = 96  // super_wildcard
+	tt_erroneous                       TreeType = 97  // erroneous
+	tt_interface                       TreeType = 98  // interface
+	tt_enum                            TreeType = 99  // enum
+	tt_annotation_type                 TreeType = 100 // annotation_type
+	tt_other                           TreeType = 101 // other
 )
 
 func GetTreeTypeName(tt TreeType) string {
 
 	if tt >= 0 && tt <= 101 {
-		return TT_array[tt]
+		return tt_array[tt]
 	}
 	return "unknown tree type:" + fmt.Sprint(tt)
 }
