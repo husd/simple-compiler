@@ -1059,7 +1059,7 @@ func (jp *JavacParser) parseExpression1() *TreeNode {
 	res := GetEmptyTreeNode()
 	switch jp.tk {
 	case IDENTIFIER:
-		left := NewIdentifyTreeNode(jp.token)
+		left := NewIdentifyTreeNode(jp.token, nil, nil)
 		jp.nextToken()
 		opC := jp.isOpCompare()
 		if !opC {
